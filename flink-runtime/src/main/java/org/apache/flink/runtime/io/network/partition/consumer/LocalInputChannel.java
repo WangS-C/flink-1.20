@@ -114,12 +114,16 @@ public class LocalInputChannel extends InputChannel implements BufferAvailabilit
         channelStatePersister.stopPersisting(checkpointId);
     }
 
+    //请求消费对应的子分区
     @Override
     protected void requestSubpartitions() throws IOException {
 
+        //重新触发请求
         boolean retriggerRequest = false;
+        //通知 数据可用
         boolean notifyDataAvailable = false;
 
+        //在存在重新触发的请求时，锁只需要请求一次。
         // The lock is required to request only once in the presence of retriggered requests.
         synchronized (requestLock) {
             checkState(!isReleased, "LocalInputChannel has been released already");
