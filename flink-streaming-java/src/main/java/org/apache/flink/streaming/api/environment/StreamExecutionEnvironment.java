@@ -167,12 +167,14 @@ public class StreamExecutionEnvironment implements AutoCloseable {
     public static final String DEFAULT_JOB_NAME = StreamGraphGenerator.DEFAULT_STREAMING_JOB_NAME;
 
     /** The time characteristic that is used if none other is set. */
+    // 默认使用 EventTime
     private static final TimeCharacteristic DEFAULT_TIME_CHARACTERISTIC =
             TimeCharacteristic.EventTime;
 
     /**
      * The environment of the context (local by default, cluster if invoked through command line).
      */
+    // 上下文的环境(默认为本地环境)
     private static StreamExecutionEnvironmentFactory contextEnvironmentFactory = null;
 
     /** The ThreadLocal used to store {@link StreamExecutionEnvironmentFactory}. */
@@ -180,14 +182,17 @@ public class StreamExecutionEnvironment implements AutoCloseable {
             threadLocalContextEnvironmentFactory = new ThreadLocal<>();
 
     /** The default parallelism used when creating a local environment. */
+    // 创建本地环境时使用的默认并行度(默认使用当前系统可用的处理器数量)
     private static int defaultLocalParallelism = Runtime.getRuntime().availableProcessors();
 
     // ------------------------------------------------------------------------
 
     /** The execution configuration for this environment. */
+    // 此环境的执行配置
     protected final ExecutionConfig config;
 
     /** Settings that control the checkpointing behavior. */
+    // 控制检查点行为的设置
     protected final CheckpointConfig checkpointCfg;
 
     protected final List<Transformation<?>> transformations = new ArrayList<>();
@@ -205,6 +210,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
     @Deprecated private StateBackend defaultStateBackend;
 
     /** The time characteristic used by the data streams. */
+    // 数据流使用的时间特性
     private TimeCharacteristic timeCharacteristic = DEFAULT_TIME_CHARACTERISTIC;
 
     /**
@@ -233,6 +239,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
     private final List<JobListener> jobListeners = new ArrayList<>();
 
     // Records the slot sharing groups and their corresponding fine-grained ResourceProfile
+    // 记录槽位共享组及其对应的细粒度ResourceProfile
     private final Map<String, ResourceProfile> slotSharingGroupResources = new HashMap<>();
 
     // --------------------------------------------------------------------------------------------
@@ -332,6 +339,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *
      * @param parallelism The parallelism
      */
+    // 设置并行度
     public StreamExecutionEnvironment setParallelism(int parallelism) {
         config.setParallelism(parallelism);
         return this;
@@ -350,6 +358,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      * @param executionMode the desired execution mode.
      * @return The execution environment of your application.
      */
+    // 设置执行模式
     @PublicEvolving
     public StreamExecutionEnvironment setRuntimeMode(final RuntimeExecutionMode executionMode) {
         checkNotNull(executionMode);
@@ -367,6 +376,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      * @param maxParallelism Maximum degree of parallelism to be used for the program., with {@code
      *     0 < maxParallelism <= 2^15}.
      */
+    // 设置最大并行度
     public StreamExecutionEnvironment setMaxParallelism(int maxParallelism) {
         Preconditions.checkArgument(
                 maxParallelism > 0
@@ -390,6 +400,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *
      * @param slotSharingGroup which contains name and its resource spec.
      */
+    //  注册槽位共享组
     @PublicEvolving
     public StreamExecutionEnvironment registerSlotSharingGroup(SlotSharingGroup slotSharingGroup) {
         final ResourceSpec resourceSpec =
@@ -398,6 +409,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
             this.slotSharingGroupResources.put(
                     slotSharingGroup.getName(),
                     ResourceProfile.fromResourceSpec(
+                            // TODO: 2024/8/5 这里wsm不直接使用resourceSpec呢
                             SlotSharingGroupUtils.extractResourceSpec(slotSharingGroup),
                             MemorySize.ZERO));
         }
@@ -439,6 +451,9 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *
      * @param timeoutMillis The maximum time between two output flushes.
      */
+    // 设置输出缓冲区刷新的最大时间频率(毫秒) (默认100毫秒)
+    // 0在每条记录之后触发刷新，从而最小化延迟
+    // -1仅在输出缓冲区满时触发刷新，从而最大化吞吐量
     public StreamExecutionEnvironment setBufferTimeout(long timeoutMillis) {
         if (timeoutMillis < ExecutionOptions.DISABLED_NETWORK_BUFFER_TIMEOUT) {
             throw new IllegalArgumentException("Timeout of buffer must be non-negative or -1");
@@ -459,6 +474,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *
      * @return The timeout of the buffer.
      */
+    // 获取刷新输出缓冲区的最大时间频率（毫秒）
     public long getBufferTimeout() {
         return this.configuration.get(ExecutionOptions.BUFFER_TIMEOUT_ENABLED)
                 ? this.configuration.get(ExecutionOptions.BUFFER_TIMEOUT).toMillis()
@@ -472,6 +488,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *
      * @return StreamExecutionEnvironment with chaining disabled.
      */
+    // 禁用流操作符的操作符链。操作符链允许非洗牌操作共存于同一线程中，完全避免了序列化和反序列化
     @PublicEvolving
     public StreamExecutionEnvironment disableOperatorChaining() {
         this.configuration.set(PipelineOptions.OPERATOR_CHAINING, false);
@@ -483,11 +500,13 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *
      * @return {@code true} if chaining is enabled, false otherwise.
      */
+    // 是否已启用链接
     @PublicEvolving
     public boolean isChainingEnabled() {
         return this.configuration.get(PipelineOptions.OPERATOR_CHAINING);
     }
 
+    // 是否启用了具有不同最大并行度的运算符链接
     @PublicEvolving
     public boolean isChainingOfOperatorsWithDifferentMaxParallelismEnabled() {
         return this.configuration.get(
@@ -522,6 +541,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *
      * @param interval Time interval between state checkpoints in milliseconds.
      */
+    // 开启检查点 (间隔不能小于10毫秒)
     public StreamExecutionEnvironment enableCheckpointing(long interval) {
         checkpointCfg.setCheckpointInterval(interval);
         return this;
@@ -648,12 +668,14 @@ public class StreamExecutionEnvironment implements AutoCloseable {
     }
 
     /** Returns whether unaligned checkpoints are enabled. */
+    // 是否启用了未对齐检查点
     @PublicEvolving
     public boolean isUnalignedCheckpointsEnabled() {
         return checkpointCfg.isUnalignedCheckpointsEnabled();
     }
 
     /** Returns whether unaligned checkpoints are force-enabled. */
+    // 是否强制未对齐的检查点
     @PublicEvolving
     public boolean isForceUnalignedCheckpoints() {
         return checkpointCfg.isForceUnalignedCheckpoints();
@@ -679,6 +701,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *
      * @return The checkpoint mode
      */
+    // 返回检查点一致性模式
     public CheckpointingMode getCheckpointingConsistencyMode() {
         return checkpointCfg.getCheckpointingConsistencyMode();
     }
@@ -777,6 +800,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      * @return This StreamExecutionEnvironment itself, to allow chaining of function calls.
      * @see #isChangelogStateBackendEnabled()
      */
+    // 启用Changelog状态后端
     @PublicEvolving
     public StreamExecutionEnvironment enableChangelogStateBackend(boolean enabled) {
         configuration.set(StateChangelogOptions.ENABLE_STATE_CHANGE_LOG, enabled);
@@ -791,6 +815,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *     #enableChangelogStateBackend(boolean)}.
      * @see #enableChangelogStateBackend(boolean)
      */
+    // 是否已启用更改日志状态后端
     @PublicEvolving
     public TernaryBoolean isChangelogStateBackendEnabled() {
         return this.configuration
@@ -806,6 +831,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      * @return This StreamExecutionEnvironment itself, to allow chaining of function calls.
      * @see #getDefaultSavepointDirectory()
      */
+    // 设置默认保存点目录
     @PublicEvolving
     public StreamExecutionEnvironment setDefaultSavepointDirectory(String savepointDirectory) {
         this.configuration.set(
@@ -1100,6 +1126,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *
      * @param configuration a configuration to read the values from
      */
+    // 设置其中包含可读配置的所有相关选项
     @PublicEvolving
     public void configure(ReadableConfig configuration) {
         configure(configuration, userClassloader);
@@ -1137,11 +1164,13 @@ public class StreamExecutionEnvironment implements AutoCloseable {
         checkpointCfg.configure(configuration);
 
         // reset state backend for backward compatibility
+        // 重置状态后端以向后兼容
         configuration
                 .getOptional(StateBackendOptions.STATE_BACKEND)
                 .ifPresent(ignored -> this.defaultStateBackend = null);
     }
 
+    // 注册自定义侦听器
     private void registerCustomListeners(
             final ClassLoader classLoader, final List<String> listeners) {
         for (String listener : listeners) {
@@ -1174,6 +1203,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      * @param <OUT> The type of the returned data stream
      * @return The data stream representing the given array of elements
      */
+    //  创建包含给定元素的新数据流
     @SafeVarargs
     public final <OUT> DataStreamSource<OUT> fromData(OUT... data) {
         if (data.length == 0) {
@@ -1303,6 +1333,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
         return fromData(data, typeInfo);
     }
 
+    // 从集合中提取类型信息
     private static <OUT> TypeInformation<OUT> extractTypeInfoFromCollection(Collection<OUT> data) {
         Preconditions.checkNotNull(data, "Collection must not be null");
         if (data.isEmpty()) {
@@ -1368,6 +1399,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      * @param from The number to start at (inclusive)
      * @param to The number to stop at (inclusive)
      */
+    // 创建一个包含数字序列的新数据流
     public DataStreamSource<Long> fromSequence(long from, long to) {
         if (from > to) {
             throw new IllegalArgumentException(
@@ -1471,6 +1503,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      * @deprecated This method will be removed a future release, possibly as early as version 2.0.
      *     Use {@link #fromData(Collection)} instead.
      */
+    // 从给定的非空集合创建数据流
     public <OUT> DataStreamSource<OUT> fromCollection(Collection<OUT> data) {
         TypeInformation<OUT> typeInfo = extractTypeInfoFromCollection(data);
         return fromCollection(data, typeInfo);
@@ -1593,6 +1626,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      * @param <OUT> The type of the returned data stream
      * @return A data stream representing the elements in the iterator
      */
+    // 创建一个并行数据流源
     public <OUT> DataStreamSource<OUT> fromParallelCollection(
             SplittableIterator<OUT> iterator, TypeInformation<OUT> typeInfo) {
         return fromParallelCollection(iterator, typeInfo, "Parallel Collection Source");
@@ -1947,6 +1981,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *     forever.
      * @return A data stream containing the strings received from the socket
      */
+    // 创建一个socket 文本流
     @PublicEvolving
     public DataStreamSource<String> socketTextStream(
             String hostname, int port, String delimiter, long maxRetry) {
@@ -2314,6 +2349,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      * @return The result of the job execution, containing elapsed time and accumulators.
      * @throws Exception which occurs during job execution.
      */
+    // 触发程序的执行
     public JobExecutionResult execute(String jobName) throws Exception {
         final List<Transformation<?>> originalTransformations = new ArrayList<>(transformations);
         StreamGraph streamGraph = getStreamGraph();
@@ -2518,6 +2554,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
         return streamGraph;
     }
 
+    // 获取 StreamGraph
     private StreamGraph getStreamGraph(List<Transformation<?>> transformations) {
         synchronizeClusterDatasetStatus();
         return getStreamGraphGenerator(transformations).generate();
@@ -2594,6 +2631,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
         if (getConfig().isClosureCleanerEnabled()) {
             ClosureCleaner.clean(f, getConfig().getClosureCleanerLevel(), true);
         }
+        // 确保可序列化
         ClosureCleaner.ensureSerializable(f);
         return f;
     }
@@ -2608,6 +2646,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      * <p>This is not meant to be used by users. The API methods that create operators must call
      * this method.
      */
+    // 将运算符添加到调用 execute时应执行的运算符列表中
     @Internal
     public void addOperator(Transformation<?> transformation) {
         Preconditions.checkNotNull(transformation, "transformation must not be null.");

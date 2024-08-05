@@ -1244,8 +1244,10 @@ public class ExecutionConfig implements Serializable, Archiveable<ArchivedExecut
     public enum ClosureCleanerLevel implements DescribedEnum {
         NONE(text("Disables the closure cleaner completely.")),
 
+        // 仅清理顶级类，而不递归到字段中
         TOP_LEVEL(text("Cleans only the top-level class without recursing into fields.")),
 
+        // 以递归方式清理所有字段
         RECURSIVE(text("Cleans all fields recursively."));
 
         private final InlineElement description;

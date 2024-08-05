@@ -479,6 +479,7 @@ public class StreamGraphGenerator {
      * <p>This checks whether we already transformed it and exits early in that case. If not it
      * delegates to one of the transformation specific methods.
      */
+    // 转换一个 Transformation.
     private Collection<Integer> transform(Transformation<?> transform) {
         if (alreadyTransformed.containsKey(transform)) {
             return alreadyTransformed.get(transform);
@@ -500,6 +501,7 @@ public class StreamGraphGenerator {
                 .getSlotSharingGroup()
                 .ifPresent(
                         slotSharingGroup -> {
+                            // 提取资源规格
                             final ResourceSpec resourceSpec =
                                     SlotSharingGroupUtils.extractResourceSpec(slotSharingGroup);
                             if (!resourceSpec.equals(ResourceSpec.UNKNOWN)) {
