@@ -224,6 +224,7 @@ public class DataStream<T> {
      * @param streams The DataStreams to union output with.
      * @return The {@link DataStream}.
      */
+    // 通过将相同类型的输出相互合并DataStream来创建一个新的DataStream输出。使用此运算符合并的 DataStreams 将同时转换。
     @SafeVarargs
     public final DataStream<T> union(DataStream<T>... streams) {
         List<Transformation<T>> unionedTransforms = new ArrayList<>();
@@ -288,6 +289,8 @@ public class DataStream<T> {
      * @param key The KeySelector to be used for extracting the key for partitioning
      * @return The {@link DataStream} with partitioned state (i.e. KeyedStream)
      */
+    // 它创建一个新的 KeyedStream 键，该键使用提供的键来分区其运算符状态。
+    //参数：key – 用于提取键进行分区的 KeySelector
     public <K> KeyedStream<T, K> keyBy(KeySelector<T, K> key) {
         Preconditions.checkNotNull(key);
         return new KeyedStream<>(this, clean(key));
@@ -395,6 +398,11 @@ public class DataStream<T> {
      * @return The partitioned DataStream.
      * @see KeySelector
      */
+    // 使用自定义分区器在选择器返回的键上对 DataStream 进行分区。此方法使用键选择器来获取要分区的键，并使用接受键类型的分区器。
+    //注意：此方法仅适用于单个字段键，即选择器不能返回字段的元组。
+    //参数：
+    //partitioner – 用于将分区分配给键的分区器。
+    //keySelector – 用于对 DataStream 进行分区的 KeySelector。
     public <K> DataStream<T> partitionCustom(
             Partitioner<K> partitioner, KeySelector<T, K> keySelector) {
         return setConnectionType(

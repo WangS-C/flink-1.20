@@ -109,19 +109,24 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 public abstract class Transformation<T> {
 
     // Has to be equal to StreamGraphGenerator.UPPER_BOUND_MAX_PARALLELISM
+    // 32768
     public static final int UPPER_BOUND_MAX_PARALLELISM = 1 << 15;
 
     // This is used to assign a unique ID to every Transformation
+    // 这用于为每个转换分配一个唯一的 ID
     private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
 
     // If true, the parallelism of the transformation is explicitly set and should be respected.
     // Otherwise the parallelism can be changed at runtime.
+    // 如果为 true，则明确设置了转换的并行度，应予以尊重。否则，可以在运行时更改并行度。
     private boolean parallelismConfigured;
 
+    // 构造函数中调用
     public static int getNewNodeId() {
         return ID_COUNTER.incrementAndGet();
     }
 
+    // 构造函数中调用getNewNodeId生成
     protected final int id;
 
     protected String name;
@@ -132,6 +137,8 @@ public abstract class Transformation<T> {
     // This is used to handle MissingTypeInfo. As long as the outputType has not been queried
     // it can still be changed using setOutputType(). Afterwards an exception is thrown when
     // trying to change the output type.
+    // 这用于处理 MissingTypeInfo。只要 outputType 没有被查询过，仍然可以使用 setOutputType（） 来更改它。
+    // 之后，在尝试更改输出类型时会引发异常。
     protected boolean typeUsed;
 
     private int parallelism;
@@ -140,18 +147,21 @@ public abstract class Transformation<T> {
      * The maximum parallelism for this stream transformation. It defines the upper limit for
      * dynamic scaling and the number of key groups used for partitioned state.
      */
+    // 此流转换的最大并行度。它定义了动态缩放的上限和用于分区状态的键组数。
     private int maxParallelism = -1;
 
     /**
      * The minimum resources for this stream transformation. It defines the lower limit for dynamic
      * resources resize in future plan.
      */
+    // 此流转换的最小资源。它定义了未来计划中动态资源调整大小的下限。
     private ResourceSpec minResources = ResourceSpec.DEFAULT;
 
     /**
      * The preferred resources for this stream transformation. It defines the upper limit for
      * dynamic resource resize in future plan.
      */
+    // 此流转换的首选资源。它定义了未来计划中动态资源调整大小的上限
     private ResourceSpec preferredResources = ResourceSpec.DEFAULT;
 
     /**
@@ -167,10 +177,12 @@ public abstract class Transformation<T> {
      * This map is a cache that stores transitive predecessors and used in {@code
      * getTransitivePredecessors()}.
      */
+    // 此映射是一个缓存，用于存储传递前置任务并在 getTransitivePredecessors()中使用。
     private final Map<Transformation<T>, List<Transformation<?>>> predecessorsCache =
             new HashMap<>();
 
     /** Slot scope use cases that this transformation needs managed memory for. */
+    // 此转换包含某些Slot托管内存用例。
     private final Set<ManagedMemoryUseCase> managedMemorySlotScopeUseCases = new HashSet<>();
 
     /**
@@ -178,8 +190,10 @@ public abstract class Transformation<T> {
      * job restarts. There is also the automatically generated {@link #id}, which is assigned from a
      * static counter. That field is independent from this.
      */
+    // 此转换的用户指定 ID。这用于在作业重新启动之间分配相同的操作员 ID。还有自动生成的 id，它是从静态计数器分配的。该领域独立于此。
     private String uid;
 
+    // 用户提供的哈希值。这将按原样用于创建 JobVertexID。
     private String userProvidedNodeHash;
 
     protected long bufferTimeout = -1;
@@ -543,6 +557,7 @@ public abstract class Transformation<T> {
      *
      * @return The output type of this {@code Transformation}
      */
+    // 返回输出类型。一旦使用一次，就无法再使用 setOutputType更改输出类型
     public TypeInformation<T> getOutputType() {
         if (outputType instanceof MissingTypeInfo) {
             MissingTypeInfo typeInfo = (MissingTypeInfo) this.outputType;
@@ -571,6 +586,9 @@ public abstract class Transformation<T> {
      * indicates that no buffering should happen, and all records/events should be immediately sent
      * through the network, without additional buffering.
      */
+    // 设置此 Transformation的缓冲区超时。超时定义了数据在通过网络发送之前可能在部分已满的缓冲区中停留多长时间。
+    //较低的超时可降低尾部延迟，但可能会影响吞吐量。对于 Flink 1.5+，对于高并行度的作业，1ms 的超时是可行的。
+    //值 -1 表示应使用默认缓冲区超时。值为零表示不应发生缓冲，所有记录/事件都应立即通过网络发送，而无需额外缓冲。
     public void setBufferTimeout(long bufferTimeout) {
         checkArgument(bufferTimeout >= -1);
         this.bufferTimeout = bufferTimeout;
@@ -592,6 +610,7 @@ public abstract class Transformation<T> {
      *
      * @return The list of transitive predecessors.
      */
+    // 返回：传递前置任务的列表。
     protected abstract List<Transformation<?>> getTransitivePredecessorsInternal();
 
     /**

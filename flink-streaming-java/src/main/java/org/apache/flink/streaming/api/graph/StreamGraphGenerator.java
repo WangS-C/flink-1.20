@@ -526,6 +526,7 @@ public class StreamGraphGenerator {
                         });
 
         // call at least once to trigger exceptions about MissingTypeInfo
+        // 至少调用一次以触发有关 MissingTypeInfo 的异常
         transform.getOutputType();
 
         @SuppressWarnings("unchecked")
