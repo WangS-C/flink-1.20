@@ -516,6 +516,11 @@ public class StreamGraph implements Pipeline {
      * @param virtualId ID of the virtual node.
      * @param outputTag The selected side-output {@code OutputTag}.
      */
+    //添加一个新的虚拟节点，用于将下游顶点仅连接到具有选定的侧输出OutputTag的输出。
+    //参数:
+    //originalId -应连接到的节点的ID。
+    // virtualId -虚拟节点的ID。
+    // outputTag -所选侧-输出OutputTag。
     public void addVirtualSideOutputNode(
             Integer originalId, Integer virtualId, OutputTag outputTag) {
 
@@ -683,16 +688,24 @@ public class StreamGraph implements Pipeline {
         // If no partitioner was specified and the parallelism of upstream and downstream
         // operator matches use forward partitioning, use rebalance otherwise.
         //如果未指定分区器，并且上游和下游算子的并行度匹配使用前向分区，则使用重新平衡，否则使用重新平衡。
+        //如果未指定分区程序，并且上游和下游运算符匹配的并行度使用前向分区，则否则使用rebalance。
         if (partitioner == null
                 && upstreamNode.getParallelism() == downstreamNode.getParallelism()) {
             partitioner =
+                    // 如果开启了自适应批处理调度程序 则使用ForwardForUnspecifiedPartitioner
+                    // 否则使用ForwardPartitioner(仅将元素转发到本地运行的下游操作的分区程序。)
                     dynamic ? new ForwardForUnspecifiedPartitioner<>() : new ForwardPartitioner<>();
         } else if (partitioner == null) {
+            // 使用再平衡分区器
             partitioner = new RebalancePartitioner<Object>();
         }
 
         if (partitioner instanceof ForwardPartitioner) {
             if (upstreamNode.getParallelism() != downstreamNode.getParallelism()) {
+                //ForwardForConsecutiveHashPartitioner 分区
+                //创建运算符链后，此分区程序将转换为以下分区程序:
+                //1.如果此分区程序是链内的，则转换为ForwardPartitioner。
+                //2.如果此分区程序是链间的，则转换为hashPartitioner。
                 if (partitioner instanceof ForwardForConsecutiveHashPartitioner) {
                     partitioner =
                             ((ForwardForConsecutiveHashPartitioner<?>) partitioner)
