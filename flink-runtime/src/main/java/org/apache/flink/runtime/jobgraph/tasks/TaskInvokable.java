@@ -43,6 +43,13 @@ import javax.annotation.Nullable;
  * @see CoordinatedTask
  * @see AbstractInvokable
  */
+//任务的不可调用部分。
+//TaskManager 在执行任务时首先调用该 restore 方法。如果调用成功且任务未取消，则 TM 将继续执行 invoke()。
+// 任务的所有操作都通过这两种方法进行（设置输入、输出、流读取器和写入器，以及任务的核心操作）。
+//之后， cleanUp(Throwable) 被调用（无论在上述调用期间是否失败或取消）。
+//实现必须具有具有类型 org.apache.flink.runtime.execution.Environment为单个参数的构造函数。
+//开发者说明：虽然构造函数不能在编译时强制执行，但我们还没有尝试引入工厂（毕竟它只是一个内部API，而在Java 8中，
+// 人们几乎可以像工厂lambda一样使用 Class::new 。
 @Internal
 public interface TaskInvokable {
 

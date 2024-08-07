@@ -273,12 +273,15 @@ public class StreamGraphGenerator {
         streamGraph =
                 new StreamGraph(
                         configuration, executionConfig, checkpointConfig, savepointRestoreSettings);
+        // 判断是否应以批处理模式执行
         shouldExecuteInBatchMode = shouldExecuteInBatchMode();
+        //配置
         configureStreamGraph(streamGraph);
 
         alreadyTransformed = new IdentityHashMap<>();
 
         for (Transformation<?> transformation : transformations) {
+            // 转换
             transform(transformation);
         }
 
@@ -793,13 +796,16 @@ public class StreamGraphGenerator {
         checkNotNull(translator);
         checkNotNull(transform);
 
+        //首先确保上游节点完成转换
         final List<Collection<Integer>> allInputIds = getParentInputIds(transform.getInputs());
 
         // the recursive call might have already transformed this
+        // 由于是递归调用的，可能已经完成了转换
         if (alreadyTransformed.containsKey(transform)) {
             return alreadyTransformed.get(transform);
         }
 
+        //确定资源共享组，用户如果没有指定，默认是default
         final String slotSharingGroup =
                 determineSlotSharingGroup(
                         transform.getSlotSharingGroup().isPresent()
@@ -812,6 +818,7 @@ public class StreamGraphGenerator {
         final TransformationTranslator.Context context =
                 new ContextImpl(this, streamGraph, slotSharingGroup, configuration);
 
+        // 调用TransformationTranslator
         return shouldExecuteInBatchMode
                 ? translator.translateForBatch(transform, context)
                 : translator.translateForStreaming(transform, context);
@@ -851,6 +858,11 @@ public class StreamGraphGenerator {
      * @param specifiedGroup The group specified by the user.
      * @param inputIds The IDs of the input operations.
      */
+    //根据用户设置的插槽共享组和输入的插槽共享组确定操作的插槽共享组。
+    //如果用户指定了组名，则按原样执行。如果未指定任何内容，并且输入操作都具有相同的组名，则采用此名称。否则，将选择默认组。
+    //参数：
+    //specifiedGroup – 用户指定的组。
+    // inputIds – 输入操作的 ID
     private String determineSlotSharingGroup(String specifiedGroup, Collection<Integer> inputIds) {
         if (specifiedGroup != null) {
             return specifiedGroup;

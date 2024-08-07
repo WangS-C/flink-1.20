@@ -44,6 +44,7 @@ public interface TransformationTranslator<OUT, T extends Transformation<OUT>> {
      *     corresponding to this transformation. These will be the nodes that a potential following
      *     transformation will need to connect to.
      */
+    //将给定 Transformation 的值转换为其运行时实现以执行 BATCH 样式的执行
     Collection<Integer> translateForBatch(final T transformation, final Context context);
 
     /**
@@ -56,6 +57,7 @@ public interface TransformationTranslator<OUT, T extends Transformation<OUT>> {
      *     corresponding to this transformation. These will be the nodes that a potential following
      *     transformation will need to connect to.
      */
+    // 将给定 Transformation 的值转换为其运行时实现以执行 STREAMING 样式的执行
     Collection<Integer> translateForStreaming(final T transformation, final Context context);
 
     /** A context giving the necessary information for the translation of a given transformation. */
