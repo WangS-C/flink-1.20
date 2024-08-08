@@ -618,6 +618,7 @@ public class DataStream<T> {
      */
     public <R> SingleOutputStreamOperator<R> map(
             MapFunction<T, R> mapper, TypeInformation<R> outputType) {
+        // 返回一个新的DataStream，SteramMap 为 StreamOperator 的实现类
         return transform("Map", outputType, new StreamMap<>(clean(mapper)));
     }
 
@@ -1221,6 +1222,7 @@ public class DataStream<T> {
         // read the output type of the input Transform to coax out errors about MissingTypeInfo
         transformation.getOutputType();
 
+        // 新的transformation会连接上当前DataStream中的transformation，从而构建成一棵树
         OneInputTransformation<T, R> resultTransform =
                 new OneInputTransformation<>(
                         this.transformation,
@@ -1234,6 +1236,7 @@ public class DataStream<T> {
         SingleOutputStreamOperator<R> returnStream =
                 new SingleOutputStreamOperator(environment, resultTransform);
 
+        // 所有的transformation都会存到 env 中，调用execute时遍历该list生成StreamGraph
         getExecutionEnvironment().addOperator(resultTransform);
 
         return returnStream;

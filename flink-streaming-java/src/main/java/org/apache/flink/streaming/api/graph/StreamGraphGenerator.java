@@ -281,14 +281,17 @@ public class StreamGraphGenerator {
         alreadyTransformed = new IdentityHashMap<>();
 
         for (Transformation<?> transformation : transformations) {
-            // 转换
+            // 对转换树的每个transformation进行转换
             transform(transformation);
         }
 
         streamGraph.setSlotSharingGroupResource(slotSharingGroupResources);
 
+        //缓解批处理作业中应用细粒度资源管理时，可能会出现资源死锁情况
+        // 目前需要用户手动设置成开启阻塞
         setFineGrainedGlobalStreamExchangeMode(streamGraph);
 
+        // 判断是否应禁用未对齐检查点
         for (StreamNode node : streamGraph.getStreamNodes()) {
             if (node.getInEdges().stream().anyMatch(this::shouldDisableUnalignedCheckpointing)) {
                 for (StreamEdge edge : node.getInEdges()) {
@@ -427,7 +430,10 @@ public class StreamGraphGenerator {
         // batch jobs with PIPELINE edges. Users need to trigger the
         // fine-grained.shuffle-mode.all-blocking to convert all edges to BLOCKING before we fix
         // that issue.
+        //在具有管道边缘的批处理作业中应用细粒度资源管理时，可能会出现资源死锁。
+        // 在我们解决该问题之前，用户需要触发fine-grained.shuffle-mode.all-blocking将所有管道边缘转换为阻塞。
         if (shouldExecuteInBatchMode && graph.hasFineGrainedResource()) {
+            // 在批处理作业中应用细粒度资源管理时是否将所有管道边缘转换为阻塞
             if (configuration.get(ClusterOptions.FINE_GRAINED_SHUFFLE_MODE_ALL_BLOCKING)) {
                 graph.setGlobalStreamExchangeMode(GlobalStreamExchangeMode.ALL_EDGES_BLOCKING);
             } else {
@@ -484,6 +490,7 @@ public class StreamGraphGenerator {
      */
     // 转换一个 Transformation.
     private Collection<Integer> transform(Transformation<?> transform) {
+        // 由于是递归调用的，可能已经完成了转换
         if (alreadyTransformed.containsKey(transform)) {
             return alreadyTransformed.get(transform);
         }
@@ -491,7 +498,6 @@ public class StreamGraphGenerator {
         LOG.debug("Transforming " + transform);
 
         if (transform.getMaxParallelism() <= 0) {
-
             // if the max parallelism hasn't been set, then first use the job wide max parallelism
             // from the ExecutionConfig.
             int globalMaxParallelismFromConfig = executionConfig.getMaxParallelism();
@@ -538,6 +544,7 @@ public class StreamGraphGenerator {
                         translatorMap.get(transform.getClass());
 
         Collection<Integer> transformedIds;
+        // 进行转换
         if (translator != null) {
             transformedIds = translate(translator, transform);
         } else {
@@ -546,6 +553,7 @@ public class StreamGraphGenerator {
 
         // need this check because the iterate transformation adds itself before
         // transforming the feedback edges
+        //需要此检查，因为迭代转换在转换反馈边缘之前添加了自身
         if (!alreadyTransformed.containsKey(transform)) {
             alreadyTransformed.put(transform, transformedIds);
         }
