@@ -354,6 +354,7 @@ public class PipelineOptions {
                     key("pipeline.operator-chaining.chain-operators-with-different-max-parallelism")
                             .booleanType()
                             .defaultValue(true)
+                            //具有不同最大并行度的运算符可以链接在一起。使用AdaptiveScheduler时，默认行为可能会阻止重新缩放
                             .withDescription(
                                     "Operators with different max parallelism can be chained together. Default behavior may prevent rescaling when the AdaptiveScheduler is used.");
 

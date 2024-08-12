@@ -27,14 +27,17 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * intermediate result partition to a job vertex. An edge is parametrized with its {@link
  * DistributionPattern}.
  */
+// 这个类表示作业图中的边(通信通道)。边总是从中间结果分区到作业顶点。用其参数化一条边
 public class JobEdge implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /** The vertex connected to this edge. */
+    // 与这条边相连的顶点
     private final JobVertex target;
 
     /** The distribution pattern that should be used for this job edge. */
+    // 决定了在上游节点（生产者）的子任务和下游节点（消费者）之间的连接模式
     private final DistributionPattern distributionPattern;
 
     /** The channel rescaler that should be used for this job edge on downstream side. */
@@ -73,6 +76,12 @@ public class JobEdge implements java.io.Serializable {
      * @param distributionPattern The pattern that defines how the connection behaves in parallel.
      * @param isBroadcast Whether the source broadcasts data to the target.
      */
+    //构造一个新的作业边缘，将中间结果连接到消费者任务。
+    //参数:
+    //source -位于该边的源的数据集。
+    //target —在此边的目标上的操作。
+    //distributionPattern -定义连接如何并行运行的模式。
+    //isBroadcast —源是否向目标广播数据。
     public JobEdge(
             IntermediateDataSet source,
             JobVertex target,

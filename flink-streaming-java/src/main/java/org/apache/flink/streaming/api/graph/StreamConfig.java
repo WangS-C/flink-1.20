@@ -68,6 +68,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  * Internal configuration for a {@link StreamOperator}. This is created and populated by the {@link
  * StreamingJobGraphGenerator}.
  */
+// StreamOperator的内部配置。这是由StreamingJobGraphGenerator创建和填充的
 @Internal
 public class StreamConfig implements Serializable {
 
@@ -374,6 +375,7 @@ public class StreamConfig implements Serializable {
         return (TypeSerializer<T>) ((NetworkInputConfig) inputs[index]).typeSerializer;
     }
 
+    // 设置流运算符
     @VisibleForTesting
     public void setStreamOperator(StreamOperator<?> operator) {
         setStreamOperatorFactory(SimpleOperatorFactory.of(operator));

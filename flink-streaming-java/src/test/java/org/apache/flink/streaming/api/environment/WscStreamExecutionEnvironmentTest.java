@@ -29,6 +29,7 @@ class WscStreamExecutionEnvironmentTest {
         env.fromData(1, 2, 3, 4).map(line -> line + 1).shuffle().filter(line -> line > 0).print();
 
         System.out.println(env.getStreamGraph().getStreamingPlanAsJSON());
+        System.out.println(env.getStreamGraph().getJobGraph());
     }
 }
 

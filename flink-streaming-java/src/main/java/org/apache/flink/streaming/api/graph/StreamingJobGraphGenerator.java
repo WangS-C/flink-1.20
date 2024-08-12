@@ -249,18 +249,23 @@ public class StreamingJobGraphGenerator {
 
         // Generate deterministic hashes for the nodes in order to identify them across
         // submission iff they didn't change.
+        // 广度优先遍历 StreamGraph 并且为每个SteamNode生成hash，hash值将被用于 JobVertexId 中
+        // 保证如果提交的拓扑没有改变，则每次生成的hash都是一样的
         Map<Integer, byte[]> hashes =
                 defaultStreamGraphHasher.traverseStreamGraphAndGenerateHashes(streamGraph);
 
         // Generate legacy version hashes for backwards compatibility
+        //生成旧版本哈希以实现向后兼容性
         List<Map<Integer, byte[]>> legacyHashes = new ArrayList<>(legacyStreamGraphHashers.size());
         for (StreamGraphHasher hasher : legacyStreamGraphHashers) {
             legacyHashes.add(hasher.traverseStreamGraphAndGenerateHashes(streamGraph));
         }
 
+        //主要的转换逻辑，生成 JobVetex， JobEdge 等
         setChaining(hashes, legacyHashes);
 
         if (jobGraph.isDynamic()) {
+            //如有必要，为动态图设置顶点并行性
             setVertexParallelismsForDynamicGraphIfNecessary();
         }
 
@@ -269,17 +274,26 @@ public class StreamingJobGraphGenerator {
         // vertices and partition-reuse
         final Map<Integer, Map<StreamEdge, NonChainedOutput>> opIntermediateOutputs =
                 new HashMap<>();
+        //设置所有运算符非链式输出配置
         setAllOperatorNonChainedOutputsConfigs(opIntermediateOutputs);
+        //设置所有顶点非链接输出配置
         setAllVertexNonChainedOutputsConfigs(opIntermediateOutputs);
 
+       // 将每个JobVertex的输入边集合也序列化到该JobVertex的StreamConfig中
+       // (出边集合已经在setChaining的时候写入了)
         setPhysicalEdges();
 
+        //标记支持并发执行尝试
         markSupportingConcurrentExecutionAttempts();
 
+        //验证混合shuffle在批处理模式下执行
         validateHybridShuffleExecuteInBatchMode();
 
+        // 根据group name，为每个 JobVertex 指定所属的 SlotSharingGroup
+        // 以及针对 Iteration的头尾设置  CoLocationGroup
         setSlotSharingAndCoLocation();
 
+        //设置托管内存分数
         setManagedMemoryFraction(
                 Collections.unmodifiableMap(jobVertices),
                 Collections.unmodifiableMap(vertexConfigs),
@@ -287,6 +301,7 @@ public class StreamingJobGraphGenerator {
                 id -> streamGraph.getStreamNode(id).getManagedMemoryOperatorScopeUseCaseWeights(),
                 id -> streamGraph.getStreamNode(id).getManagedMemorySlotScopeUseCases());
 
+        // 配置 checkpoint
         configureCheckpointing();
 
         jobGraph.setSavepointRestoreSettings(streamGraph.getSavepointRestoreSettings());
@@ -299,11 +314,13 @@ public class StreamingJobGraphGenerator {
 
         for (Map.Entry<String, DistributedCache.DistributedCacheEntry> entry :
                 distributedCacheEntries.entrySet()) {
+            // 添加用户提供的自定义的文件信息
             jobGraph.addUserArtifact(entry.getKey(), entry.getValue());
         }
 
         // set the ExecutionConfig last when it has been finalized
         try {
+            // 将 StreamGraph 的 ExecutionConfig 序列化到 JobGraph 的配置中
             jobGraph.setExecutionConfig(streamGraph.getExecutionConfig());
         } catch (IOException e) {
             throw new IllegalConfigurationException(
@@ -312,12 +329,15 @@ public class StreamingJobGraphGenerator {
         }
         jobGraph.setJobConfiguration(streamGraph.getJobConfiguration());
 
+        //在顶点名称中添加顶点索引前缀
         addVertexIndexPrefixInVertexName();
 
+        //设置顶点描述
         setVertexDescription();
 
         // Wait for the serialization of operator coordinators and stream config.
         try {
+            //等待运算符coordinator和流配置的序列化。
             FutureUtils.combineAll(
                             vertexConfigs.values().stream()
                                     .map(
@@ -327,12 +347,14 @@ public class StreamingJobGraphGenerator {
                                     .collect(Collectors.toList()))
                     .get();
 
+            //等待序列化期货并更新作业顶点
             waitForSerializationFuturesAndUpdateJobVertices();
         } catch (Exception e) {
             throw new FlinkRuntimeException("Error in serialization.", e);
         }
 
         if (!streamGraph.getJobStatusHooks().isEmpty()) {
+            //设置作业状态钩子
             jobGraph.setJobStatusHooks(streamGraph.getJobStatusHooks());
         }
 
@@ -588,6 +610,7 @@ public class StreamingJobGraphGenerator {
                     && sourceNode.getOperatorFactory() instanceof SourceOperatorFactory
                     && sourceNode.getOutEdges().size() == 1) {
                 // as long as only NAry ops support this chaining, we need to skip the other parts
+                //只要只有NAry ops支持此链接，我们就需要跳过其他部分
                 final StreamEdge sourceOutEdge = sourceNode.getOutEdges().get(0);
                 final StreamNode target = streamGraph.getStreamNode(sourceOutEdge.getTargetId());
                 final ChainingStrategy targetChainingStrategy =
@@ -595,16 +618,21 @@ public class StreamingJobGraphGenerator {
                                 .getChainingStrategy();
 
                 if (targetChainingStrategy == ChainingStrategy.HEAD_WITH_SOURCES
+                        //判断是可链化的输入
                         && isChainableInput(sourceOutEdge, streamGraph)) {
                     final OperatorID opId = new OperatorID(hashes.get(sourceNodeId));
                     final StreamConfig.SourceInputConfig inputConfig =
                             new StreamConfig.SourceInputConfig(sourceOutEdge);
                     final StreamConfig operatorConfig = new StreamConfig(new Configuration());
+                    //设置操作员配置
                     setOperatorConfig(sourceNodeId, operatorConfig, Collections.emptyMap());
+                    //设置运算符链式输出配置
                     setOperatorChainedOutputsConfig(operatorConfig, Collections.emptyList());
                     // we cache the non-chainable outputs here, and set the non-chained config later
+                    //我们在此处缓存不可链接的输出，并稍后设置非链接的配置
                     opNonChainableOutputsCache.put(sourceNodeId, Collections.emptyList());
 
+                    //来源总是第一
                     operatorConfig.setChainIndex(0); // sources are always first
                     operatorConfig.setOperatorID(opId);
                     operatorConfig.setOperatorName(sourceNode.getOperatorName());
@@ -649,8 +677,10 @@ public class StreamingJobGraphGenerator {
     private void setChaining(Map<Integer, byte[]> hashes, List<Map<Integer, byte[]>> legacyHashes) {
         // we separate out the sources that run as inputs to another operator (chained inputs)
         // from the sources that needs to run as the main (head) operator.
+        //我们将作为另一个运算符 (链接输入) 的输入运行的源与需要作为主 (头) 运算符运行的源分开。
         final Map<Integer, OperatorChainInfo> chainEntryPoints =
                 buildChainedInputsAndGetHeadInputs(hashes, legacyHashes);
+        //初始入口点
         final Collection<OperatorChainInfo> initialEntryPoints =
                 chainEntryPoints.entrySet().stream()
                         .sorted(Comparator.comparing(Map.Entry::getKey))
@@ -658,9 +688,11 @@ public class StreamingJobGraphGenerator {
                         .collect(Collectors.toList());
 
         // iterate over a copy of the values, because this map gets concurrently modified
+        //遍历值的副本，因为此映射同时被修改
         for (OperatorChainInfo info : initialEntryPoints) {
             createChain(
                     info.getStartNodeId(),
+                    //运算符从位置1开始，因为0用于链接的源输入
                     1, // operators start at position 1 because 0 is for chained source inputs
                     info,
                     chainEntryPoints);
@@ -1542,17 +1574,21 @@ public class StreamingJobGraphGenerator {
 
     public static boolean isChainable(StreamEdge edge, StreamGraph streamGraph) {
         StreamNode downStreamVertex = streamGraph.getTargetVertex(edge);
-
+        //下游节点只有一个输入
         return downStreamVertex.getInEdges().size() == 1 && isChainableInput(edge, streamGraph);
     }
 
+    //是可链化的输入
     private static boolean isChainableInput(StreamEdge edge, StreamGraph streamGraph) {
         StreamNode upStreamVertex = streamGraph.getSourceVertex(edge);
         StreamNode downStreamVertex = streamGraph.getTargetVertex(edge);
 
         if (!(streamGraph.isChainingEnabled()
+                //是同一个插槽共享组
                 && upStreamVertex.isSameSlotSharingGroup(downStreamVertex)
+                //运算符是否可链化
                 && areOperatorsChainable(upStreamVertex, downStreamVertex, streamGraph)
+                //分区程序和exchange模式是否可链化
                 && arePartitionerAndExchangeModeChainable(
                         edge.getPartitioner(), edge.getExchangeMode(), streamGraph.isDynamic()))) {
 
@@ -1639,8 +1675,10 @@ public class StreamingJobGraphGenerator {
         }
 
         // Only vertices with the same parallelism can be chained.
+        //只有具有相同并行性的顶点才能被链接。
         isChainable &= upStreamVertex.getParallelism() == downStreamVertex.getParallelism();
 
+        //是否启用了具有不同最大并行度的运算符的链接
         if (!streamGraph.isChainingOfOperatorsWithDifferentMaxParallelismEnabled()) {
             isChainable &=
                     upStreamVertex.getMaxParallelism() == downStreamVertex.getMaxParallelism();

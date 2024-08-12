@@ -72,12 +72,15 @@ public class JobVertex implements java.io.Serializable {
      *
      * <p>This is the same order that operators are stored in the {@code StreamTask}.
      */
+    // 此顶点中包含的所有运算符的id  按深度优先后序存储
     private final List<OperatorIDPair> operatorIDs;
 
     /** Produced data sets, one per writer. */
+    // 生成的数据集
     private final Map<IntermediateDataSetID, IntermediateDataSet> results = new LinkedHashMap<>();
 
     /** List of edges with incoming data. One per Reader. */
+    //带有传入数据的边列表
     private final List<JobEdge> inputs = new ArrayList<>();
 
     /** The list of factories for operator coordinators. */
@@ -147,6 +150,7 @@ public class JobVertex implements java.io.Serializable {
     /**
      * The intermediateDataSetId of the cached intermediate dataset that the job vertex consumes.
      */
+    // 中间数据集ID
     private final List<IntermediateDataSetID> intermediateDataSetIdsToConsume = new ArrayList<>();
 
     /**

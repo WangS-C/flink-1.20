@@ -32,6 +32,9 @@ public enum ResultPartitionType {
      * {@link #PIPELINED} partitions), but only released through the scheduler, when it determines
      * that the partition is no longer needed.
      */
+    //阻塞分区表示阻塞数据交换，其中数据流首先被完全生成，然后被消费。这个选项只适用于有界流，并且可以在有界流运行时和恢复中使用。
+    //阻塞分区可以被多次并发地使用。
+    //分区在被使用后不会自动释放(例如 管线式 分区)，但只有当调度程序确定不再需要该分区时才通过调度程序释放。
     BLOCKING(true, false, false, ConsumingConstraint.BLOCKING, ReleaseBy.SCHEDULER),
 
     /**
@@ -45,6 +48,9 @@ public enum ResultPartitionType {
      * scenarios, like when the TaskManager exits or when the TaskManager loses connection to
      * JobManager / ResourceManager for too long.
      */
+    //BLOCKING_PERSISTENT分区类似于 阻塞 分区，但具有用户指定的生命周期。
+    //BLOCKING_PERSISTENT分区在对JobManager或ResourceManager的显式API调用时被删除，而不是由调度程序删除。
+    //否则，只有当TaskManager退出或TaskManager与JobManager / ResourceManager长时间失去连接时，才会被安全网丢弃。
     BLOCKING_PERSISTENT(true, false, true, ConsumingConstraint.BLOCKING, ReleaseBy.SCHEDULER),
 
     /**
@@ -70,6 +76,10 @@ public enum ResultPartitionType {
      * <p>For batch jobs, it will be best to keep this unlimited ({@link #PIPELINED}) since there
      * are no checkpoint barriers.
      */
+    //带有有界(本地) 缓冲池的流水线分区。
+    //对于流作业，对缓冲池大小的固定限制应该有助于避免缓冲过多的数据和检查点屏障延迟。然而，与限制总体网络缓冲池大小相反，
+    // 这仍然允许通过选择适当的大网络缓冲池大小来灵活地处理分区的总数。
+    //对于批处理作业，最好将其设置为无限制(管线式)，因为这里没有关卡障碍。
     PIPELINED_BOUNDED(
             false, true, false, ConsumingConstraint.MUST_BE_PIPELINED, ReleaseBy.UPSTREAM),
 
@@ -82,6 +92,8 @@ public enum ResultPartitionType {
      * in that {@link #PIPELINED_APPROXIMATE} partition can be reconnected after down stream task
      * fails.
      */
+    //带有有界(本地) 缓冲池的流水线分区，支持在近似本地恢复中重新连接后继续使用数据的下游任务。
+    //流水线结果一次只能由单个消费者消费一次。 PIPELINED_APPROXIMATE 不同于 管线式 和 PIPELINED_BOUNDED 在那 PIPELINED_APPROXIMATE 下行任务失败后可以重新连接分区
     PIPELINED_APPROXIMATE(
             false, true, false, ConsumingConstraint.CAN_BE_PIPELINED, ReleaseBy.UPSTREAM),
 
@@ -94,12 +106,16 @@ public enum ResultPartitionType {
      * <p>HYBRID_FULL partitions is re-consumable, so double calculation can be avoided during
      * failover.
      */
+    //具有有界 (本地) 缓冲池的混合分区，以支持下游任务同时读取和写入shuffle数据。
+    //无论是否完全生产，混合分区都可以随时使用。
+    //HYBRID_FULL分区是可重新消耗的，因此在故障转移期间可以避免双重计算。
     HYBRID_FULL(true, false, false, ConsumingConstraint.CAN_BE_PIPELINED, ReleaseBy.SCHEDULER),
 
     /**
      * HYBRID_SELECTIVE partitions are similar to {@link #HYBRID_FULL} partitions, but it is not
      * re-consumable.
      */
+    // HYBRID_SELECTIVE分区与hybrid_full分区类似，但不可重复使用。
     HYBRID_SELECTIVE(
             false, false, false, ConsumingConstraint.CAN_BE_PIPELINED, ReleaseBy.SCHEDULER);
 

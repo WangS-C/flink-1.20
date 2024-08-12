@@ -32,20 +32,27 @@ import static org.apache.flink.util.Preconditions.checkState;
  *
  * <p>Intermediate data sets may be read by other operators, materialized, or discarded.
  */
+//中间数据集是由操作符(源或任何中间操作) 产生的数据集。
+//中间数据集可以被其他操作符读取、具体化或丢弃。
 public class IntermediateDataSet implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    // 标识符
     private final IntermediateDataSetID id; // the identifier
 
+    //产生这个数据集的操作
     private final JobVertex producer; // the operation that produced this data set
 
     // All consumers must have the same partitioner and parallelism
+    // 所有消费者必须具有相同的分区器和并行性
     private final List<JobEdge> consumers = new ArrayList<>();
 
     // The type of partition to use at runtime
+    //运行时要使用的分区类型
     private final ResultPartitionType resultType;
 
+    // 分布模式
     private DistributionPattern distributionPattern;
 
     private boolean isBroadcast;
