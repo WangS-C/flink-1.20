@@ -17,6 +17,10 @@
 
 package org.apache.flink.streaming.api.environment;
 
+import org.apache.flink.runtime.jobgraph.JobGraph;
+
+import org.apache.flink.streaming.api.graph.StreamGraph;
+
 import org.junit.jupiter.api.Test;
 
 
@@ -28,8 +32,10 @@ class WscStreamExecutionEnvironmentTest {
 
         env.fromData(1, 2, 3, 4).map(line -> line + 1).shuffle().filter(line -> line > 0).print();
 
-        System.out.println(env.getStreamGraph().getStreamingPlanAsJSON());
-        System.out.println(env.getStreamGraph().getJobGraph());
+        StreamGraph streamGraph = env.getStreamGraph(false);
+        System.out.println(streamGraph.getStreamingPlanAsJSON());
+        JobGraph jobGraph = streamGraph.getJobGraph();
+        System.out.println(jobGraph);
     }
 }
 
