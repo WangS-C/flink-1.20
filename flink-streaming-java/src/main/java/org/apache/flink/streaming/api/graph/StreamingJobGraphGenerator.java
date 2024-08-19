@@ -253,6 +253,7 @@ public class StreamingJobGraphGenerator {
         jobGraph.setJobType(streamGraph.getJobType());
         jobGraph.setDynamic(streamGraph.isDynamic());
 
+        //是否启用了近似本地恢复。
         jobGraph.enableApproximateLocalRecovery(
                 streamGraph.getCheckpointConfig().isApproximateLocalRecoveryEnabled());
 
@@ -281,6 +282,8 @@ public class StreamingJobGraphGenerator {
         // Note that we set all the non-chainable outputs configuration here because the
         // "setVertexParallelismsForDynamicGraphIfNecessary" may affect the parallelism of job
         // vertices and partition-reuse
+        //请注意，我们在这里设置了所有不可链接的输出配置，
+        // 因为 “setVertexParallelismsForDynamicGraphIfNecessary” 可能会影响作业顶点和分区重用的并行性
         final Map<Integer, Map<StreamEdge, NonChainedOutput>> opIntermediateOutputs =
                 new HashMap<>();
         //设置所有运算符非链式输出配置
@@ -745,6 +748,7 @@ public class StreamingJobGraphGenerator {
             //==> 递归调用
             for (StreamEdge chainable : chainableOutputs) {
                 // Mark downstream nodes in the same chain as outputBlocking
+                //将同一链中的下游节点标记为outputBlocking
                 if (isOutputOnlyAfterEndOfStream) {
                     outputBlockingNodesID.add(chainable.getTargetId());
                 }
@@ -755,6 +759,7 @@ public class StreamingJobGraphGenerator {
                                 chainInfo,
                                 chainEntryPoints));
                 // Mark upstream nodes in the same chain as outputBlocking
+                //将同一链中的上游节点标记为outputBlocking
                 if (outputBlockingNodesID.contains(chainable.getTargetId())) {
                     outputBlockingNodesID.add(currentNodeId);
                 }
@@ -806,13 +811,17 @@ public class StreamingJobGraphGenerator {
                             ? createJobVertex(startNodeId, chainInfo)
                             : new StreamConfig(new Configuration());
 
+            // 尝试将分割器转换为动态图
             tryConvertPartitionerForDynamicGraph(chainableOutputs, nonChainableOutputs);
 
+            //设置Operator配置
             setOperatorConfig(currentNodeId, config, chainInfo.getChainedSources());
 
+            //设置Operator链式输出配置
             setOperatorChainedOutputsConfig(config, chainableOutputs);
 
             // we cache the non-chainable outputs here, and set the non-chained config later
+            //我们在此处缓存不可链接的输出，并稍后设置非链接的配置
             opNonChainableOutputsCache.put(currentNodeId, nonChainableOutputs);
 
             if (currentNodeId.equals(startNodeId)) {
@@ -1126,6 +1135,7 @@ public class StreamingJobGraphGenerator {
         config.setVertexID(vertexId);
 
         // build the inputs as a combination of source and network inputs
+        //将输入构建为源和网络输入的组合
         final List<StreamEdge> inEdges = vertex.getInEdges();
         final TypeSerializer<?>[] inputSerializers = vertex.getTypeSerializersIn();
 
@@ -1143,6 +1153,7 @@ public class StreamingJobGraphGenerator {
 
             if (chainedSource != null) {
                 // chained source is the input
+                //链接的源是输入
                 if (inputConfigs[inputIndex] != null) {
                     throw new IllegalStateException(
                             "Trying to union a chained source with another input.");
@@ -1171,6 +1182,7 @@ public class StreamingJobGraphGenerator {
         }
 
         // set the input config of the vertex if it consumes from cached intermediate dataset.
+        //设置顶点的输入配置，如果它从缓存的中间数据集消耗。
         if (vertex.getConsumeClusterDatasetId() != null) {
             config.setNumberOfNetworkInputs(1);
             inputConfigs[0] = new StreamConfig.NetworkInputConfig(inputSerializers[0], 0);
@@ -1222,6 +1234,7 @@ public class StreamingJobGraphGenerator {
     private void setOperatorChainedOutputsConfig(
             StreamConfig config, List<StreamEdge> chainableOutputs) {
         // iterate edges, find sideOutput edges create and save serializers for each outputTag type
+        //为每个outputTag类型创建并保存序列化器
         for (StreamEdge edge : chainableOutputs) {
             if (edge.getOutputTag() != null) {
                 config.setTypeSerializerSideOut(
@@ -1475,11 +1488,13 @@ public class StreamingJobGraphGenerator {
 
         Integer downStreamVertexID = edge.getTargetId();
 
+        //上下游节点
         JobVertex headVertex = jobVertices.get(headOfChain);
         JobVertex downStreamVertex = jobVertices.get(downStreamVertexID);
 
         StreamConfig downStreamConfig = new StreamConfig(downStreamVertex.getConfiguration());
 
+        //下游节点增加一个输入
         downStreamConfig.setNumberOfNetworkInputs(downStreamConfig.getNumberOfNetworkInputs() + 1);
 
         StreamPartitioner<?> partitioner = output.getPartitioner();
@@ -1488,6 +1503,8 @@ public class StreamingJobGraphGenerator {
         checkBufferTimeout(resultPartitionType, edge);
 
         JobEdge jobEdge;
+        //创建 JobEdge 和 IntermediateDataSet
+        //根据StreamPartitioner类型决定在上游节点（生产者）的子任务和下游节点（消费者）之间的连接模式
         if (partitioner.isPointwise()) {
             jobEdge =
                     downStreamVertex.connectNewDataSetAsInput(
@@ -1507,6 +1524,7 @@ public class StreamingJobGraphGenerator {
         }
 
         // set strategy name so that web interface can show it.
+        // 设置策略名称，以便web界面可以显示它。
         jobEdge.setShipStrategyName(partitioner.toString());
         jobEdge.setForward(partitioner instanceof ForwardPartitioner);
         jobEdge.setDownstreamSubtaskStateMapper(partitioner.getDownstreamSubtaskStateMapper());

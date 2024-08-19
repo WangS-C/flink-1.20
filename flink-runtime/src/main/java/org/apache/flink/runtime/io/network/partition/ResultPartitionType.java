@@ -122,12 +122,15 @@ public enum ResultPartitionType {
     /**
      * Can this result partition be consumed by multiple downstream consumers for multiple times.
      */
+    //此结果分区是否可以被多个下游消费者多次使用
     private final boolean isReconsumable;
 
     /** Does this partition use a limited number of (network) buffers? */
+    //此分区是否使用有限数量的 (网络) 缓冲区
     private final boolean isBounded;
 
     /** This partition will not be released after consuming if 'isPersistent' is true. */
+    //如果为true，则在使用后不会释放此分区。
     private final boolean isPersistent;
 
     private final ConsumingConstraint consumingConstraint;
@@ -137,10 +140,13 @@ public enum ResultPartitionType {
     /** ConsumingConstraint indicates when can the downstream consume the upstream. */
     private enum ConsumingConstraint {
         /** Upstream must be finished before downstream consume. */
+        //上游必须在下游消费之前完成。
         BLOCKING,
         /** Downstream can consume while upstream is running. */
+        //下游可以在上游运行时消耗
         CAN_BE_PIPELINED,
         /** Downstream must consume while upstream is running. */
+        //当上游运行时，下游必须消耗
         MUST_BE_PIPELINED
     }
 
@@ -151,6 +157,10 @@ public enum ResultPartitionType {
      * logic. We can discuss the issue of unifying the partition release logic in FLINK-27948. Once
      * the ticket is resolved, we can remove the enumeration here.
      */
+    //Releasebby指示谁负责释放结果分区。
+    //注意: 这可能只是处理分区释放逻辑的短期解决方案。
+    //我们可以讨论在FLINK-27948中统一分区释放逻辑的问题。
+    //一旦解决了票证，我们就可以在这里删除枚举。
     private enum ReleaseBy {
         UPSTREAM,
         SCHEDULER
