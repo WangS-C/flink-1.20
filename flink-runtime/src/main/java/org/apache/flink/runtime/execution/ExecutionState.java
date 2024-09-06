@@ -45,6 +45,27 @@ package org.apache.flink.runtime.execution;
  * <p>The states {@code FINISHED}, {@code CANCELED}, and {@code FAILED} are considered terminal
  * states.
  */
+
+/**
+ * 任务在执行期间可以处于的所有状态的枚举。任务通常从已创建的状态开始，并根据此图表切换状态:
+ * <pre>{@code
+ *  已创建  -> 作业已经被调度系统接收 -> 正在部署 -> 正在初始化 -> 正在运行 -> 已完成
+ *     |            |            |          |              |
+ *     |            |            |    +-----+--------------+
+ *     |            |            V    V
+ *     |            |         取消 -----+----> 已取消
+ *     |            |                         |
+ *     |            +-------------------------+
+ *     |
+ *     |                                   ... -> 失败
+ *     V
+ * RECONCILING  -> 正在初始化 | 正在运行 | 已完成 | 已取消 | 失败
+ *
+ * }</pre>
+ * 如果作业管理器故障转移，则可以从已创建状态进入协调状态，并且协调状态可以切换到任何现有任务状态。
+ * 可以从任何其他状态进入失败状态。
+ * “ 已完成 ” 、 “ 已取消” 和 “ 失败 ” 状态被视为终端状态。
+ */
 public enum ExecutionState {
     CREATED,
 

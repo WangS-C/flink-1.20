@@ -111,6 +111,13 @@ import static org.apache.flink.util.Preconditions.checkState;
  * a completed call is as expected, and trigger correcting actions if it is not. Many actions are
  * also idempotent (like canceling).
  */
+//顶点的单次执行。虽然可以多次执行ExecutionVertex (用于恢复，重新计算，重新配置)，但此类跟踪该顶点和资源的单次执行状态。
+//锁定自由状态转换
+//在代码的几个方面，我们需要处理可能的并发状态更改和操作。例如，当调用部署任务 (将其发送到TaskManager) 时，任务被取消。
+//我们可以锁定代码的整个部分 (决定部署，部署，将状态设置为运行)，这样可以保证任何 “取消命令” 只会在部署完成后拾取，
+// 并且 “取消命令” 调用将永远不会超过部署调用。
+//这阻塞了线程的大量时间，因为远程调用可能需要很长时间。根据它们的锁定行为，它甚至可能导致分布式死锁 (除非小心避免)。
+//因此，我们使用原子状态更新和偶尔的双重检查来确保完成调用后的状态符合预期，如果不是，则触发纠正操作。许多动作也是幂等的 (如取消)。
 public class Execution
         implements AccessExecution, Archiveable<ArchivedExecution>, LogicalSlot.Payload {
 

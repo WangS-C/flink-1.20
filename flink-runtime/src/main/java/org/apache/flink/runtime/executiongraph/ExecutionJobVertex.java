@@ -94,8 +94,12 @@ public class ExecutionJobVertex
 
     private final JobVertex jobVertex;
 
+    //ExecutionVertex 对应一个并行的子任务
+    // 算子的并行度是多少，那么就会有多少个
     @Nullable private ExecutionVertex[] taskVertices;
 
+    // 对外输出
+    // 对应JobGraph 的IntermediateDataSet
     @Nullable private IntermediateResult[] producedDataSets;
 
     @Nullable private List<IntermediateResult> inputs;

@@ -305,7 +305,7 @@ public class StreamingJobGraphGenerator {
         // 以及针对 Iteration的头尾设置  CoLocationGroup
         setSlotSharingAndCoLocation();
 
-        //设置托管内存分数
+        //设置托管内存
         setManagedMemoryFraction(
                 Collections.unmodifiableMap(jobVertices),
                 Collections.unmodifiableMap(vertexConfigs),

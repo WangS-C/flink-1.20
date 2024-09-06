@@ -72,6 +72,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  */
 public class DefaultExecutionGraphBuilder {
 
+    // 构建入口
     public static DefaultExecutionGraph buildGraph(
             JobGraph jobGraph,
             Configuration jobManagerConfig,
@@ -106,6 +107,7 @@ public class DefaultExecutionGraphBuilder {
         final JobID jobId = jobGraph.getJobID();
         final JobType jobType = jobGraph.getJobType();
 
+        //设置作业信息
         final JobInformation jobInformation =
                 new JobInformation(
                         jobId,
@@ -142,6 +144,7 @@ public class DefaultExecutionGraphBuilder {
         }
 
         // create a new execution graph, if none exists so far
+        //创建新的执行图 (如果到目前为止不存在)
         final DefaultExecutionGraph executionGraph =
                 new DefaultExecutionGraph(
                         jobGraph.getJobType(),
@@ -195,6 +198,7 @@ public class DefaultExecutionGraphBuilder {
             }
 
             try {
+                //JobVertex 在 Master 上进行初始化
                 vertex.initializeOnMaster(
                         new SimpleInitializeOnMasterContext(
                                 classLoader,
@@ -214,6 +218,8 @@ public class DefaultExecutionGraphBuilder {
                 (System.nanoTime() - initMasterStart) / 1_000_000);
 
         // topologically sort the job vertices and attach the graph to the existing one
+        //对作业顶点进行拓扑排序，并将图附加到现有的
+        //对所有的 Jobvertext 进行拓扑排序，并生成 ExecutionGraph 内部的节点和连接
         List<JobVertex> sortedTopology = jobGraph.getVerticesSortedTopologicallyFromSources();
         if (log.isDebugEnabled()) {
             log.debug(
@@ -234,6 +240,7 @@ public class DefaultExecutionGraphBuilder {
             // dynamic graph does not support checkpointing so we skip it
             log.warn("Skip setting up checkpointing for a job with dynamic graph.");
         } else if (isCheckpointingEnabled(jobGraph)) {
+            //配置状态检查点
             JobCheckpointingSettings snapshotSettings = jobGraph.getCheckpointingSettings();
 
             // load the state backend from the application settings
@@ -268,6 +275,7 @@ public class DefaultExecutionGraphBuilder {
             }
 
             // load the checkpoint storage from the application settings
+            //从应用程序设置加载检查点存储
             final CheckpointStorage applicationConfiguredStorage;
             final SerializedValue<CheckpointStorage> serializedAppConfiguredStorage =
                     snapshotSettings.getDefaultCheckpointStorage();
@@ -302,7 +310,7 @@ public class DefaultExecutionGraphBuilder {
             }
 
             // instantiate the user-defined checkpoint hooks
-
+            //实例化用户定义的检查点钩子
             final SerializedValue<MasterTriggerRestoreHook.Factory[]> serializedHooks =
                     snapshotSettings.getMasterHooks();
             final List<MasterTriggerRestoreHook<?>> hooks;

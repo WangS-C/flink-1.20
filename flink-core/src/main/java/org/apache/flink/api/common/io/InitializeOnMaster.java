@@ -40,5 +40,10 @@ public interface InitializeOnMaster {
      * @throws IOException The initialization may throw exceptions, which may cause the job to
      *     abort.
      */
+    //在分布式程序执行开始之前，在master (JobManager) 上调用该方法。
+    //参数:
+    //并行性-将运行格式或函数的并行度。
+    //抛出:
+    //IOException-初始化可能会引发异常，这可能会导致作业中止
     void initializeGlobal(int parallelism) throws IOException;
 }

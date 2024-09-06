@@ -61,6 +61,7 @@ public class InputOutputFormatVertex extends JobVertex {
         final ClassLoader original = Thread.currentThread().getContextClassLoader();
         try {
             // set user classloader before calling user code
+            //在调用用户代码之前设置用户classloader
             Thread.currentThread().setContextClassLoader(loader);
 
             // configure the input format and setup input splits
@@ -90,6 +91,7 @@ public class InputOutputFormatVertex extends JobVertex {
             }
 
             // configure output formats and invoke initializeGlobal()
+            //配置输出格式并调用initializeGlobal()
             Map<OperatorID, UserCodeWrapper<? extends OutputFormat<?>>> outputFormats =
                     formatContainer.getOutputFormats();
             for (Map.Entry<OperatorID, UserCodeWrapper<? extends OutputFormat<?>>> entry :

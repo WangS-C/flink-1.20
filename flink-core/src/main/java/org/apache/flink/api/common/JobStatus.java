@@ -27,39 +27,50 @@ public enum JobStatus {
      * The job has been received by the Dispatcher, and is waiting for the job manager to receive
      * leadership and to be created.
      */
+    //该作业已被调度程序接收，正在等待作业管理器接收领导并进行创建
     INITIALIZING(TerminalState.NON_TERMINAL),
 
     /** Job is newly created, no task has started to run. */
+    //作业是新创建的，尚无任务开始运行。
     CREATED(TerminalState.NON_TERMINAL),
 
     /** Some tasks are scheduled or running, some may be pending, some may be finished. */
+    //有些任务已安排好或正在运行，有些可能处于待处理状态，有些可能已经完成
     RUNNING(TerminalState.NON_TERMINAL),
 
     /** The job has failed and is currently waiting for the cleanup to complete. */
+    //作业已失败，目前正在等待清理完成。
     FAILING(TerminalState.NON_TERMINAL),
 
     /** The job has failed with a non-recoverable task failure. */
+    //作业已失败，且发生不可恢复的任务失败。
     FAILED(TerminalState.GLOBALLY),
 
     /** Job is being cancelled. */
+    //工作正在被取消。
     CANCELLING(TerminalState.NON_TERMINAL),
 
     /** Job has been cancelled. */
+    //工作已被取消。
     CANCELED(TerminalState.GLOBALLY),
 
     /** All of the job's tasks have successfully finished. */
+    //这项工作的所有任务均已成功完成。
     FINISHED(TerminalState.GLOBALLY),
 
     /** The job is currently undergoing a reset and total restart. */
+    //这项工作目前正在进行重置和全面重启。
     RESTARTING(TerminalState.NON_TERMINAL),
 
     /**
      * The job has been suspended which means that it has been stopped but not been removed from a
      * potential HA job store.
      */
+    //该作业已被暂停，这意味着它已被停止但尚未从潜在的 HA 作业存储中删除。
     SUSPENDED(TerminalState.LOCALLY),
 
     /** The job is currently reconciling and waits for task execution report to recover state. */
+    //该作业目前正在协调并等待任务执行报告以恢复状态
     RECONCILING(TerminalState.NON_TERMINAL);
 
     // --------------------------------------------------------------------------------------------

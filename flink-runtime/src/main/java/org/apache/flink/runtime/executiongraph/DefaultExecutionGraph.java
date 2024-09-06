@@ -123,6 +123,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.util.Preconditions.checkState;
 
 /** Default implementation of the {@link ExecutionGraph}. */
+//ExecutionGraph的默认实现。
 public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionGraphAccessor {
 
     /** The log object used for debugging. */
@@ -135,42 +136,53 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
      * multiple execution graphs created from one job graph, in cases like job re-submission, job
      * master failover and job rescaling.
      */
+    //执行图的唯一 ID。它与 JobID 不同，因为在作业重新提交、作业主控故障转移和作业重新缩放等情况下，可以从一个作业图创建多个执行图。
     private final ExecutionGraphID executionGraphId;
 
     /** Job specific information like the job id, job name, job configuration, etc. */
+    //作业特定信息，如作业 ID、作业名称、作业配置等
     private final JobInformation jobInformation;
 
     /** The executor which is used to execute futures. */
     private final ScheduledExecutorService futureExecutor;
 
     /** The executor which is used to execute blocking io operations. */
+    //用于执行阻塞io操作的执行器
     private final Executor ioExecutor;
 
     /** {@link CoordinatorStore} shared across all operator coordinators within this execution. */
+    //CoordinatorStore在本次执行中由所有操作员协调器共享。
     private final CoordinatorStore coordinatorStore = new CoordinatorStoreImpl();
 
     /** Executor that runs tasks in the job manager's main thread. */
+    //在作业管理器的主线程中运行任务的执行器
     @Nonnull private ComponentMainThreadExecutor jobMasterMainThreadExecutor;
 
     /** {@code true} if all source tasks are stoppable. */
+    //如果所有源任务均可停止， true
     private boolean isStoppable = true;
 
     /** All job vertices that are part of this graph. */
+    //此图中的所有作业顶点。
     private final Map<JobVertexID, ExecutionJobVertex> tasks;
 
     /** All vertices, in the order in which they were created. * */
+    //所有顶点，按照其创建的顺序。*
     private final List<ExecutionJobVertex> verticesInCreationOrder;
 
     /** All intermediate results that are part of this graph. */
+    //该图中的所有中间结果。
     private final Map<IntermediateDataSetID, IntermediateResult> intermediateResults;
 
     /** The currently executed tasks, for callbacks. */
+    //当前执行的任务，用于回调。
     private final Map<ExecutionAttemptID, Execution> currentExecutions;
 
     /**
      * Listeners that receive messages when the entire job switches it status (such as from RUNNING
      * to FINISHED).
      */
+    //当整个作业切换其状态（例如从 RUNNING 到 FINISHED）时接收消息的监听器
     private final List<JobStatusListener> jobStatusListeners;
 
     /**
@@ -179,21 +191,28 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
      * of the enum value, i.e. the timestamp when the graph went into state "RUNNING" is at {@code
      * stateTimestamps[RUNNING.ordinal()]}.
      */
+    //执行图转换到某个状态时的时间戳（以毫秒为单位，由System. currentTimeMillis()返回）。
+    //此数组的索引是枚举值的序数，即，图进入状态“RUNNING”时的时间戳位于stateTimestamps[RUNNING. ordinal()] 。
     private final long[] stateTimestamps;
 
     /** The timeout for all messages that require a response/acknowledgement. */
+    //所有需要响应/ 确认的消息的超时
     private final Time rpcTimeout;
 
     /** The classloader for the user code. Needed for calls into user code classes. */
+    //用户代码的类加载器。调用用户代码类时需要它。
     private final ClassLoader userClassLoader;
 
     /** Registered KvState instances reported by the TaskManagers. */
+    //由 TaskManagers 报告的注册 KvState 实例。
     private final KvStateLocationRegistry kvStateLocationRegistry;
 
     /** Blob writer used to offload RPC messages. */
+    //用于卸载 RPC 消息的 Blob 写入器
     private final BlobWriter blobWriter;
 
     /** Number of total job vertices. */
+    //作业顶点的总数。
     private int numJobVerticesTotal;
 
     private final PartitionGroupReleaseStrategy.Factory partitionGroupReleaseStrategyFactory;
@@ -205,32 +224,39 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
     @Nullable private InternalFailuresListener internalTaskFailuresListener;
 
     /** Counts all restarts. Used by other Gauges/Meters and does not register to metric group. */
+    //计算所有重启次数。由其他仪表/ 仪表使用，不注册到度量组。
     private final Counter numberOfRestartsCounter = new SimpleCounter();
 
     // ------ Configuration of the Execution -------
 
     /** The maximum number of historical execution attempts kept in history. */
+    //历史记录中保留的最大历史执行尝试次数。
     private final int executionHistorySizeLimit;
 
     // ------ Execution status and progress. These values are volatile, and accessed under the lock
     // -------
 
     /** Number of finished job vertices. */
+    //已完成作业顶点的数量。
     private int numFinishedJobVertices;
 
     /** Current status of the job execution. */
+    //作业执行的当前状态。
     private volatile JobStatus state = JobStatus.CREATED;
 
     /** The job type of the job execution. */
+    //作业执行的作业类型。
     private final JobType jobType;
 
     /** A future that completes once the job has reached a terminal state. */
+    //一旦作业达到最终状态，Future便会完成。
     private final CompletableFuture<JobStatus> terminationFuture = new CompletableFuture<>();
 
     /**
      * The exception that caused the job to fail. This is set to the first root exception that was
      * not recoverable and triggered job failure.
      */
+    //导致作业失败的异常。此值设置为第一个不可恢复且触发作业失败的根异常。
     private Throwable failureCause;
 
     /**
@@ -238,6 +264,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
      * 'failureCause', to let 'failureCause' be a strong reference to the exception, while this info
      * holds no strong reference to any user-defined classes.
      */
+    //作业的扩展失败原因信息。此信息除了“failureCause”之外还存在，以使“failureCause”成为对异常的强引用，而此信息不包含对任何用户定义类的强引用。
     private ErrorInfo failureInfo;
 
     private final JobMasterPartitionTracker partitionTracker;
@@ -257,6 +284,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
     @Nullable private CheckpointCoordinatorConfiguration checkpointCoordinatorConfiguration;
 
     /** The coordinator for checkpoints, if snapshot checkpoints are enabled. */
+    //如果启用了快照检查点，则检查点的协调器。
     @Nullable private CheckpointCoordinator checkpointCoordinator;
 
     /** TODO, replace it with main thread executor. */
@@ -266,6 +294,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
      * Checkpoint stats tracker separate from the coordinator in order to be available after
      * archiving.
      */
+    //检查点统计跟踪器与协调器分开，以便在归档后可用。
     @Nullable private CheckpointStatsTracker checkpointStatsTracker;
 
     // ------ Fields that are only relevant for archived execution graphs ------------
@@ -280,6 +309,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
     private String jsonPlan;
 
     /** Shuffle master to register partitions for task deployment. */
+    //Shuffle Master 注册分区以进行任务部署。
     private final ShuffleMaster<?> shuffleMaster;
 
     private final ExecutionDeploymentListener executionDeploymentListener;
@@ -499,6 +529,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
                                         "Checkpoint Timer")));
 
         // create the coordinator that triggers and commits checkpoints and holds the state
+        //创建触发并提交检查点并保存状态的协调器
         checkpointCoordinator =
                 new CheckpointCoordinator(
                         jobInformation.getJobId(),

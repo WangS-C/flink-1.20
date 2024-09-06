@@ -654,6 +654,7 @@ public class CheckpointCoordinator {
                                             // this must happen outside the coordinator-wide lock,
                                             // because it communicates with external services
                                             // (in HA mode) and may block for a while.
+                                            //这必须发生在协调器范围的锁之外，因为它与外部服务通信（在 HA 模式下）并且可能会阻塞一段时间。
                                             long checkpointID =
                                                     checkpointIdCounter.getAndIncrement();
                                             return new Tuple2<>(plan, checkpointID);
@@ -698,6 +699,7 @@ public class CheckpointCoordinator {
                                         if (pendingCheckpoint.isDisposed()) {
                                             // The disposed checkpoint will be handled later,
                                             // skip snapshotting the coordinator states.
+                                            //已处理的检查点将在稍后处理，跳过协调器状态的快照。
                                             return null;
                                         }
                                         synchronized (lock) {
@@ -716,6 +718,7 @@ public class CheckpointCoordinator {
             // has completed.
             // This is to ensure the tasks are checkpointed after the OperatorCoordinators in case
             // ExternallyInducedSource is used.
+            //在协调器检查点完成后，我们必须拍摄主钩子的快照。这是为了确保在使用ExternallyInducedSource 的情况下在OperatorCoordinators 之后对任务进行检查点。
             final CompletableFuture<?> masterStatesComplete =
                     coordinatorCheckpointsComplete.thenComposeAsync(
                             ignored -> {
@@ -724,12 +727,14 @@ public class CheckpointCoordinator {
                                 // We use FutureUtils.getWithoutException() to make compiler happy
                                 // with checked
                                 // exceptions in the signature.
+                                //如果代码到达此处，则保证挂起的检查点不为空。我们使用 FutureUtils.getWithoutException() 来使编译器对签名中的已检查异常感到满意
                                 PendingCheckpoint checkpoint =
                                         FutureUtils.getWithoutException(
                                                 pendingCheckpointCompletableFuture);
                                 if (checkpoint == null || checkpoint.isDisposed()) {
                                     // The disposed checkpoint will be handled later,
                                     // skip snapshotting the master states.
+                                    //已处理的检查点将在稍后处理，跳过主状态快照。
                                     return null;
                                 }
                                 return snapshotMasterState(checkpoint);
@@ -875,6 +880,11 @@ public class CheckpointCoordinator {
      * @param externalSavepointLocation the external savepoint location, it might be null
      * @return the checkpoint location
      */
+    //异步初始化检查点位置。由于它可能很耗时，因此预计在 io 线程中执行。
+    //参数：
+    //checkpointID – 检查点 ID props – 检查点属性 externalSavepointLocation – 外部保存点位置，可能为空
+    //返回：
+    //检查站位置
     private CheckpointStorageLocation initializeCheckpointLocation(
             long checkpointID,
             CheckpointProperties props,
@@ -910,6 +920,7 @@ public class CheckpointCoordinator {
             try {
                 // since we haven't created the PendingCheckpoint yet, we need to check the
                 // global state here.
+                //因为我们还没有创建 PendingCheckpoint，所以我们需要在这里检查全局状态。
                 preCheckGlobalState(isPeriodic);
             } catch (Throwable t) {
                 throw new CompletionException(t);

@@ -589,6 +589,11 @@ public class JobVertex implements java.io.Serializable {
      * @param context Provides contextual information for the initialization
      * @throws Exception The method may throw exceptions which cause the job to fail immediately.
      */
+    //一个钩子，可以被子类覆盖，以实现主程序在作业开始时调用的逻辑。
+    //参数:
+    //上下文 -提供上下文信息的初始化
+    //抛出:
+    //异常 -该方法可能会引发导致作业立即失败的异常。
     public void initializeOnMaster(InitializeOnMasterContext context) throws Exception {}
 
     /**

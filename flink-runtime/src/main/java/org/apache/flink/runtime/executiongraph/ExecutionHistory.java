@@ -31,6 +31,8 @@ import java.util.Optional;
  * from the head of the map (FIFO order). Note that the historical executions does not include the
  * current execution attempt.
  */
+// 此类承载LinkedHashMap中具有大小限制的ExecutionVertex的历史执行情况。
+// 当映射增长超出大小范围时，元素将从映射的头部 (FIFO顺序) 丢弃。请注意，历史执行不包括当前执行尝试。
 public class ExecutionHistory implements Serializable {
 
     private static final long serialVersionUID = 1L;

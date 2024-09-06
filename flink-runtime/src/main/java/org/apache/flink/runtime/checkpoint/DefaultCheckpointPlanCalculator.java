@@ -118,6 +118,9 @@ public class DefaultCheckpointPlanCalculator implements CheckpointPlanCalculator
      *
      * @throws CheckpointException if some tasks do not have attached Execution.
      */
+    //检查所有任务是否已附加到当前执行。此方法应从 JobMaster 主线程执行器调用。
+    //抛出：
+    //CheckpointException – 如果某些任务没有附加的执行。
     private void checkAllTasksInitiated() throws CheckpointException {
         for (ExecutionVertex task : allTasks) {
             if (task.getCurrentExecutionAttempt() == null) {

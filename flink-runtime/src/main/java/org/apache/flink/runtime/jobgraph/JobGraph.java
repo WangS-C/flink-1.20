@@ -437,6 +437,7 @@ public class JobGraph implements Serializable {
 
         // start by finding the vertices with no input edges
         // and the ones with disconnected inputs (that refer to some standalone data set)
+        //首先找到没有输入边的顶点和具有断开输入的顶点 (指的是一些独立的数据集)
         {
             Iterator<JobVertex> iter = remaining.iterator();
             while (iter.hasNext()) {
@@ -452,10 +453,12 @@ public class JobGraph implements Serializable {
         int startNodePos = 0;
 
         // traverse from the nodes that were added until we found all elements
+        //从添加的节点遍历，直到我们找到所有元素
         while (!remaining.isEmpty()) {
 
             // first check if we have more candidates to start traversing from. if not, then the
             // graph is cyclic, which is not permitted
+            //首先检查我们是否有更多的候选人开始遍历。如果不是，则图形是循环的，这是不允许的
             if (startNodePos >= sorted.size()) {
                 throw new InvalidProgramException("The job graph is cyclic.");
             }
@@ -471,11 +474,13 @@ public class JobGraph implements Serializable {
             JobVertex start, List<JobVertex> target, Set<JobVertex> remaining) {
 
         // forward traverse over all produced data sets and all their consumers
+        //前向遍历所有生成的数据集及其所有消费者
         for (IntermediateDataSet dataSet : start.getProducedDataSets()) {
             for (JobEdge edge : dataSet.getConsumers()) {
 
                 // a vertex can be added, if it has no predecessors that are still in the
                 // 'remaining' set
+                //如果顶点没有仍在 “剩余” 集中的前趋，则可以添加顶点
                 JobVertex v = edge.getTarget();
                 if (!remaining.contains(v)) {
                     continue;

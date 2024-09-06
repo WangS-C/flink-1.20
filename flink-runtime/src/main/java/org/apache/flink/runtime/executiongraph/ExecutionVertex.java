@@ -57,6 +57,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  * The ExecutionVertex is a parallel subtask of the execution. It may be executed once, or several
  * times, each of which time it spawns an {@link Execution}.
  */
+// ExecutionVertex是执行的并行子任务。它可以执行一次或多次，每次都会产生一次执行。
 public class ExecutionVertex
         implements AccessExecutionVertex, Archiveable<ArchivedExecutionVertex> {
 
@@ -72,6 +73,7 @@ public class ExecutionVertex
 
     private final ExecutionVertexID executionVertexId;
 
+    //ExecutionVertex的历史执行情况
     final ExecutionHistory executionHistory;
 
     private final Time timeout;
@@ -80,8 +82,10 @@ public class ExecutionVertex
     private final String taskNameWithSubtask;
 
     /** The current or latest execution attempt of this vertex's task. */
+    // 此顶点任务的当前或最新执行尝试。
     Execution currentExecution; // this field must never be null
 
+    // 输入拆分
     final ArrayList<InputSplit> inputSplits;
 
     private int nextAttemptNumber;
@@ -89,9 +93,14 @@ public class ExecutionVertex
     private long inputBytes;
 
     /** This field holds the allocation id of the last successful assignment. */
-    @Nullable private TaskManagerLocation lastAssignedLocation;
+    //此字段保存上次成功分配的分配id。
+    //封装TaskManager的连接信息
+    @Nullable
+    private TaskManagerLocation lastAssignedLocation;
 
-    @Nullable private AllocationID lastAssignedAllocationID;
+    //由JobManager通过ResourceManager从TaskManager分配的物理插槽的唯一标识符。
+    @Nullable
+    private AllocationID lastAssignedAllocationID;
 
     // --------------------------------------------------------------------------------------------
 
@@ -100,9 +109,9 @@ public class ExecutionVertex
      *
      * @param timeout The RPC timeout to use for deploy / cancel calls
      * @param createTimestamp The timestamp for the vertex creation, used to initialize the first
-     *     Execution with.
+     *         Execution with.
      * @param executionHistorySizeLimit The maximum number of historical Executions (= execution
-     *     attempts) to keep.
+     *         attempts) to keep.
      * @param initialAttemptCount The attempt number of the first execution of this vertex.
      */
     @VisibleForTesting

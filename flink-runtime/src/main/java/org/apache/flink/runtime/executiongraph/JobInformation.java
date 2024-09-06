@@ -36,6 +36,7 @@ import java.util.Collection;
 import java.util.Objects;
 
 /** Container class for job information which is stored in the {@link ExecutionGraph}. */
+// 存储在ExecutionGraph中的作业信息的容器类。
 public class JobInformation implements Serializable {
 
     private static final long serialVersionUID = 8367087049937822140L;
