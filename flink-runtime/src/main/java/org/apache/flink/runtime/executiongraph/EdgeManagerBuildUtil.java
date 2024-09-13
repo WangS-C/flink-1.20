@@ -45,6 +45,10 @@ public class EdgeManagerBuildUtil {
      * @param vertex the downstream consumer {@link ExecutionJobVertex}
      * @param intermediateResult the upstream consumed {@link IntermediateResult}
      */
+    //根据DistributionPattern计算ExecutionJobVertex和IntermediateResult * 之间的连接。
+    //参数：
+    //vertex – 下游消费者ExecutionJobVertex
+    //intermediateResult – 上游消耗的IntermediateResult
     static void connectVertexToResult(
             ExecutionJobVertex vertex, IntermediateResult intermediateResult) {
         final DistributionPattern distributionPattern =

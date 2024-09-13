@@ -315,6 +315,8 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
     private final ExecutionDeploymentListener executionDeploymentListener;
     private final ExecutionStateUpdateListener executionStateUpdateListener;
 
+    //用EdgeManager来存储组与组之间的关系，将创建ExecutionEdge 的流程替换为构建EdgeManager。 优化性能
+    //https://issues.apache.org/jira/browse/FLINK-21326
     private final EdgeManager edgeManager;
 
     private final Map<ExecutionVertexID, ExecutionVertex> executionVerticesById;
@@ -888,6 +890,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
         }
 
         // the topology assigning should happen before notifying new vertices to failoverStrategy
+        //拓扑分配应该在通知新顶点进行故障转移策略之前进行
         executionTopology = DefaultExecutionTopology.fromExecutionGraph(this);
 
         partitionGroupReleaseStrategy =
@@ -895,6 +898,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
     }
 
     /** Attach job vertices without initializing them. */
+    //附加作业顶点但不对其进行初始化
     private void attachJobVertices(
             List<JobVertex> topologicallySorted, JobManagerJobMetricGroup jobManagerJobMetricGroup)
             throws JobException {
@@ -908,6 +912,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
                     parallelismStore.getParallelismInfo(jobVertex.getID());
 
             // create the execution job vertex and attach it to the graph
+            // 创建执行作业顶点并将其附加到graph
             ExecutionJobVertex ejv =
                     executionJobVertexFactory.createExecutionJobVertex(
                             this,
