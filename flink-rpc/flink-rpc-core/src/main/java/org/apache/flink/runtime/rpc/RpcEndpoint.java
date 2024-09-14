@@ -115,12 +115,14 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
     // ------------------------------------------------------------------------
 
     /** RPC service to be used to start the RPC server and to obtain rpc gateways. */
+    //RPC 服务用于启动 RPC 服务器并获取 RPC 网关。
     private final RpcService rpcService;
 
     /** Unique identifier for this rpc endpoint. */
     private final String endpointId;
 
     /** Interface to access the underlying rpc server. */
+    //访问底层rpc服务器的接口
     protected final RpcServer rpcServer;
 
     /**
