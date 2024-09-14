@@ -38,6 +38,9 @@ import java.util.concurrent.CompletableFuture;
  * @param <F> type of the fencing token
  * @param <T> type of the RpcEndpoint
  */
+//PekkoRpcActor的 Fenced 扩展。此 Actor 将为FencedRpcEndpoint启动，并负责根据当前隔离令牌过滤掉无效消息。
+//类型参数：
+//< F > – 隔离标记的类型 < T > – RpcEndpoint 的类型
 public class FencedPekkoRpcActor<
                 F extends Serializable, T extends FencedRpcEndpoint<F> & RpcGateway>
         extends PekkoRpcActor<T> {

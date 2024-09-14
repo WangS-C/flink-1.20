@@ -32,6 +32,10 @@ import java.util.UUID;
  *
  * @param <F> type of the fencing token
  */
+//隔离RpcEndpoint的基类。隔离的 rpc 端点期望所有 rpc 消息都包含隔离令牌。
+// 此外，rpc 端点还分配有自己的隔离令牌。只有当附加的隔离令牌等于端点自己的令牌时，才会执行 rpc。
+//类型参数：
+//< F > – 隔离标记的类型
 public abstract class FencedRpcEndpoint<F extends Serializable> extends RpcEndpoint {
 
     private final F fencingToken;

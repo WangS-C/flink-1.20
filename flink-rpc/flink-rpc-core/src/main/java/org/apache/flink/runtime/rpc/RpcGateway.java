@@ -19,6 +19,8 @@
 package org.apache.flink.runtime.rpc;
 
 /** Rpc gateway interface which has to be implemented by Rpc gateways. */
+//Rpc网关接口，必须由Rpc网关实现。
+//定义通信行为；用于远程调用RpcEndpoint的某些方法，可以理解为对方的客户端代理
 public interface RpcGateway {
 
     /**

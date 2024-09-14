@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
  * Connecting to a rpc server will return a {@link RpcGateway} which can be used to call remote
  * procedures.
  */
+//rpc 服务的接口。rpc 服务用于启动并连接到RpcEndpoint 。连接到 rpc 服务器将返回可用于调用远程过程的RpcGateway 。
 public interface RpcService extends AutoCloseableAsync {
 
     /**
@@ -60,6 +61,14 @@ public interface RpcService extends AutoCloseableAsync {
      * @param selfGatewayType class of the self gateway type
      * @return Self gateway of the specified type which can be used to issue asynchronous rpcs
      */
+    //返回指定类型的自网关，可用于向 RpcEndpoint 发出异步调用。
+    //重要提示：RpcEndpoint 必须实现自网关类型。否则该方法将失败。
+    //参数：
+    //selfGatewayType – 自我网关类型的类
+    //类型参数：
+    //< C > – 要创建的自网关类型
+    //返回：
+    //指定类型的自网关，可用于发出异步 rpcs
     <C extends RpcGateway> C getSelfGateway(Class<C> selfGatewayType, RpcServer rpcServer);
 
     /**
@@ -88,6 +97,13 @@ public interface RpcService extends AutoCloseableAsync {
      * @return Future containing the fenced rpc gateway or an {@link RpcConnectionException} if the
      *     connection attempt failed
      */
+    //连接到指定地址下的远程隔离 RPC 服务器。返回可用于与 RPC 服务器通信的隔离 RPC 网关。如果连接失败，则返回的 Future 将失败并出现RpcConnectionException 。
+    //参数：
+    //address – 远程 rpc 服务器的地址 fencingToken – 与服务器通信时使用的隔离令牌 clazz – 要返回的 rpc 网关类
+    //类型参数：
+    //< F > – 围栏标记的类型 < C > – 要返回的 RPC 网关类型
+    //返回：
+    //如果连接尝试失败，则包含受保护的 RPC 网关或RpcConnectionException
     <F extends Serializable, C extends FencedRpcGateway<F>> CompletableFuture<C> connect(
             String address, F fencingToken, Class<C> clazz);
 
@@ -120,5 +136,10 @@ public interface RpcService extends AutoCloseableAsync {
      *
      * @return The RPC service provided scheduled executor
      */
+    //从 RPC 服务获取一个已安排的执行器。此执行器可用于安排将来要执行的任务。
+    //重要提示：此执行器不会将方法调用与任何并发调用隔离，因此不适合运行修改RpcEndpoint状态的 Future 的完成方法。
+    // 对于此类操作，需要使用该RpcEndpoint的MainThreadExecutionContext 。
+    //返回：
+    //RPC服务提供的定时执行器
     ScheduledExecutor getScheduledExecutor();
 }

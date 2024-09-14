@@ -68,6 +68,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * in an {@link RpcInvocation} message and then sends it to the {@link PekkoRpcActor} where it is
  * executed.
  */
+//与PekkoRpcActor一起使用的调用处理程序。调用处理程序将 rpc 包装在RpcInvocation消息中，然后将其发送到PekkoRpcActor并在那里执行。
 class PekkoInvocationHandler implements InvocationHandler, PekkoBasedEndpoint, RpcServer {
     private static final Logger LOG = LoggerFactory.getLogger(PekkoInvocationHandler.class);
 
@@ -127,6 +128,7 @@ class PekkoInvocationHandler implements InvocationHandler, PekkoBasedEndpoint, R
 
         Object result;
 
+        // 判断方法的类是否为指定的类，符合如下的类，执行本地调用，否则实行远程调用
         if (declaringClass.equals(PekkoBasedEndpoint.class)
                 || declaringClass.equals(Object.class)
                 || declaringClass.equals(RpcGateway.class)
@@ -142,6 +144,7 @@ class PekkoInvocationHandler implements InvocationHandler, PekkoBasedEndpoint, R
                             + "fencing token. Please use RpcService#connect(RpcService, F, Time) with F being the fencing token to "
                             + "retrieve a properly FencedRpcGateway.");
         } else {
+            //  客户端会进入这里，进行远程的调用
             result = invokeRpc(method, args);
         }
 

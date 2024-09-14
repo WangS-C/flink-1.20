@@ -83,6 +83,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  * Pekko based {@link RpcService} implementation. The RPC service starts an actor to receive RPC
  * invocations from a {@link RpcGateway}.
  */
+//基于 Pekko 的RpcService实现。RPC 服务启动一个参与者来接收来自RpcGateway RPC 调用。
 @ThreadSafe
 public class PekkoRpcService implements RpcService {
 
@@ -149,6 +150,9 @@ public class PekkoRpcService implements RpcService {
         // call into Flink
         // otherwise we could leak the plugin class loader or poison the context class loader of
         // external threads (because they inherit the current threads context class loader)
+        //Pekko 总是将线程上下文类加载器设置为加载它的类加载器（即插件类加载器），
+        // 我们必须确保在调用 Flink 时将上下文类加载器设置为 Flink 类加载器，
+        // 否则可能会泄漏插件类加载器或毒害外部线程的上下文类加载器（因为它们继承了当前线程上下文类加载器）
         internalScheduledExecutor =
                 new ActorSystemScheduledExecutorAdapter(actorSystem, flinkClassLoader);
 
@@ -216,6 +220,7 @@ public class PekkoRpcService implements RpcService {
     public <C extends RpcGateway> CompletableFuture<C> connect(
             final String address, final Class<C> clazz) {
 
+        // 连接远程Rpc Server，返回的是代理对象
         return connectInternal(
                 address,
                 clazz,
@@ -264,8 +269,15 @@ public class PekkoRpcService implements RpcService {
             C rpcEndpoint, Map<String, String> loggingContext) {
         checkNotNull(rpcEndpoint, "rpc endpoint");
 
+        /**
+         * 根据RpcEndpoint的类型来创建对应的Actor，目前支持两种Actor的创建
+         * 1、PekkoRpcActor
+         * 2、FencedPekkoRpcActor，对PekkoRpcActor进行扩展，能够过滤到与指定token无关的消息
+         */
         final SupervisorActor.ActorRegistration actorRegistration =
                 registerRpcActor(rpcEndpoint, loggingContext);
+
+        // 这里拿到的是PekkoRpcActor的引用
         final ActorRef actorRef = actorRegistration.getActorRef();
         final CompletableFuture<Void> actorTerminationFuture =
                 actorRegistration.getTerminationFuture();
@@ -284,12 +296,14 @@ public class PekkoRpcService implements RpcService {
             hostname = host.get();
         }
 
+        // 提取集成RpcEndpoint的所有子类
         Set<Class<?>> implementedRpcGateways =
                 new HashSet<>(RpcUtils.extractImplementedRpcGateways(rpcEndpoint.getClass()));
 
         implementedRpcGateways.add(RpcServer.class);
         implementedRpcGateways.add(PekkoBasedEndpoint.class);
 
+        // 对上述指定的类集合进行代理
         final InvocationHandler invocationHandler;
 
         if (rpcEndpoint instanceof FencedRpcEndpoint) {
@@ -323,8 +337,11 @@ public class PekkoRpcService implements RpcService {
         // Rather than using the System ClassLoader directly, we derive the ClassLoader
         // from this class . That works better in cases where Flink runs embedded and all Flink
         // code is loaded dynamically (for example from an OSGI bundle) through a custom ClassLoader
+        //我们不是直接使用系统类加载器，而是从此类派生类加载器。
+        //在 Flink 嵌入运行并且所有 Flink 代码通过自定义 ClassLoader 动态加载（例如从 OSGI 包）的情况下，效果更好
         ClassLoader classLoader = getClass().getClassLoader();
 
+        // 针对RpcServer生成一个动态代理
         @SuppressWarnings("unchecked")
         RpcServer server =
                 (RpcServer)
@@ -498,8 +515,10 @@ public class PekkoRpcService implements RpcService {
                 address,
                 clazz.getName());
 
+        // 根据Pekko Actor地址获取ActorRef
         final CompletableFuture<ActorRef> actorRefFuture = resolveActorAddress(address);
 
+        // 发送一个握手成功的消息给远程Actor
         final CompletableFuture<HandshakeSuccessMessage> handshakeFuture =
                 actorRefFuture.thenCompose(
                         (ActorRef actorRef) ->
@@ -515,10 +534,12 @@ public class PekkoRpcService implements RpcService {
                                                                         HandshakeSuccessMessage
                                                                                 .class))));
 
+        // 创建动态代理，并返回
         final CompletableFuture<C> gatewayFuture =
                 actorRefFuture.thenCombineAsync(
                         handshakeFuture,
                         (ActorRef actorRef, HandshakeSuccessMessage ignored) -> {
+                            // PekkoInvocationHandler，针对客户端会调用 invokeRpc
                             InvocationHandler invocationHandler =
                                     invocationHandlerFactory.apply(actorRef);
 
@@ -527,8 +548,11 @@ public class PekkoRpcService implements RpcService {
                             // That works better in cases where Flink runs embedded and
                             // all Flink code is loaded dynamically
                             // (for example from an OSGI bundle) through a custom ClassLoader
+                            //我们没有直接使用系统类加载器，而是从此类派生类加载器。
+                            // 在 Flink 嵌入运行并且所有 Flink 代码通过自定义 ClassLoader 动态加载（例如从 OSGI 包）的情况下，效果更好
                             ClassLoader classLoader = getClass().getClassLoader();
 
+                            // 创建动态代理
                             @SuppressWarnings("unchecked")
                             C proxy =
                                     (C)

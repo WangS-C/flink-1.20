@@ -83,6 +83,12 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  *
  * @param <T> Type of the {@link RpcEndpoint}
  */
+//Pekko rpc 参与者接收RpcInvocation 、 RunAsync和CallAsync ControlMessages消息。
+//RpcInvocation指定一个 rpc 并被分派到给定的RpcEndpoint实例。
+//RunAsync和CallAsync消息包含在参与者线程的上下文中执行的可执行代码。
+//ControlMessages消息控制 pekko rpc 参与者的处理行为。ControlMessages. START 开始处理ControlMessages. STOP消息。ControlMessages. STOP 消息停止处理消息。处理停止时到达的ControlMessages. START消息都将被丢弃。
+//类型参数：
+//< T > – RpcEndpoint的类型
 class PekkoRpcActor<T extends RpcEndpoint & RpcGateway> extends AbstractActor {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -159,8 +165,11 @@ class PekkoRpcActor<T extends RpcEndpoint & RpcGateway> extends AbstractActor {
     @Override
     public Receive createReceive() {
         return ReceiveBuilder.create()
+                //如果是 RemoteHandshakeMessage 信息，执行 handleHandshakeMessage，处理握手消息
                 .match(RemoteHandshakeMessage.class, this::handleHandshakeMessage)
+                //如果是 ControlMessages，执行 handleControlMessage，如启动、停止、中断
                 .match(ControlMessages.class, this::handleControlMessage)
+                //其他情况，handleMessage
                 .matchAny(this::handleMessage)
                 .build();
     }
@@ -171,6 +180,7 @@ class PekkoRpcActor<T extends RpcEndpoint & RpcGateway> extends AbstractActor {
                 mainThreadValidator.enterMainThread();
 
                 try {
+                    // 处理消息
                     handleRpcMessage(message);
                 } finally {
                     mainThreadValidator.exitMainThread();
@@ -282,6 +292,9 @@ class PekkoRpcActor<T extends RpcEndpoint & RpcGateway> extends AbstractActor {
      *
      * @param rpcInvocation Rpc invocation message
      */
+    //通过在 rpc 端点上查找 rpc 方法并使用提供的方法参数调用此方法来处理 rpc 调用。如果该方法有返回值，则将其返回给调用的发送者。
+    //参数：
+    //rpcInvocation – Rpc 调用消息
     private void handleRpcInvocation(RpcInvocation rpcInvocation) {
         Method rpcMethod = null;
 
@@ -289,6 +302,7 @@ class PekkoRpcActor<T extends RpcEndpoint & RpcGateway> extends AbstractActor {
             String methodName = rpcInvocation.getMethodName();
             Class<?>[] parameterTypes = rpcInvocation.getParameterTypes();
 
+            //获取需要调用的方法
             rpcMethod = lookupRpcMethod(methodName, parameterTypes);
         } catch (final NoSuchMethodException e) {
             log.error("Could not find rpc method for rpc invocation.", e);
@@ -298,6 +312,7 @@ class PekkoRpcActor<T extends RpcEndpoint & RpcGateway> extends AbstractActor {
             getSender().tell(new Status.Failure(rpcException), getSelf());
         }
 
+        //通过反射执行
         if (rpcMethod != null) {
             try {
                 // this supports declaration of anonymous classes
@@ -323,6 +338,7 @@ class PekkoRpcActor<T extends RpcEndpoint & RpcGateway> extends AbstractActor {
                                 "Reporting back error thrown in remote procedure {}", rpcMethod, e);
 
                         // tell the sender about the failure
+                        //告诉发件人失败的情况
                         getSender().tell(new Status.Failure(e.getTargetException()), getSelf());
                         return;
                     }
@@ -331,6 +347,7 @@ class PekkoRpcActor<T extends RpcEndpoint & RpcGateway> extends AbstractActor {
                     final boolean isLocalRpcInvocation =
                             rpcMethod.getAnnotation(Local.class) != null;
 
+                    //向调用方发送执行结果
                     if (result instanceof CompletableFuture) {
                         final CompletableFuture<?> responseFuture = (CompletableFuture<?>) result;
                         sendAsyncResponse(responseFuture, methodName, isLocalRpcInvocation);

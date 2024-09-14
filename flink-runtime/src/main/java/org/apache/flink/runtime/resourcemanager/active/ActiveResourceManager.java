@@ -81,6 +81,8 @@ import static org.apache.flink.util.Preconditions.checkState;
  * management frameworks. With different {@link ResourceManagerDriver} provided, this resource
  * manager can work with various frameworks.
  */
+// ResourceManager的有效实现。
+//该资源管理器主动向外部资源管理框架申请和释放资源，通过提供不同的ResourceManagerDriver ，该资源管理器可以和各种框架协同工作
 public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
         extends ResourceManager<WorkerType> implements ResourceEventHandler<WorkerType> {
 

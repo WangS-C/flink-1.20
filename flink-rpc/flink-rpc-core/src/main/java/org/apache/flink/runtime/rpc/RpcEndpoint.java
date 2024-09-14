@@ -119,6 +119,7 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
     private final RpcService rpcService;
 
     /** Unique identifier for this rpc endpoint. */
+    //此 rpc 端点的唯一标识符
     private final String endpointId;
 
     /** Interface to access the underlying rpc server. */
@@ -129,18 +130,21 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      * A reference to the endpoint's main thread, if the current method is called by the main
      * thread.
      */
+    //如果当前方法由主线程调用，则对端点主线程的引用。
     final AtomicReference<Thread> currentMainThread = new AtomicReference<>(null);
 
     /**
      * The main thread executor to be used to execute future callbacks in the main thread of the
      * executing rpc server.
      */
+    //主线程执行器用于在执行 rpc 服务器的主线程中执行future的回调
     private final MainThreadExecutor mainThreadExecutor;
 
     /**
      * Register endpoint closeable resource to the registry and close them when the server is
      * stopped.
      */
+    //将端点可关闭资源注册到注册表并在服务器停止时关闭它们。
     private final CloseableRegistry resourceRegistry;
 
     /**
@@ -149,6 +153,8 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      * <p>IMPORTANT: the running state is not thread safe and can be used only in the main thread of
      * the rpc endpoint.
      */
+    //指示 RPC 端点是否已启动且未停止或者正在停止。
+    //重要提示：运行状态不是线程安全的，只能在 rpc 端点的主线程中使用。
     private boolean isRunning;
 
     /**
@@ -159,14 +165,24 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      */
     protected RpcEndpoint(
             RpcService rpcService, String endpointId, Map<String, String> loggingContext) {
+        // 保存rpcService和endpointId
         this.rpcService = checkNotNull(rpcService, "rpcService");
         this.endpointId = checkNotNull(endpointId, "endpointId");
 
+        // 通过 RpcService 启动RpcServer
+        /**
+         * 构造的时候调用 rpcService.startServer()启动RpcServer，进入可以接受处理请求的状态，最后将RpcServer绑定到主线程上
+         * 真正执行起来
+         * 在RpcEndpoint中还定义了一些放入如 runAsync(Runnable)、callAsync(Callable,Time)方法来执行Rpc调用，值得注意的是在Flink
+         * 的设计中，对于同一个Endpoint，所有的调用都运行在主线程，因此不会有并发问题，当启动RpcEndpoint进行Rpc调用时，其会委托RpcServer进行处理
+         */
         this.rpcServer = rpcService.startServer(this, loggingContext);
         this.resourceRegistry = new CloseableRegistry();
 
+        // 主线程执行器，所有调用在主线程中串行执行
         this.mainThreadExecutor =
                 new MainThreadExecutor(rpcServer, this::validateRunsInMainThread, endpointId);
+        //将mainThreadExecutor 资源注册到 CloseableRegistry上
         registerResource(this.mainThreadExecutor);
     }
 
@@ -280,6 +296,9 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      *
      * @param closeableResource the given closeable resource
      */
+    //将给定的可关闭资源注册到CloseableRegistry 。
+    //参数：
+    //closeableResource – 给定的可关闭资源
     protected void registerResource(Closeable closeableResource) {
         try {
             resourceRegistry.registerCloseable(closeableResource);
