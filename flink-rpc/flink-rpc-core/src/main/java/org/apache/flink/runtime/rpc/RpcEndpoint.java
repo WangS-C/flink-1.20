@@ -92,6 +92,22 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * <p>The running state can be queried in a RPC method handler or in the main thread by calling
  * {@link #isRunning()} method.
  */
+//RPC 端点的基类。提供远程过程调用的分布式组件必须扩展 RPC 端点基类。RPC 端点由RpcService支持。
+//端点和网关
+//待完成...
+//单线程端点执行
+//同一端点上的所有 RPC 调用都由同一线程（称为端点的主线程）调用。
+//因此，通过在主线程中执行所有状态更改操作，我们不必像 Erlang 或 Akka 的 Actor 模型那样考虑并发访问。
+//RPC 端点提供runAsync(Runnable) 、 callAsync(Callable, Duration)和getMainThreadExecutor()来在 RPC 端点的主线程中执行代码。
+//生命周期
+//RPC 端点有以下阶段：
+//RPC 端点以非运行状态创建，不提供任何 RPC 请求。
+//调用start()方法会触发 RPC 端点的启动，并将可覆盖的onStart()方法调用安排到主线程。
+//当启动操作结束时，RPC 端点将移至运行状态并开始服务和完成 RPC 请求。
+//调用closeAsync()方法会触发 RPC 端点的终止，并将可覆盖的onStop()方法调用安排到主线程。
+//当调用onStop()方法时，它会触发异步停止操作。RPC 端点不再处于运行状态，但它会继续为 RPC 请求提供服务。
+//当异步停止操作结束时，RPC 端点将完全终止并且不再提供 RPC 请求。
+//可以通过调用isRunning()方法在 RPC 方法处理程序或主线程中查询运行状态
 public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
