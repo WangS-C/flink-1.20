@@ -14,7 +14,7 @@ public class WscFlinkRpcClientTest {
 
             // 2. 连接远程RPC服务，注意：连接地址是服务端程序打印的地址
             CompletableFuture<TaskGateway> gatewayFuture = akkaRpcService
-                    .connect("pekko.tcp://flink@192.168.50.151:60972/user/rpc/dbc74082-bf04-4c1f-a94e-6892ba8f29af",
+                    .connect("pekko.tcp://flink@192.168.50.151:27381/user/rpc/f51c0f49-ef23-4e77-9503-1e264a1753a3",
                             TaskGateway.class);
 
             // 3. 远程调用

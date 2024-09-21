@@ -163,6 +163,10 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      * @param rpcService The RPC server that dispatches calls to this RPC endpoint.
      * @param endpointId Unique identifier for this endpoint
      */
+    //初始化 RPC 端点。
+    //参数：
+    //rpcService – 将调用调度到此 RPC 端点的 RPC 服务器。
+    // endpointId – 此端点的唯一标识符
     protected RpcEndpoint(
             RpcService rpcService, String endpointId, Map<String, String> loggingContext) {
         // 保存rpcService和endpointId
@@ -232,6 +236,7 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      * Triggers start of the rpc endpoint. This tells the underlying rpc server that the rpc
      * endpoint is ready to process remote procedure calls.
      */
+    //触发 rpc 端点的启动。这会告知底层 rpc 服务器，rpc 端点已准备好处理远程过程调用。
     public final void start() {
         rpcServer.start();
     }
@@ -242,6 +247,9 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      * @throws Exception indicating that the rpc endpoint could not be started. If an exception
      *     occurs, then the rpc endpoint will automatically terminate.
      */
+    //由 RpcService 实现调用来启动 RpcEndpoint 的内部方法。
+    //抛出：
+    //Exception – 表示无法启动 rpc 端点。如果发生异常，则 rpc 端点将自动终止。
     public final void internalCallOnStart() throws Exception {
         validateRunsInMainThread();
         isRunning = true;
@@ -260,12 +268,18 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      * @throws Exception indicating that the rpc endpoint could not be started. If an exception
      *     occurs, then the rpc endpoint will automatically terminate.
      */
+    //用户可覆盖的回调，从internalCallOnStart()调用。
+    //启动 RpcEndpoint 时调用此方法。该方法保证在主线程上下文中执行，可用于在 rpc 端点的主线程上下文中启动 rpc 端点。
+    //重要提示：用户绝不应直接调用此方法。
+    //抛出：
+    //Exception – 表示无法启动 rpc 端点。如果发生异常，则 rpc 端点将自动终止。
     protected void onStart() throws Exception {}
 
     /**
      * Triggers stop of the rpc endpoint. This tells the underlying rpc server that the rpc endpoint
      * is no longer ready to process remote procedure calls.
      */
+    //触发 rpc 端点停止。这会告知底层 rpc 服务器，rpc 端点不再准备处理远程过程调用。
     protected final void stop() {
         rpcServer.stop();
     }
@@ -276,6 +290,9 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      * @return Future which is completed once all post stop actions are completed. If an error
      *     occurs this future is completed exceptionally
      */
+    //由 RpcService 实现调用来停止 RpcEndpoint 的内部方法。
+    //返回：
+    //一旦所有停止后操作完成，Future 就会完成。如果发生错误，此 Future 会异常完成
     public final CompletableFuture<Void> internalCallOnStop() {
         validateRunsInMainThread();
         CompletableFuture<Void> stopFuture = new CompletableFuture<>();
@@ -360,6 +377,14 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
      * @param <C> type of the self gateway to create
      * @return Self gateway of the specified type which can be used to issue asynchronous rpcs
      */
+    //返回指定类型的自网关，可用于向 RpcEndpoint 发出异步调用。
+    //重要提示：RpcEndpoint 必须实现自网关类型。否则该方法将失败。
+    //参数：
+    //selfGatewayType – 自我网关类型的类
+    //类型参数：
+    //< C > – 要创建的自网关类型
+    //返回：
+    //指定类型的自网关，可用于发出异步 rpcs
     public <C extends RpcGateway> C getSelfGateway(Class<C> selfGatewayType) {
         return rpcService.getSelfGateway(selfGatewayType, rpcServer);
     }
