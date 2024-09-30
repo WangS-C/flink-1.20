@@ -26,6 +26,7 @@ import java.util.UUID;
  * Classes which want to be notified about a changing leader by the {@link LeaderRetrievalService}
  * have to implement this interface.
  */
+//希望由LeaderRetrievalService通知有关更改领导者的类必须实现此接口。
 public interface LeaderRetrievalListener {
 
     /**
@@ -37,6 +38,11 @@ public interface LeaderRetrievalListener {
      * @param leaderAddress The address of the new leader
      * @param leaderSessionID The new leader session ID
      */
+    //当选新的领导者时， LeaderRetrievalService将调用此方法。
+    //如果两个参数都为空，则表示在没有选举新领导人的情况下领导层被撤销。
+    //参数:
+    //leaderAddress -新领导者 的地址
+    //leaderSessionID -新领导者会话ID
     void notifyLeaderAddress(@Nullable String leaderAddress, @Nullable UUID leaderSessionID);
 
     /**
@@ -46,5 +52,6 @@ public interface LeaderRetrievalListener {
      *
      * @param exception
      */
+    //此方法由LeaderRetrievalService在发生异常时调用。这确保LeaderRetrievalListener知道在LeaderRetrievalService线程中发生的任何问题
     void handleError(Exception exception);
 }

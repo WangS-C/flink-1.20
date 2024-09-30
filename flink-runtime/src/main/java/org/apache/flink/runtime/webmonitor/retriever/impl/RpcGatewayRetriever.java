@@ -37,6 +37,7 @@ import java.util.function.Function;
  * @param <F> type of the fencing token
  * @param <T> type of the fenced gateway to retrieve
  */
+//LeaderGatewayRetriever使用RpcService实现。
 public class RpcGatewayRetriever<F extends Serializable, T extends FencedRpcGateway<F>>
         extends LeaderGatewayRetriever<T> {
 
@@ -59,6 +60,7 @@ public class RpcGatewayRetriever<F extends Serializable, T extends FencedRpcGate
     @Override
     protected CompletableFuture<T> createGateway(
             CompletableFuture<Tuple2<String, UUID>> leaderFuture) {
+        //根据 Leader 的地址通过 RpcService.connect() 方法获得对应 Leader 的 RpcGateway
         return FutureUtils.retryWithDelay(
                 () ->
                         leaderFuture.thenCompose(

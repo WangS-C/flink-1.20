@@ -33,6 +33,11 @@ import java.util.UUID;
  * the leader session id as well as the leader address can now be published for leader retrieval
  * services.
  */
+//服务的接口，允许在一组竞争者中选出一个领导者。
+//在使用此服务之前，必须调用start方法启动它。start方法将竞争者作为参数。
+// 如果存在多个竞争者，则每个竞争者必须实例化其自己的领导者选举服务。
+//一旦竞争者被授予领导地位，他必须通过调用LeaderElection. Confirmleadiablishing (UUID，String) 方法来确认收到的领导会话ID。
+// 这将通知领导者选举服务，竞争者已接受指定的领导，并且现在可以为领导者检索服务发布领导者会话id以及领导者地址
 public interface LeaderElectionService {
 
     /**
@@ -42,5 +47,8 @@ public interface LeaderElectionService {
      * @param componentId a unique identifier that refers to the stored leader information that the
      *     newly created {@link LeaderElection} manages.
      */
+    //创建一个新的领导选举注册到此的实例LeaderElectionService实例。
+    //参数:
+    //组件id-引用新创建的存储的领导者信息的唯一标识符领导选举管理。
     LeaderElection createLeaderElection(String componentId);
 }

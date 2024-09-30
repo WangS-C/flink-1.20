@@ -28,6 +28,9 @@ package org.apache.flink.runtime.leaderretrieval;
  *
  * <p>The service should be stopped by calling the stop method.
  */
+//此接口必须由检索当前leader并通知侦听器的服务来实现。
+//在使用此服务之前，必须通过调用start方法来启动它。start方法还将LeaderRetrievalListener作为参数。该服务只能启动一次。
+//应通过调用stop方法停止服务。
 public interface LeaderRetrievalService {
 
     /**
@@ -37,6 +40,9 @@ public interface LeaderRetrievalService {
      * @param listener The leader retrieval listener which will be notified about new leaders.
      * @throws Exception
      */
+    //使用给定的侦听器启动leader检索服务，以侦听新的leader。此方法只能调用一次。
+    //参数:
+    //监听器-领导者检索侦听器，将收到有关新领导者的通知。
     void start(LeaderRetrievalListener listener) throws Exception;
 
     /**
@@ -44,5 +50,6 @@ public interface LeaderRetrievalService {
      *
      * @throws Exception
      */
+    //停止leader检索服务。
     void stop() throws Exception;
 }

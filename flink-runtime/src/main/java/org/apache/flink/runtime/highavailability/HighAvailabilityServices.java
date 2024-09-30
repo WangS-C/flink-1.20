@@ -48,6 +48,15 @@ import java.util.concurrent.Executor;
  *   <li>Naming of RPC endpoints
  * </ul>
  */
+//HighAvailabilityServices提供对高可用性设置所需的所有服务的访问。特别是，这些服务提供对高度可用的存储和注册表的访问，
+// 以及分布式计数器和领导者选举。
+//ResourceManager领导者选举和领导者检索
+//JobManager领导选举和领导检索
+//持久性的检查点元数据
+//正在注册最新完成的检查点
+//持久性的BLOB存储区
+//注册表标记作业的状态
+//命名RPC端点
 public interface HighAvailabilityServices
         extends ClientHighAvailabilityServices, GloballyCleanableResource {
 
