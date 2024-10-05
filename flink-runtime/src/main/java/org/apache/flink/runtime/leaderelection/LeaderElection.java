@@ -24,9 +24,11 @@ import java.util.UUID;
  * {@code LeaderElection} serves as a proxy between {@code LeaderElectionService} and {@link
  * LeaderContender}.
  */
+//LeaderElectionService和LeaderContender之间充当LeaderElectionService的代理
 public interface LeaderElection extends AutoCloseable {
 
     /** Registers the passed {@link LeaderContender} with the leader election process. */
+    //将通过的LeaderContender注册到领导者选举流程。
     void startLeaderElection(LeaderContender contender) throws Exception;
 
     /**
@@ -40,6 +42,12 @@ public interface LeaderElection extends AutoCloseable {
      * @param leaderSessionID The new leader session ID
      * @param leaderAddress The address of the new leader
      */
+    //确认LeaderContender已接受由给定领导会话id标识的领导。它还会发布领导者地址，在该地址下可以访问领导者。
+    //此方法的目的是在LeaderContender中设置新的leader会话ID与
+    //将新的leader会话ID和相关的leader地址发布到leader检索服务之间建立顺序。
+    //参数:
+    //leaderAddress -新的领导者会话ID
+    //leaderAddress -新的领导者
     void confirmLeadership(UUID leaderSessionID, String leaderAddress);
 
     /**
@@ -49,6 +57,11 @@ public interface LeaderElection extends AutoCloseable {
      * @param leaderSessionId identifying the current leader
      * @return true if the associated {@link LeaderContender} is the leader, otherwise false
      */
+    //如果服务的LeaderContender在获取的给定领导者会话ID下具有领导，则返回true。
+    //参数:
+    //leaderSessionId -识别当前领导者
+    //return:
+    //如果关联的LeaderContender是领导者，则为true，否则为false
     boolean hasLeadership(UUID leaderSessionId);
 
     /**
@@ -56,5 +69,7 @@ public interface LeaderElection extends AutoCloseable {
      * underlying leader election. {@link LeaderContender#revokeLeadership()} will be called if the
      * service still holds the leadership.
      */
+    //通过从基础leader选举中取消注册LeaderContender来关闭LeaderElection。
+    //LeaderContender. revokeLeadership() 如果服务仍然拥有领导地位，将被调用。
     void close() throws Exception;
 }

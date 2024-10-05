@@ -48,15 +48,15 @@ import java.util.concurrent.Executor;
  *   <li>Naming of RPC endpoints
  * </ul>
  */
-//HighAvailabilityServices提供对高可用性设置所需的所有服务的访问。特别是，这些服务提供对高度可用的存储和注册表的访问，
-// 以及分布式计数器和领导者选举。
-//ResourceManager领导者选举和领导者检索
-//JobManager领导选举和领导检索
-//持久性的检查点元数据
-//正在注册最新完成的检查点
-//持久性的BLOB存储区
-//注册表标记作业的状态
-//命名RPC端点
+//HighAvailabilityServices 允许访问高可用性设置所需的所有服务。
+// 特别是，这些服务提供对高可用存储和注册表的访问，以及分布式计数器和领导者选举。
+//ResourceManager 领导者选举和领导者检索
+//JobManager 领导者选举和领导者检索
+//检查点元数据的持久性
+//注册最新完成的检查点
+//BLOB 存储的持久性
+//标记作业状态的注册表
+//RPC端点的命名
 public interface HighAvailabilityServices
         extends ClientHighAvailabilityServices, GloballyCleanableResource {
 
@@ -68,6 +68,7 @@ public interface HighAvailabilityServices
      * This UUID should be used when no proper leader election happens, but a simple pre-configured
      * leader is used. That is for example the case in non-highly-available standalone setups.
      */
+//    当没有发生正确的领导者选举但使用简单的预配置领导者时，应该使用此 UUID。例如，在非高可用性独立设置中就是这种情况。
     UUID DEFAULT_LEADER_ID = new UUID(0, 0);
 
     /**
@@ -75,6 +76,8 @@ public interface HighAvailabilityServices
      * HighAvailabilityServices}. With the new mode every JobMaster will have a distinct JobID
      * assigned.
      */
+//    使用HighAvailabilityServices时，应使用此 JobID 来识别旧的 JobManager。
+//    在新模式下，每个 JobMaster 都会分配一个不同的 JobID
     JobID DEFAULT_JOB_ID = new JobID(0L, 0L);
 
     // ------------------------------------------------------------------------
@@ -82,21 +85,25 @@ public interface HighAvailabilityServices
     // ------------------------------------------------------------------------
 
     /** Gets the leader retriever for the cluster's resource manager. */
+//    获取集群资源管理器的领导者检索器
     LeaderRetrievalService getResourceManagerLeaderRetriever();
 
     /**
      * Gets the leader retriever for the dispatcher. This leader retrieval service is not always
      * accessible.
      */
+//    获取调度程序的领导者检索器。此领导者检索服务并不总是可以访问。
     LeaderRetrievalService getDispatcherLeaderRetriever();
 
     /**
      * Gets the leader retriever for the job JobMaster which is responsible for the given job.
      *
      * @param jobID The identifier of the job.
+     *
      * @return Leader retrieval service to retrieve the job manager for the given job
+     *
      * @deprecated This method should only be used by the legacy code where the JobManager acts as
-     *     the master.
+     *         the master.
      */
     @Deprecated
     LeaderRetrievalService getJobManagerLeaderRetriever(JobID jobID);
@@ -106,9 +113,16 @@ public interface HighAvailabilityServices
      *
      * @param jobID The identifier of the job.
      * @param defaultJobManagerAddress JobManager address which will be returned by a static leader
-     *     retrieval service.
+     *         retrieval service.
+     *
      * @return Leader retrieval service to retrieve the job manager for the given job
      */
+//    获取负责给定作业的作业 JobMaster 的领导者检索器。
+//参数：
+//jobID – 作业的标识符。
+// defaultJobManagerAddress – 将由静态领导者检索服务返回的 JobManager 地址。
+//返回：
+//领导者检索服务，用于检索给定作业的作业管理器
     LeaderRetrievalService getJobManagerLeaderRetriever(
             JobID jobID, String defaultJobManagerAddress);
 
@@ -118,6 +132,7 @@ public interface HighAvailabilityServices
      * client, named {@link ClientHighAvailabilityServices}. See also FLINK-13750.
      *
      * @return the leader retriever for web monitor
+     *
      * @deprecated just use {@link #getClusterRestEndpointLeaderRetriever()} instead of this method.
      */
     @Deprecated
@@ -131,12 +146,15 @@ public interface HighAvailabilityServices
     }
 
     /** Gets the {@link LeaderElection} for the cluster's resource manager. */
+//    获取集群资源管理器的LeaderElection 。
     LeaderElection getResourceManagerLeaderElection();
 
     /** Gets the {@link LeaderElection} for the cluster's dispatcher. */
+//    获取集群调度程序的LeaderElection 。
     LeaderElection getDispatcherLeaderElection();
 
     /** Gets the {@link LeaderElection} for the job with the given {@link JobID}. */
+//    获取具有给定JobID的作业的LeaderElection 。
     LeaderElection getJobManagerLeaderElection(JobID jobID);
 
     /**
@@ -159,30 +177,45 @@ public interface HighAvailabilityServices
      *
      * @return Checkpoint recovery factory
      */
+//    获取作业管理器的检查点恢复工厂。
+//返回：
+//检查点恢复工厂
     CheckpointRecoveryFactory getCheckpointRecoveryFactory() throws Exception;
 
     /**
      * Gets the submitted job graph store for the job manager.
      *
      * @return Submitted job graph store
+     *
      * @throws Exception if the submitted job graph store could not be created
      */
+//    获取作业管理器提交的作业图存储。
+//返回：
+//提交的作业图存储
     JobGraphStore getJobGraphStore() throws Exception;
 
     /**
      * Gets the store that holds information about the state of finished jobs.
      *
      * @return Store of finished job results
+     *
      * @throws Exception if job result store could not be created
      */
+//    获取保存有关已完成作业状态信息的存储。
+//返回：
+//存储已完成的作业结果
     JobResultStore getJobResultStore() throws Exception;
 
     /**
      * Creates the BLOB store in which BLOBs are stored in a highly-available fashion.
      *
      * @return Blob store
+     *
      * @throws IOException if the blob store could not be created
      */
+//    创建 BLOB 存储，其中以高可用性方式存储 BLOB。
+//返回：
+//斑点商店
     BlobStore createBlobStore() throws IOException;
 
     /** Gets the {@link LeaderElection} for the cluster's rest endpoint. */
@@ -232,6 +265,9 @@ public interface HighAvailabilityServices
      *
      * @throws Exception if an error occurred while cleaning up data stored by them.
      */
+//    删除外部存储中高可用性服务存储的所有数据。
+//调用此方法后，由这些高可用性服务管理的任何作业或会话都将不可恢复。
+//如果清理期间发生异常，此方法将尝试继续清理并仅在尝试所有清理步骤后报告异常。
     void cleanupAllData() throws Exception;
 
     /**

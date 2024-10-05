@@ -47,6 +47,9 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  *
  * <p>{@code DefaultLeaderElectionService} handles a single {@link LeaderContender}.
  */
+//领导者选举服务的默认实现。与不同的LeaderElectionDriver组合，
+// 我们可以对竞争者进行 Leader 选举，然后将 Leader 信息持久化到各种存储中。
+//DefaultLeaderElectionService处理单个LeaderContender 。
 public class DefaultLeaderElectionService extends DefaultLeaderElection.ParentService
         implements LeaderElectionService, LeaderElectionDriver.Listener, AutoCloseable {
 

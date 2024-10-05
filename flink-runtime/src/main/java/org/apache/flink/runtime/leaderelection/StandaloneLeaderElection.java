@@ -29,6 +29,8 @@ import java.util.UUID;
  * implementation can be used for testing, and for cluster setups that do not tolerate failures of
  * the main components (e.g. ResourceManager or Dispatcher).
  */
+//StandaloneLeaderElection为非HA案例实现领导选举。
+//此实现可用于测试，以及用于不容忍主要组件 (例如ResourceManager或Dispatcher) 故障的集群设置。
 public class StandaloneLeaderElection implements LeaderElection {
 
     private final Object lock = new Object();

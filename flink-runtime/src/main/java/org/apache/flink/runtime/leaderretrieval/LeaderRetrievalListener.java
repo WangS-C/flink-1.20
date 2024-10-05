@@ -52,6 +52,7 @@ public interface LeaderRetrievalListener {
      *
      * @param exception
      */
-    //此方法由LeaderRetrievalService在发生异常时调用。这确保LeaderRetrievalListener知道在LeaderRetrievalService线程中发生的任何问题
+    //此方法由LeaderRetrievalService在发生异常时调用。
+    // 这确保LeaderRetrievalListener知道在LeaderRetrievalService线程中发生的任何问题
     void handleError(Exception exception);
 }
