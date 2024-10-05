@@ -177,6 +177,12 @@ public class ZooKeeperUtils {
      *     errors of {@link CuratorFramework}
      * @return {@link CuratorFrameworkWithUnhandledErrorListener} instance
      */
+    //启动CuratorFramework实例并将其连接到给定的 ZooKeeper 仲裁。
+    //参数：
+    //configuration – 包含配置值的Configuration对象
+    //fatalErrorHandler – FatalErrorHandler fatalErrorHandler 用于处理CuratorFramework的意外错误
+    //返回：
+    //CuratorFrameworkWithUnhandledErrorListener实例
     public static CuratorFrameworkWithUnhandledErrorListener startCuratorFramework(
             Configuration configuration, FatalErrorHandler fatalErrorHandler) {
         checkNotNull(configuration, "configuration");

@@ -580,6 +580,20 @@ public final class Utils {
      * @param startCommandValues a replacement map <tt>placeholder -&gt; value</tt>
      * @return the start command with placeholders filled in
      */
+    //将模板启动命令中的占位符替换为 startCommandValues 中的值。
+    //如果使用默认模板ConfigConstants. DEFAULT_YARN_CONTAINER_START_COMMAND_TEMPLATE ，则映射中必须存在以下键，否则生成的命令仍将包含占位符：
+    //java = Java 可执行文件的路径
+    //jvmmem = JVM 内存限制和调整
+    //jvmopts = Java VM 的其他选项
+    //logging = 与日志记录相关的配置设置
+    //class = 要执行的主类
+    //args = 主类的参数
+    //重定向=输出重定向
+    //参数：
+    //template – 带有占位符的模板启动命令
+    //startCommandValues – 替换地图占位符 -> 值
+    //返回：
+    //填充了占位符的启动命令
     public static String getStartCommand(String template, Map<String, String> startCommandValues) {
         for (Map.Entry<String, String> variable : startCommandValues.entrySet()) {
             template =

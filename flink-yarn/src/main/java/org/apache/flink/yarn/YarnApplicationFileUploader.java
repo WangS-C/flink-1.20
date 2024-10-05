@@ -231,6 +231,14 @@ class YarnApplicationFileUploader implements AutoCloseable {
      * @param resourceType type of the resource, which can be one of FILE, PATTERN, or ARCHIVE
      * @return list of class paths with the proper resource keys from the registration
      */
+    //递归上传（并注册） shipFiles中的任何（用户和系统）文件，但应单独上传的与“ flink-dist*.jar ”匹配的文件除外。
+    //如果已经是远程文件，则跳过上传。
+    //参数：
+    //shipFiles – 注册为 Yarn 本地资源的本地或远程文件
+    //localResourcesDirectory – localResources上传到的目录
+    //resourceType – 资源的类型，可以是 FILE、PATTERN 或 ARCHIVE 之一
+    //返回：
+    //具有注册中正确资源键的类路径列表
     List<String> registerMultipleLocalResources(
             final Collection<Path> shipFiles,
             final String localResourcesDirectory,
@@ -341,6 +349,9 @@ class YarnApplicationFileUploader implements AutoCloseable {
      *
      * @return list of class paths with the file name
      */
+    //将提供的 lib 目录中的所有文件注册为具有 PUBLIC 可见性的 Yarn 本地资源，这意味着它们将被缓存在节点中并由不同的应用程序重用。
+    //返回：
+    //带有文件名的类路径列表
     List<String> registerProvidedLocalResources() {
         checkNotNull(localResources);
 

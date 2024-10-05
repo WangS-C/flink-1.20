@@ -81,6 +81,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * Abstract class which implements the creation of the {@link DispatcherResourceManagerComponent}
  * components.
  */
+//实现DispatcherResourceManagerComponent组件创建的抽象类。
 public class DefaultDispatcherResourceManagerComponentFactory
         implements DispatcherResourceManagerComponentFactory {
 
@@ -101,6 +102,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
         this.restEndpointFactory = restEndpointFactory;
     }
 
+    //用来启动 Dispatcher， ResourceManager，和 WebMonitorEndpoint
     @Override
     public DispatcherResourceManagerComponent create(
             Configuration configuration,
@@ -132,6 +134,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                     highAvailabilityServices.getResourceManagerLeaderRetriever();
 
             final LeaderGatewayRetriever<DispatcherGateway> dispatcherGatewayRetriever =
+                    //Dispatcher网关
                     new RpcGatewayRetriever<>(
                             rpcService,
                             DispatcherGateway.class,
@@ -140,6 +143,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                                     12, Duration.ofMillis(10), Duration.ofMillis(50)));
 
             final LeaderGatewayRetriever<ResourceManagerGateway> resourceManagerGatewayRetriever =
+                    //ResourceManager网关
                     new RpcGatewayRetriever<>(
                             rpcService,
                             ResourceManagerGateway.class,

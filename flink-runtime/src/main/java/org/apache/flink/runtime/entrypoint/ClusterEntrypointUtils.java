@@ -198,6 +198,14 @@ public final class ClusterEntrypointUtils {
      * @param workingDirectoryName name of the working directory to create
      * @return working directory
      */
+    //从给定的配置生成工作目录。如果指定了工作目录选项，则将首先读取此配置选项。最后，
+    // CoreOptions. TMP_DIRS将用于从中提取工作目录库。
+    //参数：
+    //configuration – 从中提取工作目录
+    //workingDirOption – 可选的工作目录选项
+    //workingDirectoryName – 要创建的工作目录的名称
+    //返回：
+    //工作目录
     public static File generateWorkingDirectoryFile(
             Configuration configuration,
             Optional<ConfigOption<String>> workingDirOption,

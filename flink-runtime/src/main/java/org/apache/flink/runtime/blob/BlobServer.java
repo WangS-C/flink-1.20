@@ -82,6 +82,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * requests and spawning threads to handle these requests. Furthermore, it takes care of creating
  * the directory structure to store the BLOBs or temporarily cache them.
  */
+//此类实现 BLOB 服务器。 BLOB 服务器负责侦听传入请求并生成线程来处理这些请求。
+//此外，它还负责创建目录结构来存储 BLOB 或临时缓存它们。
 public class BlobServer extends Thread
         implements BlobService,
                 BlobWriter,

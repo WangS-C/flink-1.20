@@ -86,11 +86,14 @@ public class HighAvailabilityServicesUtils {
     private static HighAvailabilityServices createZooKeeperHaServices(
             Configuration configuration, Executor executor, FatalErrorHandler fatalErrorHandler)
             throws Exception {
+        //从配置创建 blob 存储
         BlobStoreService blobStoreService = BlobUtils.createBlobStoreFromConfig(configuration);
 
+        //启动CuratorFramework实例并将其连接到给定的ZooKeeper
         final CuratorFrameworkWithUnhandledErrorListener curatorFrameworkWrapper =
                 ZooKeeperUtils.startCuratorFramework(configuration, fatalErrorHandler);
 
+        //ZooKeeper HA
         return new ZooKeeperLeaderElectionHaServices(
                 curatorFrameworkWrapper, configuration, executor, blobStoreService);
     }

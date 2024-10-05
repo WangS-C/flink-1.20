@@ -72,6 +72,13 @@ public interface SlotManager extends AutoCloseable {
      * @param resourceEventListener to use for notify resource not enough
      * @param newBlockedTaskManagerChecker to query whether a task manager is blocked
      */
+    //使用给定的领导者 ID 和资源管理器操作启动槽管理器。
+    //参数：
+    //newResourceManagerId – 用于与任务管理器通信
+    //newMainThreadExecutor – 用于在 ResourceManager 的主线程中运行代码
+    //newResourceAllocator – 用于资源（取消）分配
+    //resourceEventListener – 用于通知资源不足
+    //newBlockedTaskManagerChecker – 查询任务管理器是否被阻止
     void start(
             ResourceManagerId newResourceManagerId,
             Executor newMainThreadExecutor,

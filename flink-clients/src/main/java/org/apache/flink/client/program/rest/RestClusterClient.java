@@ -172,6 +172,7 @@ import java.util.stream.Collectors;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** A {@link ClusterClient} implementation that communicates via HTTP REST requests. */
+//通过 HTTP REST 请求进行通信的ClusterClient实现。
 public class RestClusterClient<T> implements ClusterClient<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(RestClusterClient.class);

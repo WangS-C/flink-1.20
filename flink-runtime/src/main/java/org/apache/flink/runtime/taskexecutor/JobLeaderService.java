@@ -30,6 +30,10 @@ import org.apache.flink.runtime.rpc.RpcService;
  * leader and its connection. In case that a job leader loses leadership, the job leader listener is
  * notified as well.
  */
+//该服务负责监控所有已注册作业的作业领导者（作业经理，即给定作业的领导者）。
+//在获得作业领导权并被作业领导者服务检测到后，该服务会尝试与作业领导者建立连接。
+//成功建立连接后，作业领导者侦听器会收到有关新作业领导者及其连接的通知。
+//如果作业领导者失去领导权，作业领导者侦听器也会收到通知。
 public interface JobLeaderService {
 
     /**
@@ -41,6 +45,12 @@ public interface JobLeaderService {
      *     jobs
      * @param initialJobLeaderListener listening for job leader changes
      */
+    //使用给定的服务启动作业领导者服务。
+    //参数：
+    //initialOwnerAddress – 用于建立连接（源地址）
+    //initialRpcService – 用于创建rpc连接
+    //initialHighAvailabilityServices – 为不同的作业创建领导者检索服务
+    //initialJobLeaderListener – 监听工作领导者的变化
     void start(
             String initialOwnerAddress,
             RpcService initialRpcService,

@@ -90,6 +90,7 @@ import static org.apache.flink.configuration.HighAvailabilityOptions.HA_CLUSTER_
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** Class handling the command line interface to the YARN session. */
+//处理 YARN 会话命令行界面的类。
 public class FlinkYarnSessionCli extends AbstractYarnCli {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkYarnSessionCli.class);
 
@@ -574,6 +575,7 @@ public class FlinkYarnSessionCli extends AbstractYarnCli {
         effectiveConfiguration.set(
                 DeploymentOptions.TARGET, YarnDeploymentTarget.SESSION.getName());
 
+        //从给定的配置创建ClusterDescriptor 。
         final YarnClusterDescriptor yarnClusterDescriptor =
                 (YarnClusterDescriptor)
                         yarnClusterClientFactory.createClusterDescriptor(effectiveConfiguration);
@@ -598,6 +600,7 @@ public class FlinkYarnSessionCli extends AbstractYarnCli {
                             yarnClusterClientFactory.getClusterSpecification(
                                     effectiveConfiguration);
 
+                    //部署会话集群
                     clusterClientProvider =
                             yarnClusterDescriptor.deploySessionCluster(clusterSpecification);
                     ClusterClient<ApplicationId> clusterClient =

@@ -41,6 +41,10 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * pre-configured ResourceManager, and stores checkpoints and metadata simply on the heap or on a
  * local file system and therefore in a storage without guarantees.
  */
+//HighAvailabilityServices的实现，适用于所有参与者（ResourceManager、JobManager、TaskManager）
+// 在同一进程中运行的非高可用性情况。
+//此实现不依赖于任何外部服务。它返回一个修复预配置的 ResourceManager，
+// 并将检查点和元数据简单地存储在堆或本地文件系统上，因此存储在没有保证的存储中。
 public class EmbeddedHaServices extends AbstractNonHaServices {
 
     private final Executor executor;

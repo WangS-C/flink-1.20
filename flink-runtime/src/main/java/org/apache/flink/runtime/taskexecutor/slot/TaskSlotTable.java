@@ -45,6 +45,9 @@ import java.util.UUID;
  *
  * <p>Before the task slot table can be used, it must be started via the {@link #start} method.
  */
+//多个TaskSlot实例的容器。此外，它还维护多个索引，以便更快地访问任务和分配的槽集。
+//任务槽表自动注册无法分配给作业管理器的已分配槽的超时。
+//在使用任务slot表之前，必须通过start方法启动它
 public interface TaskSlotTable<T extends TaskSlotPayload>
         extends TimeoutListener<AllocationID>, AutoCloseableAsync {
     /**
@@ -54,6 +57,10 @@ public interface TaskSlotTable<T extends TaskSlotPayload>
      * @param mainThreadExecutor {@link ComponentMainThreadExecutor} to schedule internal calls to
      *     the main thread
      */
+    //使用给定的槽操作启动任务槽表。
+    //参数：
+    //initialSlotActions – 用于slot操作
+    //mainThreadExecutor – ComponentMainThreadExecutor安排对主线程的内部调用
     void start(SlotActions initialSlotActions, ComponentMainThreadExecutor mainThreadExecutor);
 
     /**

@@ -51,6 +51,13 @@ public interface RpcSystem extends RpcSystemUtils, AutoCloseable {
      *     RpcService should be reachable
      * @return rpc service builder
      */
+    //返回可从其他计算机访问的RpcService的构建器。
+    //参数：
+    //configuration ——Flink配置
+    //externalAddress – RpcService 应可访问的可选地址
+    //externalPortRange – 从中选择 1 个端口的端口范围，在该范围内 RpcService 应可访问
+    //返回：
+    //RPC 服务构建器
     RpcServiceBuilder remoteServiceBuilder(
             Configuration configuration,
             @Nullable String externalAddress,

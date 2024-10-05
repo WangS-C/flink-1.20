@@ -74,6 +74,11 @@ public interface HeartbeatServices {
      * @param configuration Configuration to be used for the HeartbeatServices creation
      * @return An HeartbeatServices instance created from the given configuration
      */
+    //从Configuration创建 HeartbeatServices 实例。
+    //参数：
+    //configuration – 用于创建 HeartbeatServices 的配置
+    //返回：
+    //根据给定配置创建的 HeartbeatServices 实例
     static HeartbeatServices fromConfiguration(Configuration configuration) {
         long heartbeatInterval =
                 configuration.get(HeartbeatManagerOptions.HEARTBEAT_INTERVAL).toMillis();

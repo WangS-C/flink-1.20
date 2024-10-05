@@ -439,6 +439,7 @@ class PekkoUtils {
      */
     public static ActorSystem createActorSystem(String actorSystemName, Config config) {
         // Initialize slf4j as logger of Pekko's Netty instead of java.util.logging (FLINK-1650)
+        //将 slf4j 初始化为 Pekko 的 Netty 记录器而不是 java.util.logging (FLINK-1650)
         InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
         return RobustActorSystem.create(actorSystemName, config);
     }

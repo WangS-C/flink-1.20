@@ -46,6 +46,10 @@ public class JMXService {
      *
      * @param portsConfig port configuration of the JMX server.
      */
+    //启动 JMV 范围的单例 JMX 服务器。
+    //如果JMXServer静态实例已经启动，则不会再次启动。相反，将记录一条警告，指示现有 JMXServer 静态实例正在公开哪个端口。
+    //参数：
+    //portsConfig – JMX 服务器的端口配置。
     public static synchronized void startInstance(String portsConfig) {
         if (jmxServer == null) {
             if (portsConfig != null) {

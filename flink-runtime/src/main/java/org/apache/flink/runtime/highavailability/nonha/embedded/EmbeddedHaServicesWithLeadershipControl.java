@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 /** {@link EmbeddedHaServices} extension to expose leadership granting and revoking. */
+//EmbeddedHaServices扩展公开领导授予和撤销。
 public class EmbeddedHaServicesWithLeadershipControl extends EmbeddedHaServices
         implements HaLeadershipControl {
 

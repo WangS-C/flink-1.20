@@ -119,6 +119,13 @@ public class BlobUtils {
      * @return new blob server instance
      * @throws IOException if we could not create the blob storage directory
      */
+    //从给定的配置、后备存储目录和 Blob 存储创建BlobServer 。
+    //参数：
+    //configuration – 用于 BlobServer
+    //fallbackStorageDirectory – 如果没有显式配置其他目录，则使用后备存储目录
+    //blobStore – 用于此 blob 服务器的 blob 存储
+    //返回：
+    //新的 blob 服务器实例
     public static BlobServer createBlobServer(
             Configuration configuration,
             Reference<File> fallbackStorageDirectory,
@@ -140,6 +147,14 @@ public class BlobUtils {
      * @return new blob cache service instance
      * @throws IOException if we could not create the blob storage directory
      */
+    //根据给定的配置、后备存储目录、Blob 视图和 Blob 服务器地址创建BlobCacheService 。
+    //参数：
+    //configuration – 用于 BlobCacheService
+    // fallbackStorageDirectory – 后备存储目录
+    // blobView – Blob视图
+    // serverAddress – blob 服务器地址
+    //返回：
+    //新的 blob 缓存服务实例
     public static BlobCacheService createBlobCacheService(
             Configuration configuration,
             Reference<File> fallbackStorageDirectory,

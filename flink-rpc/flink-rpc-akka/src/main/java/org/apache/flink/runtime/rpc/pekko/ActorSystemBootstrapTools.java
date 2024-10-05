@@ -214,6 +214,15 @@ public class ActorSystemBootstrapTools {
      * @return The ActorSystem which has been started.
      * @throws Exception
      */
+    //启动本地 Actor 系统。
+    //参数：
+    //configuration – Flink 配置。
+    //actorSystemName – 启动的 ActorSystem 的名称。
+    //logger – 输出日志信息的记录器。
+    //actorSystemExecutorConfiguration – ActorSystem 底层执行器的配置。
+    //customConfig – 自定义 Pekko 配置与源自 Flink 配置的配置相结合。
+    //返回：
+    //已经启动的ActorSystem。
     public static ActorSystem startLocalActorSystem(
             Configuration configuration,
             String actorSystemName,
@@ -247,6 +256,13 @@ public class ActorSystemBootstrapTools {
      * @param logger The logger to output log information.
      * @return The ActorSystem which has been started.
      */
+    //使用给定的 Pekko 配置启动 Actor 系统。
+    //参数：
+    //config – 启动的 ActorSystem 的配置。
+    //actorSystemName – 启动的 ActorSystem 的名称。
+    //logger – 输出日志信息的记录器。
+    //返回：
+    //已经启动的ActorSystem。
     private static ActorSystem startActorSystem(
             Config config, String actorSystemName, Logger logger) {
         logger.debug("Using pekko configuration\n {}", config);

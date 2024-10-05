@@ -193,6 +193,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                             new ExecutorThreadFactory("taskmanager-future"));
 
             highAvailabilityServices =
+                    //创建高可用性服务
                     HighAvailabilityServicesUtils.createHighAvailabilityServices(
                             configuration,
                             executor,
@@ -202,18 +203,22 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
             JMXService.startInstance(configuration.get(JMXServerOptions.JMX_SERVER_PORT));
 
+            //创建rpc服务
             rpcService = createRpcService(configuration, highAvailabilityServices, rpcSystem);
 
             this.resourceId =
+                    //获取任务管理器资源ID
                     getTaskManagerResourceID(
                             configuration, rpcService.getAddress(), rpcService.getPort());
 
+            //创建任务管理器工作目录
             this.workingDirectory =
                     ClusterEntrypointUtils.createTaskManagerWorkingDirectory(
                             configuration, resourceId);
 
             LOG.info("Using working directory: {}", workingDirectory);
 
+            //从配置中获取心跳服务
             HeartbeatServices heartbeatServices =
                     HeartbeatServices.fromConfiguration(configuration);
 
@@ -248,6 +253,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                     new DelegationTokenReceiverRepository(configuration, pluginManager);
 
             taskExecutorService =
+                    //创建任务执行器
                     taskExecutorServiceFactory.createTaskExecutor(
                             this.configuration,
                             this.resourceId.unwrap(),
@@ -292,6 +298,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
     public void start() throws Exception {
         synchronized (lock) {
+            //启动TaskManagerRunnerServices
             startTaskManagerRunnerServices();
             taskExecutorService.start();
         }
@@ -489,6 +496,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                     new TaskManagerRunner(
                             configuration,
                             pluginManager,
+                            //创建任务执行器服务
                             TaskManagerRunner::createTaskExecutorService);
             taskManagerRunner.start();
         } catch (Exception exception) {
@@ -534,6 +542,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
             exitCode =
                     SecurityUtils.getInstalledContext()
+                            //运行TaskManager
                             .runSecured(() -> runTaskManager(configuration, pluginManager));
         } catch (Throwable t) {
             throwable = ExceptionUtils.stripException(t, UndeclaredThrowableException.class);
@@ -569,6 +578,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
             throws Exception {
 
         final TaskExecutor taskExecutor =
+                //启动TaskManager
                 startTaskManager(
                         configuration,
                         resourceID,

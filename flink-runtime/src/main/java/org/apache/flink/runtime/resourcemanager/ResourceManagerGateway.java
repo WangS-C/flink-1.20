@@ -110,6 +110,14 @@ public interface ResourceManagerGateway
      * @return Future which is completed with {@link Acknowledge} once the slot report has been
      *     received.
      */
+    //将给定的SlotReport发送到 ResourceManager。
+    //参数：
+    //taskManagerResourceId – 发送任务管理器的资源 ID
+    //taskManagerRegistrationId – 标识发送任务管理器的 id
+    //slotReport – 发送到 ResourceManager
+    //timeout – 操作
+    //返回：
+    //收到插槽报告后，通过Acknowledge完成未来。
     CompletableFuture<Acknowledge> sendSlotReport(
             ResourceID taskManagerResourceId,
             InstanceID taskManagerRegistrationId,

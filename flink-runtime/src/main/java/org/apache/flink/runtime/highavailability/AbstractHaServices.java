@@ -52,6 +52,13 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * <p>The abstract class is also responsible for determining which component service should be
  * reused. For example, {@link #jobResultStore} is created once and could be reused many times.
  */
+//基于分布式系统（例如Zookeeper、Kubernetes）抽象高可用服务。
+// 它将有助于创建所有领导者选举/ 检索服务和清理。
+// 请在getLeaderPathForResourceManager 、 getLeaderPathForDispatcher 、
+// getLeaderPathForJobManager 、 getLeaderPathForRestServer的实现中返回正确的领导者名称。
+// 返回的领导者名称是 Kubernetes 中的 ConfigMap 名称和 Zookeeper 中的子路径。
+//应实现close()和cleanupAllData()来销毁资源。
+//抽象类还负责确定应该重用哪个组件服务。例如，jobResultStore创建一次，可以重复使用多次。
 public abstract class AbstractHaServices implements HighAvailabilityServices {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -231,6 +238,11 @@ public abstract class AbstractHaServices implements HighAvailabilityServices {
      * @param leaderName ConfigMap name in Kubernetes or child node path in Zookeeper.
      * @return Return LeaderRetrievalService using Zookeeper or Kubernetes.
      */
+    //使用指定的leaderName创建领导者检索服务。
+    //参数：
+    //leaderName – Kubernetes 中的 ConfigMap 名称或 Zookeeper 中的子节点路径。
+    //返回：
+    //使用 Zookeeper 或 Kubernetes 返回 LeaderRetrievalService。
     protected abstract LeaderRetrievalService createLeaderRetrievalService(String leaderName);
 
     /**

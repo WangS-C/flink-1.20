@@ -93,6 +93,7 @@ public class DefaultLeaderRetrievalService
         synchronized (lock) {
             leaderListener = listener;
             leaderRetrievalDriver =
+                    //创建领导者检索驱动程序
                     leaderRetrievalDriverFactory.createLeaderRetrievalDriver(
                             this, new LeaderRetrievalFatalErrorHandler());
             LOG.info("Starting DefaultLeaderRetrievalService with {}.", leaderRetrievalDriver);

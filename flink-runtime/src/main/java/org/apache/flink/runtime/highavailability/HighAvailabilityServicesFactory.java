@@ -34,6 +34,12 @@ public interface HighAvailabilityServicesFactory {
      * @return instance of {@link HighAvailabilityServices}
      * @throws Exception when HAServices cannot be created
      */
+    //创建HighAvailabilityServices实例。
+    //参数：
+    //configuration ——Flink配置
+    //executor – 后台任务执行器
+    //返回：
+    //HighAvailabilityServices实例
     HighAvailabilityServices createHAServices(Configuration configuration, Executor executor)
             throws Exception;
 

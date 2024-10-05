@@ -93,6 +93,7 @@ public abstract class ResourceManagerFactory<T extends ResourceIDRetrievable> {
             ResourceManagerProcessContext context, UUID leaderSessionId) throws Exception {
 
         final ResourceManagerRuntimeServices resourceManagerRuntimeServices =
+                //创建资源管理器运行时服务
                 createResourceManagerRuntimeServices(
                         context.getRmRuntimeServicesConfig(),
                         context.getRpcService(),
@@ -100,6 +101,7 @@ public abstract class ResourceManagerFactory<T extends ResourceIDRetrievable> {
                         SlotManagerMetricGroup.create(
                                 context.getMetricRegistry(), context.getHostname()));
 
+        //创建资源管理器
         return createResourceManager(
                 context.getRmConfig(),
                 context.getResourceId(),

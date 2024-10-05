@@ -184,16 +184,20 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
         final YarnContainerEventHandler yarnContainerEventHandler = new YarnContainerEventHandler();
         try {
             resourceManagerClient =
+                    //创建资源管理器客户端
                     yarnResourceManagerClientFactory.createResourceManagerClient(
                             yarnHeartbeatIntervalMillis, yarnContainerEventHandler);
             resourceManagerClient.init(yarnConfig);
             resourceManagerClient.start();
 
             final RegisterApplicationMasterResponse registerApplicationMasterResponse =
+                    //注册应用程序主控
                     registerApplicationMaster();
+            //从之前的尝试中获取容器
             getContainersFromPreviousAttempts(registerApplicationMasterResponse);
             taskExecutorProcessSpecContainerResourcePriorityAdapter =
                     new TaskExecutorProcessSpecContainerResourcePriorityAdapter(
+                            //获得最大的资源能力
                             registerApplicationMasterResponse.getMaximumResourceCapability(),
                             ExternalResourceUtils.getExternalResourceConfigurationKeys(
                                     flinkConfig,
@@ -262,6 +266,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
         Utils.deleteApplicationFiles(configuration.getYarnFiles());
     }
 
+    //请求资源
     @Override
     public CompletableFuture<YarnWorkerNode> requestResource(
             TaskExecutorProcessSpec taskExecutorProcessSpec) {
@@ -337,9 +342,11 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
                                 return null;
                             }));
 
+            //添加容器请求
             addContainerRequest(resource, priority);
 
             // make sure we transmit the request fast and receive fast news of granted allocations
+            //确保我们快速传输请求并快速接收已授予分配的消息
             resourceManagerClient.setHeartbeatInterval(containerRequestHeartbeatIntervalMillis);
 
             requestResourceFutures
@@ -424,6 +431,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
             final Container container = containerIterator.next();
             final AMRMClient.ContainerRequest pendingRequest =
                     pendingContainerRequestIterator.next();
+            //获取容器资源id
             final ResourceID resourceId = getContainerResourceId(container);
 
             final CompletableFuture<YarnWorkerNode> requestResourceFuture =
@@ -435,6 +443,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
             }
 
             requestResourceFuture.complete(new YarnWorkerNode(container, resourceId));
+            //在容器中异步启动任务执行器
             startTaskExecutorInContainerAsync(container, taskExecutorProcessSpec, resourceId);
             removeContainerRequest(pendingRequest);
 
@@ -443,6 +452,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
 
         int numExcess = 0;
         while (containerIterator.hasNext()) {
+            //返回多余的容器
             returnExcessContainer(containerIterator.next());
             numExcess++;
         }
@@ -461,6 +471,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
 
     private void addContainerRequest(Resource resource, Priority priority) {
         // update blocklist
+        //更新阻止列表
         tryUpdateApplicationBlockList();
         AMRMClient.ContainerRequest containerRequest =
                 ContainerRequestReflector.INSTANCE.getContainerRequest(
@@ -485,6 +496,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
         final CompletableFuture<ContainerLaunchContext> containerLaunchContextFuture =
                 FutureUtils.supplyAsync(
                         () ->
+                                //创建 TaskManager 的启动上下文
                                 createTaskExecutorLaunchContext(
                                         resourceId,
                                         container.getNodeId().getHost(),
@@ -495,6 +507,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
                 containerLaunchContextFuture.handleAsync(
                         (context, exception) -> {
                             if (exception == null) {
+                                //异步启动容器
                                 nodeManagerClient.startContainerAsync(container, context);
                             } else {
                                 getResourceEventHandler()
@@ -560,6 +573,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
                         taskManagerParameters,
                         taskManagerDynamicProperties,
                         currDir,
+                        ////入口类
                         YarnTaskExecutorRunner.class,
                         log);
 
@@ -591,6 +605,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
     private void getContainersFromPreviousAttempts(
             final RegisterApplicationMasterResponse registerApplicationMasterResponse) {
         final List<Container> containersFromPreviousAttempts =
+                //从之前的尝试中获取容器
                 registerApplicationMasterResponseReflector.getContainersFromPreviousAttempts(
                         registerApplicationMasterResponse);
         final List<YarnWorkerNode> recoveredWorkers = new ArrayList<>();
@@ -606,6 +621,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
             recoveredWorkers.add(worker);
         }
 
+        //在之前的尝试中，工人们恢复了
         getResourceEventHandler().onPreviousAttemptWorkersRecovered(recoveredWorkers);
     }
 
@@ -677,6 +693,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
                     });
         }
 
+        //分配container的回调函数
         @Override
         public void onContainersAllocated(List<Container> containers) {
             runAsyncWithFatalHandler(
@@ -686,6 +703,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
 
                         for (Map.Entry<Priority, List<Container>> entry :
                                 groupContainerByPriority(containers).entrySet()) {
+                            //在优先分配的容器上
                             onContainersOfPriorityAllocated(entry.getKey(), entry.getValue());
                         }
 

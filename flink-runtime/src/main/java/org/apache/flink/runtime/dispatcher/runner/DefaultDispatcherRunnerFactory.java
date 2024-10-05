@@ -32,6 +32,7 @@ import java.util.concurrent.Executor;
  * {@link DispatcherRunnerFactory} implementation which creates {@link DefaultDispatcherRunner}
  * instances.
  */
+//DispatcherRunnerFactory实现创建DefaultDispatcherRunner实例。
 public class DefaultDispatcherRunnerFactory implements DispatcherRunnerFactory {
     private final DispatcherLeaderProcessFactoryFactory dispatcherLeaderProcessFactoryFactory;
 

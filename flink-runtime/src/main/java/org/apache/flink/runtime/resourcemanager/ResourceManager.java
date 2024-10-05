@@ -253,6 +253,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
     public final void onStart() throws Exception {
         try {
             log.info("Starting the resource manager.");
+            //启动资源管理器服务
             startResourceManagerServices();
             startedFuture.complete(null);
         } catch (Throwable t) {
@@ -269,10 +270,13 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
         try {
             jobLeaderIdService.start(new JobLeaderIdActionsImpl());
 
+            //注册指标
             registerMetrics();
 
+            //启动心跳服务
             startHeartbeatServices();
 
+            //使用给定的领导者 ID 和资源管理器操作启动槽管理器。
             slotManager.start(
                     getFencingToken(),
                     getMainThreadExecutor(),
@@ -1310,6 +1314,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
      * @throws ResourceManagerException which occurs during initialization and causes the resource
      *     manager to fail.
      */
+    //初始化框架特定组件。
     protected abstract void initialize() throws ResourceManagerException;
 
     /**

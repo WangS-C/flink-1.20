@@ -348,6 +348,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
     @Override
     public void onStart() throws Exception {
         try {
+            //启动调度程序服务
             startDispatcherServices();
         } catch (Throwable t) {
             final DispatcherException exception =
@@ -396,6 +397,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
 
     private void startRecoveredJobs() {
         for (JobGraph recoveredJob : recoveredJobs) {
+            //运行恢复的作业
             runRecoveredJob(recoveredJob);
         }
         recoveredJobs.clear();

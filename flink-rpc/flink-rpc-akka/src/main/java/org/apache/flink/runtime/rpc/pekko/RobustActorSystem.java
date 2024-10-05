@@ -96,6 +96,7 @@ public abstract class RobustActorSystem extends ActorSystemImpl {
                         return postShutdownClassLoadingErrorFilter;
                     }
                 };
+        //终止时登记
         robustActorSystem.registerOnTermination(
                 postShutdownClassLoadingErrorFilter::notifyShutdownComplete);
 

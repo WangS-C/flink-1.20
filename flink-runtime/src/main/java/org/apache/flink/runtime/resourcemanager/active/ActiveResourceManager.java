@@ -330,6 +330,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
     //  Internal
     // ------------------------------------------------------------------------
 
+    //检查资源声明
     private void checkResourceDeclarations() {
         validateRunsInMainThread();
 
@@ -394,6 +395,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
                             totalWorkerCounter.getNum(workerResourceSpec),
                             declaredWorkerNumber);
                     for (int i = 0; i < requestWorkerNumber; i++) {
+                        //请求新工人
                         requestNewWorker(workerResourceSpec);
                     }
                 } else {
@@ -493,6 +495,9 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
      * @param workerResourceSpec workerResourceSpec specifies the size of the to be allocated
      *     resource
      */
+    //使用工作线程资源规范分配资源。
+    //参数：
+    //workerResourceSpec –workerResourceSpec 指定要分配的资源的大小
     @VisibleForTesting
     public void requestNewWorker(WorkerResourceSpec workerResourceSpec) {
         final TaskExecutorProcessSpec taskExecutorProcessSpec =

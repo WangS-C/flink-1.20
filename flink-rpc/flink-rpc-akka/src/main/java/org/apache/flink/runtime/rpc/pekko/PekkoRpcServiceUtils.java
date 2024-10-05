@@ -341,11 +341,13 @@ public class PekkoRpcServiceUtils {
 
             // pekko internally caches the context class loader
             // make sure it uses the plugin class loader
+            //pekko 在内部缓存上下文类加载器，确保它使用插件类加载器
             try (TemporaryClassLoaderContext ignored =
                     TemporaryClassLoaderContext.of(getClass().getClassLoader())) {
                 if (externalAddress == null) {
                     // create local actor system
                     actorSystem =
+                            //启动本地 Actor 系统。
                             ActorSystemBootstrapTools.startLocalActorSystem(
                                     configuration,
                                     actorSystemName,
@@ -354,6 +356,7 @@ public class PekkoRpcServiceUtils {
                                     customConfig);
                 } else {
                     // create remote actor system
+                    //创建远程参与者系统
                     actorSystem =
                             ActorSystemBootstrapTools.startRemoteActorSystem(
                                     configuration,

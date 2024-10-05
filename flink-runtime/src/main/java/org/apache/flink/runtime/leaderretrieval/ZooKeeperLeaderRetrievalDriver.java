@@ -81,6 +81,13 @@ public class ZooKeeperLeaderRetrievalDriver implements LeaderRetrievalDriver {
      *     leader information is being cleared
      * @param fatalErrorHandler Fatal error handler
      */
+    //创建一个领导者检索服务，该服务使用 ZooKeeper 来检索领导者信息。
+    //参数：
+    //client – 构成与 ZooKeeper 仲裁的连接的客户端
+    //path – ZooKeeper节点的路径，包含领导者信息
+    //leaderRetrievalEventHandler – 通知领导者更改的处理程序。
+    //leaderInformationClearancePolicy – LeaderInformationClearancePolicy 控制何时清除领导者信息
+    //fatalErrorHandler – 致命错误处理程序
     public ZooKeeperLeaderRetrievalDriver(
             CuratorFramework client,
             String path,

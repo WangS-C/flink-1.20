@@ -226,17 +226,21 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
         LOG.info("Starting {}.", getClass().getSimpleName());
 
         try {
+            //从配置中设置Flink安全管理器
             FlinkSecurityManager.setFromConfiguration(configuration);
             PluginManager pluginManager =
+                    //从根文件夹创建插件管理器
                     PluginUtils.createPluginManagerFromRootFolder(configuration);
             configureFileSystems(configuration, pluginManager);
 
+            //安装安全上下文
             SecurityContext securityContext = installSecurityContext(configuration);
 
             ClusterEntrypointUtils.configureUncaughtExceptionHandler(configuration);
             securityContext.runSecured(
                     (Callable<Void>)
                             () -> {
+                                //运行集群
                                 runCluster(configuration, pluginManager);
 
                                 return null;
@@ -285,17 +289,21 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
         return SecurityUtils.getInstalledContext();
     }
 
+    //运行集群
     private void runCluster(Configuration configuration, PluginManager pluginManager)
             throws Exception {
         synchronized (lock) {
+            //初始化服务
             initializeServices(configuration, pluginManager);
 
             // write host information into configuration
+            //将主机信息写入配置
             configuration.set(JobManagerOptions.ADDRESS, commonRpcService.getAddress());
             configuration.set(JobManagerOptions.PORT, commonRpcService.getPort());
 
             final DispatcherResourceManagerComponentFactory
                     dispatcherResourceManagerComponentFactory =
+                    //创建调度程序资源管理器组件工厂
                             createDispatcherResourceManagerComponentFactory(configuration);
 
             clusterComponent =
@@ -310,6 +318,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
                             delegationTokenManager,
                             metricRegistry,
                             executionGraphInfoStore,
+                            //rpc 指标查询服务检索器
                             new RpcMetricQueryServiceRetriever(
                                     metricRegistry.getMetricQueryServiceRpcService()),
                             failureEnrichers,
@@ -363,6 +372,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
                     resourceId);
 
             workingDirectory =
+                    //创建作业管理器工作目录
                     ClusterEntrypointUtils.createJobManagerWorkingDirectory(
                             configuration, resourceId);
 
@@ -371,17 +381,22 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
             rpcSystem = RpcSystem.load(configuration);
 
             commonRpcService =
+                    //创建远程rpc服务
                     RpcUtils.createRemoteRpcService(
                             rpcSystem,
                             configuration,
                             configuration.get(JobManagerOptions.ADDRESS),
+                            //通用RpcService的端口范围
                             getRPCPortRange(configuration),
                             configuration.get(JobManagerOptions.BIND_HOST),
+                            //JobManager 绑定的本地 RPC 端口
                             configuration.getOptional(JobManagerOptions.RPC_BIND_PORT));
 
+            //启动JMX实例
             JMXService.startInstance(configuration.get(JMXServerOptions.JMX_SERVER_PORT));
 
             // update the configuration used to create the high availability services
+            //更新用于创建高可用性服务的配置
             configuration.set(JobManagerOptions.ADDRESS, commonRpcService.getAddress());
             configuration.set(JobManagerOptions.PORT, commonRpcService.getPort());
 
@@ -397,30 +412,39 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
                             ioExecutor);
             // Obtaining delegation tokens and propagating them to the local JVM receivers in a
             // one-time fashion is required because BlobServer may connect to external file systems
+            //由于 BlobServer 可能连接到外部文件系统，因此需要一次性获取委托令牌并将其传播到本地 JVM 接收器
             delegationTokenManager.obtainDelegationTokens();
+            //创建高可用性服务
             haServices = createHaServices(configuration, ioExecutor, rpcSystem);
             blobServer =
+                    //创建 blob 服务器
                     BlobUtils.createBlobServer(
                             configuration,
                             Reference.borrowed(workingDirectory.unwrap().getBlobStorageDirectory()),
                             haServices.createBlobStore());
             blobServer.start();
             configuration.set(BlobServerOptions.PORT, String.valueOf(blobServer.getPort()));
+            //创建心跳服务
             heartbeatServices = createHeartbeatServices(configuration);
             failureEnrichers = FailureEnricherUtils.getFailureEnrichers(configuration);
+            //创建指标注册表
             metricRegistry = createMetricRegistry(configuration, pluginManager, rpcSystem);
 
             final RpcService metricQueryServiceRpcService =
+                    //启动远程metrics rpc服务
                     MetricUtils.startRemoteMetricsRpcService(
                             configuration,
                             commonRpcService.getAddress(),
                             configuration.get(JobManagerOptions.BIND_HOST),
                             rpcSystem);
+            //启动查询服务
             metricRegistry.startQueryService(metricQueryServiceRpcService, null);
 
+            //获取主机名
             final String hostname = RpcUtils.getHostname(commonRpcService);
 
             processMetricGroup =
+                    //实例化进程度量组
                     MetricUtils.instantiateProcessMetricGroup(
                             metricRegistry,
                             hostname,
@@ -428,6 +452,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
                                     configuration));
 
             executionGraphInfoStore =
+                    //创建可序列化的执行图存储
                     createSerializableExecutionGraphStore(
                             configuration, commonRpcService.getScheduledExecutor());
         }
@@ -439,6 +464,11 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
      * @param configuration to extract the port range from
      * @return Port range for the common {@link RpcService}
      */
+    //返回通用RpcService的端口范围。
+    //参数：
+    //configuration – 从中提取端口范围
+    //返回：
+    //通用RpcService的端口范围
     protected String getRPCPortRange(Configuration configuration) {
         if (ZooKeeperUtils.isZooKeeperRecoveryMode(configuration)) {
             return configuration.get(HighAvailabilityOptions.HA_JOB_MANAGER_PORT_RANGE);
@@ -450,6 +480,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
     protected HighAvailabilityServices createHaServices(
             Configuration configuration, Executor executor, RpcSystemUtils rpcSystemUtils)
             throws Exception {
+        //创建高可用性服务
         return HighAvailabilityServicesUtils.createHighAvailabilityServices(
                 configuration,
                 executor,
@@ -737,6 +768,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
 
         final String clusterEntrypointName = clusterEntrypoint.getClass().getSimpleName();
         try {
+            //启动集群
             clusterEntrypoint.startCluster();
         } catch (ClusterEntrypointException e) {
             LOG.error(
@@ -766,9 +798,11 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
     /** Execution mode of the {@link MiniDispatcher}. */
     public enum ExecutionMode {
         /** Waits until the job result has been served. */
+        //等待作业结果送达。
         NORMAL,
 
         /** Directly stops after the job has finished. */
+        //作业完成后直接停止
         DETACHED
     }
 

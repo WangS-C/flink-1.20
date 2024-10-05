@@ -51,6 +51,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * lifecycle of the entry point is bound to that of the specific application being executed, and the
  * {@code main()} method of the application is run on the cluster.
  */
+//针对“应用程序模式”中执行应用程序的集群入口点的基类。
+// 入口点的生命周期与正在执行的特定应用程序的生命周期绑定，并且应用程序的main()方法在集群上运行。
 public class ApplicationClusterEntryPoint extends ClusterEntrypoint {
 
     private final PackagedProgram program;
@@ -69,9 +71,11 @@ public class ApplicationClusterEntryPoint extends ClusterEntrypoint {
     @Override
     protected DispatcherResourceManagerComponentFactory
             createDispatcherResourceManagerComponentFactory(final Configuration configuration) {
+        //创建调度程序资源管理器组件工厂
         return new DefaultDispatcherResourceManagerComponentFactory(
                 new DefaultDispatcherRunnerFactory(
                         ApplicationDispatcherLeaderProcessFactoryFactory.create(
+                                //使用StandaloneDispatcher
                                 configuration, SessionDispatcherFactory.INSTANCE, program)),
                 resourceManagerFactory,
                 JobRestEndpointFactory.INSTANCE);
@@ -100,6 +104,7 @@ public class ApplicationClusterEntryPoint extends ClusterEntrypoint {
         // If it is a PyFlink Application, we need to extract Python dependencies from the program
         // arguments, and
         // configure to execution configurations.
+        //如果是 PyFlink 应用程序，我们需要从程序参数中提取 Python 依赖项，并配置为执行配置。
         if (PackagedProgramUtils.isPython(program.getMainClassName())) {
             ProgramOptionsUtils.configurePythonExecution(configuration, program);
         }

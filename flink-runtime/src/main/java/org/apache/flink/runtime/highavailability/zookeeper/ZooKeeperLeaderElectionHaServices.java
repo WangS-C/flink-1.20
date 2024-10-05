@@ -59,6 +59,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  *      |                 |       /checkpoint_id_counter
  * </pre>
  */
+// 每个进程仅使用单个领导者选举的 ZooKeeper HA 服务。
 public class ZooKeeperLeaderElectionHaServices extends AbstractHaServices {
     /** The curator resource to use. */
     private final CuratorFrameworkWithUnhandledErrorListener curatorFrameworkWrapper;

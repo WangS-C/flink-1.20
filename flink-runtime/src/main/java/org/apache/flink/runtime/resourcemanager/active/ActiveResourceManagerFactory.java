@@ -108,6 +108,7 @@ public abstract class ActiveResourceManagerFactory<WorkerType extends ResourceID
                 configuration.get(
                         ResourceManagerOptions.RESOURCE_MANAGER_PREVIOUS_WORKER_RECOVERY_TIMEOUT);
 
+        //活动资源管理器
         return new ActiveResourceManager<>(
                 createResourceManagerDriver(
                         configuration, webInterfaceUrl, rpcService.getAddress()),

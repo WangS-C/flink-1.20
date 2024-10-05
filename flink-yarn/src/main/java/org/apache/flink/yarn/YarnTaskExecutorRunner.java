@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /** This class is the executable entry point for running a TaskExecutor in a YARN container. */
+//此类是在 YARN 容器中运行 TaskExecutor 的可执行入口点。
 public class YarnTaskExecutorRunner {
 
     protected static final Logger LOG = LoggerFactory.getLogger(YarnTaskExecutorRunner.class);
@@ -75,6 +76,9 @@ public class YarnTaskExecutorRunner {
      *
      * @param args The command line arguments.
      */
+    //YARN 任务执行器的实例入口点。获取用户组信息并作为特权操作调用主要工作方法TaskManagerRunner. runTaskManager(Configuration, PluginManager) 。
+    //参数：
+    //args – 命令行参数。
     private static void runTaskManagerSecurely(String[] args) {
         Configuration configuration = null;
 
@@ -85,12 +89,14 @@ public class YarnTaskExecutorRunner {
             LOG.info("Current working Directory: {}", currDir);
 
             configuration = TaskManagerRunner.loadConfiguration(args);
+            //设置和修改配置
             setupAndModifyConfiguration(configuration, currDir, ENV);
         } catch (Throwable t) {
             LOG.error("YARN TaskManager initialization failed.", t);
             System.exit(INIT_ERROR_EXIT_CODE);
         }
 
+        //安全地运行TaskManager进程
         TaskManagerRunner.runTaskManagerProcessSecurely(Preconditions.checkNotNull(configuration));
     }
 

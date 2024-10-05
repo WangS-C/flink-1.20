@@ -57,6 +57,8 @@ public interface DelegationTokenManager {
      * distribution must be implemented in the listener logic in order to keep the manager logic
      * clean.
      */
+    //创建一个重复发生的任务，该任务获取新令牌并自动将它们分发给所有接收者（在本地 JVM 以及注册的任务管理器中）。
+    //任务管理器分发必须在侦听器逻辑中实现，以保持管理器逻辑干净。
     void start(Listener listener) throws Exception;
 
     /** Stops re-occurring token obtain task. */

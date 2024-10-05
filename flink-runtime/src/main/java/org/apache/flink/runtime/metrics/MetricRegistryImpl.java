@@ -279,6 +279,10 @@ public class MetricRegistryImpl implements MetricRegistry, AutoCloseableAsync {
      * @param rpcService RpcService to create the MetricQueryService on
      * @param resourceID resource ID used to disambiguate the actor name
      */
+    //初始化 MetricQueryService。
+    //参数：
+    //rpcService – 用于创建 MetricQueryService 的 RpcService
+    //resourceID – 用于消除参与者名称歧义的资源 ID
     public void startQueryService(RpcService rpcService, ResourceID resourceID) {
         synchronized (lock) {
             Preconditions.checkState(

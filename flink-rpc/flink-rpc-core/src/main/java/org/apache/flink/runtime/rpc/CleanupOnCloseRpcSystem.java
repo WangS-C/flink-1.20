@@ -32,6 +32,7 @@ import java.net.UnknownHostException;
 import java.nio.file.Path;
 
 /** An {@link RpcSystem} wrapper that cleans up resources after the RPC system has been closed. */
+//一个RpcSystem包装器，用于在 RPC 系统关闭后清理资源。
 public class CleanupOnCloseRpcSystem implements RpcSystem {
     private static final Logger LOG = LoggerFactory.getLogger(CleanupOnCloseRpcSystem.class);
 

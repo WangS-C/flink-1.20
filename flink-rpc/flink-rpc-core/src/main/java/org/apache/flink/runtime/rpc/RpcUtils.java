@@ -123,6 +123,11 @@ public class RpcUtils {
      * @param rpcService to retrieve the hostname for
      * @return hostname onto which the given {@link RpcService} has been bound or localhost
      */
+    //返回给定RpcService所绑定的主机名。如果RpcService已以本地模式启动，则主机名为"hostname" 。
+    //参数：
+    //rpcService – 检索主机名
+    //返回：
+    //给定RpcService已绑定的主机名或 localhost
     public static String getHostname(RpcService rpcService) {
         final String rpcServiceAddress = rpcService.getAddress();
         return rpcServiceAddress != null && rpcServiceAddress.isEmpty()
@@ -140,6 +145,9 @@ public class RpcUtils {
      *
      * @see RpcSystem#remoteServiceBuilder(Configuration, String, String)
      */
+    //构建远程 RPC 服务的便捷快捷方式，该服务负责检查 null 和空选项。
+    //参见：
+    //RpcSystem. remoteServiceBuilder(Configuration, String, String)
     public static RpcService createRemoteRpcService(
             RpcSystem rpcSystem,
             Configuration configuration,
@@ -156,6 +164,7 @@ public class RpcUtils {
         if (bindPort.isPresent()) {
             rpcServiceBuilder = rpcServiceBuilder.withBindPort(bindPort.get());
         }
+        //创建并开始
         return rpcServiceBuilder.createAndStart();
     }
 

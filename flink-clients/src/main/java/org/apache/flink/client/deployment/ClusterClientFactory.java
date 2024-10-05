@@ -42,6 +42,11 @@ public interface ClusterClientFactory<ClusterID> {
      *     ClusterDescriptor}
      * @return the corresponding {@link ClusterDescriptor}.
      */
+    //从给定的配置创建ClusterDescriptor 。
+    //参数：
+    //configuration – 包含与ClusterDescriptor相关的配置选项
+    //返回：
+    //对应的ClusterDescriptor 。
     ClusterDescriptor<ClusterID> createClusterDescriptor(Configuration configuration);
 
     /**

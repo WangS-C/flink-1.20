@@ -150,6 +150,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.util.Preconditions.checkState;
 
 /** MiniCluster to execute Flink jobs locally. */
+//MiniCluster 在本地执行 Flink 作业。
 public class MiniCluster implements AutoCloseableAsync {
 
     private static final Logger LOG = LoggerFactory.getLogger(MiniCluster.class);
@@ -317,6 +318,7 @@ public class MiniCluster implements AutoCloseableAsync {
      * @throws Exception This method passes on any exception that occurs during the startup of the
      *     mini cluster.
      */
+    // 根据配置的属性启动mini集群。
     public void start() throws Exception {
         synchronized (lock) {
             checkState(!running, "MiniCluster is already running");
@@ -331,6 +333,7 @@ public class MiniCluster implements AutoCloseableAsync {
             try {
                 workingDirectory =
                         WorkingDirectory.create(
+                                //从给定的配置生成工作目录
                                 ClusterEntrypointUtils.generateWorkingDirectoryFile(
                                         configuration,
                                         Optional.of(PROCESS_WORKING_DIR_BASE),
@@ -341,6 +344,7 @@ public class MiniCluster implements AutoCloseableAsync {
                 rpcSystem = rpcSystemSupplier.get();
 
                 LOG.info("Starting Metrics Registry");
+                //创建指标注册表
                 metricRegistry =
                         createMetricRegistry(
                                 configuration,
@@ -365,6 +369,7 @@ public class MiniCluster implements AutoCloseableAsync {
                 } else {
 
                     // start a new service per component, possibly with custom bind addresses
+                    //每个组件启动一个新服务，可能使用自定义绑定地址
                     final String jobManagerExternalAddress =
                             miniClusterConfiguration.getJobManagerExternalAddress();
                     final String taskManagerExternalAddress =
@@ -395,10 +400,12 @@ public class MiniCluster implements AutoCloseableAsync {
 
                     // we always need the 'commonRpcService' for auxiliary calls
                     // bind to the JobManager address with port 0
+                    //我们总是需要“commonRpcService”来进行辅助调用，绑定到端口 0 的 JobManager 地址
                     commonRpcService =
                             createRemoteRpcService(
                                     configuration, jobManagerBindAddress, 0, rpcSystem.deref());
                     metricQueryServiceRpcService =
+                            //启动远程metrics rpc服务
                             MetricUtils.startRemoteMetricsRpcService(
                                     configuration,
                                     commonRpcService.getAddress(),
@@ -406,6 +413,7 @@ public class MiniCluster implements AutoCloseableAsync {
                                     rpcSystem.deref());
                 }
 
+                //初始化 MetricQueryService
                 metricRegistry.startQueryService(metricQueryServiceRpcService, null);
 
                 processMetricGroup =
@@ -429,16 +437,20 @@ public class MiniCluster implements AutoCloseableAsync {
                 // Obtaining delegation tokens and propagating them to the local JVM receivers in a
                 // one-time fashion is required because BlobServer may connect to external file
                 // systems
+                //由于 BlobServer 可能连接到外部文件系统，因此需要一次性获取委托令牌并将其传播到本地 JVM 接收器
                 delegationTokenManager.obtainDelegationTokens();
 
                 delegationTokenReceiverRepository =
                         new DelegationTokenReceiverRepository(
                                 configuration, miniClusterConfiguration.getPluginManager());
 
+                //创建高可用性服务工厂
                 haServicesFactory = createHighAvailabilityServicesFactory(configuration);
 
+                //创建HighAvailabilityServices实例
                 haServices = createHighAvailabilityServices(configuration, ioExecutor);
 
+                //创建BlobServer
                 blobServer =
                         BlobUtils.createBlobServer(
                                 configuration,
@@ -446,8 +458,10 @@ public class MiniCluster implements AutoCloseableAsync {
                                 haServices.createBlobStore());
                 blobServer.start();
 
+                //从Configuration创建 HeartbeatServices 实例。
                 heartbeatServices = HeartbeatServices.fromConfiguration(configuration);
 
+                //创建 blob 缓存服务
                 blobCacheService =
                         BlobUtils.createBlobCacheService(
                                 configuration,
@@ -456,12 +470,15 @@ public class MiniCluster implements AutoCloseableAsync {
                                 new InetSocketAddress(
                                         InetAddress.getLocalHost(), blobServer.getPort()));
 
+                //启动TaskManagers
                 startTaskManagers();
 
                 MetricQueryServiceRetriever metricQueryServiceRetriever =
+                        //rpc 指标查询服务检索器
                         new RpcMetricQueryServiceRetriever(
                                 metricRegistry.getMetricQueryServiceRpcService());
 
+                //设置调度程序资源管理器组件
                 setupDispatcherResourceManagerComponents(
                         configuration,
                         dispatcherResourceManagerComponentRpcServiceFactory,
@@ -518,6 +535,7 @@ public class MiniCluster implements AutoCloseableAsync {
             MetricQueryServiceRetriever metricQueryServiceRetriever)
             throws Exception {
         dispatcherResourceManagerComponents.addAll(
+                //创建调度程序资源管理器组件
                 createDispatcherResourceManagerComponents(
                         configuration,
                         dispatcherResourceManagerComponentRpcServiceFactory,
@@ -589,6 +607,9 @@ public class MiniCluster implements AutoCloseableAsync {
             // EmbeddedLeaderElection requires a single instance for leader election across multiple
             // JobManager instances on the same JVM (after FLINK-24038 was introduced); therefore,
             // SingletonHighAvailabilityServicesFactory is utilized here
+            //MiniClusters 的特殊功能允许控制领导权 EmbeddedLeaderElection 需要在同一 JVM 上的多个 JobManager
+            // 实例中使用单个实例进行领导者选举（引入 FLINK-24038 后）；
+            // 因此，这里使用了SingletonHighAvailabilityServicesFactory
             return new SingletonHighAvailabilityServicesFactory(
                     (config, embeddedLeaderElectionExecutor) ->
                             new EmbeddedHaServicesWithLeadershipControl(
@@ -605,10 +626,13 @@ public class MiniCluster implements AutoCloseableAsync {
             // basic EmbeddedLeaderElection requires a single instance for leader election across
             // multiple JobManager instances on the same JVM (after FLINK-24038 was introduced);
             // therefore, SingletonHighAvailabilityServicesFactory is utilized here
+            //基本的EmbeddedLeaderElection需要单个实例在同一JVM上的多个JobManager实例中进行领导者选举
+            // （在引入FLINK-24038之后）；因此，这里使用了SingletonHighAvailabilityServicesFactory
             return new SingletonHighAvailabilityServicesFactory(
                     (config, embeddedLeaderElectionExecutor) ->
                             new EmbeddedHaServices(embeddedLeaderElectionExecutor));
         } else {
+            //常规高可用性服务工厂
             return new RegularHighAvailabilityServicesFactory();
         }
     }
@@ -759,6 +783,12 @@ public class MiniCluster implements AutoCloseableAsync {
      * increases with each new started TaskManager. The indices of terminated TaskManagers are not
      * reused after {@link #terminateTaskManager(int)}.
      */
+    //启动附加的 TaskManager 进程。
+    //当MiniCluster启动时，它总是启动MiniClusterConfiguration. getNumTaskManagers TaskManagers。
+    //所有 TaskManager 的索引从 0 到迄今为止启动的 TaskManager 数量减一。
+    //此方法使用下一个索引启动一个 TaskManager，该索引是迄今为止启动的 TaskManager 的数量。
+    //索引总是随着每个新启动的任务管理器而增加。
+    //终止的 TaskManager 的索引在terminateTaskManager(int)之后不会被重用。
     public void startTaskManager() throws Exception {
         synchronized (lock) {
             final Configuration configuration = miniClusterConfiguration.getConfiguration();
@@ -767,6 +797,7 @@ public class MiniCluster implements AutoCloseableAsync {
                     TaskManagerRunner.startTaskManager(
                             configuration,
                             new ResourceID(UUID.randomUUID().toString()),
+                            //创建RpcService
                             taskManagerRpcServiceFactory.createRpcService(),
                             haServices,
                             heartbeatServices,
@@ -774,6 +805,7 @@ public class MiniCluster implements AutoCloseableAsync {
                             blobCacheService,
                             useLocalCommunication(),
                             ExternalResourceInfoProvider.NO_EXTERNAL_RESOURCES,
+                            //创建子工作目录
                             workingDirectory.createSubWorkingDirectory("tm_" + taskManagers.size()),
                             taskManagerTerminatingFatalErrorHandlerFactory.create(
                                     taskManagers.size()),
@@ -1171,6 +1203,7 @@ public class MiniCluster implements AutoCloseableAsync {
      * @param config The configuration of the mini cluster
      * @param maximumMessageSizeInBytes the maximum message size
      */
+    // 为mini集群创建指标注册表的工厂方法。
     protected MetricRegistryImpl createMetricRegistry(
             Configuration config, long maximumMessageSizeInBytes) {
         return new MetricRegistryImpl(
@@ -1190,6 +1223,13 @@ public class MiniCluster implements AutoCloseableAsync {
      * @param rpcSystem
      * @return The instantiated RPC service
      */
+    //用于实例化远程 RPC 服务的工厂方法。
+    //参数：
+    //configuration ——Flink 配置。
+    //bindAddress – RPC 服务绑定到的地址。
+    //bindPort – RPC 服务绑定到的端口范围。 rpcSystem
+    //返回：
+    //实例化的RPC服务
     protected RpcService createRemoteRpcService(
             Configuration configuration, String bindAddress, int bindPort, RpcSystem rpcSystem)
             throws Exception {
@@ -1211,6 +1251,15 @@ public class MiniCluster implements AutoCloseableAsync {
      * @param rpcSystem
      * @return The instantiated RPC service
      */
+    //用于实例化远程 RPC 服务的工厂方法。
+    //参数：
+    //configuration ——Flink 配置。
+    //externalAddress – 访问 RPC 服务的外部地址。
+    //externalPortRange – 访问 RPC 服务的外部端口范围。
+    //bindAddress – RPC 服务绑定到的地址。
+    //rpcSystem
+    //返回：
+    //实例化的RPC服务
     protected RpcService createRemoteRpcService(
             Configuration configuration,
             String externalAddress,
@@ -1414,6 +1463,7 @@ public class MiniCluster implements AutoCloseableAsync {
     }
 
     /** Internal factory for {@link RpcService}. */
+    //RpcService的内部工厂。
     protected interface RpcServiceFactory {
         RpcService createRpcService() throws Exception;
     }
@@ -1434,6 +1484,7 @@ public class MiniCluster implements AutoCloseableAsync {
     }
 
     /** Factory which creates and registers new {@link RpcService}. */
+    //创建并注册新RpcService的工厂。
     protected class DedicatedRpcServiceFactory implements RpcServiceFactory {
 
         private final Configuration configuration;
@@ -1531,6 +1582,7 @@ public class MiniCluster implements AutoCloseableAsync {
     /** HA Services to use. */
     public enum HaServices {
         /** Uses the configured HA Services in {@link HighAvailabilityOptions#HA_MODE} option. */
+        //使用HighAvailabilityOptions. HA_MODE选项中配置的 HA 服务。
         CONFIGURED,
 
         /**
@@ -1540,6 +1592,8 @@ public class MiniCluster implements AutoCloseableAsync {
          * <p>{@link HaLeadershipControl} allows granting and revoking leadership of HA components.
          * Enabling this feature disables {@link HighAvailabilityOptions#HA_MODE} option.
          */
+        //在getHaLeadershipControl中启用或禁用HaLeadershipControl 。
+        //HaLeadershipControl允许授予和撤销 HA 组件的领导权。启用此功能会禁用HighAvailabilityOptions. HA_MODE选项。
         WITH_LEADERSHIP_CONTROL
     }
 
@@ -1547,6 +1601,8 @@ public class MiniCluster implements AutoCloseableAsync {
      * SingletonHighAvailabilityServicesFactory is used for scenarios that are not truly high
      * available and rely on having a single HighAvailabilityServices object.
      */
+    //SingletonHighAvailabilityServicesFactory
+    // 用于并非真正高可用且依赖于单个 HighAvailabilityServices 对象的场景。
     private static class SingletonHighAvailabilityServicesFactory
             implements HighAvailabilityServicesFactory {
 

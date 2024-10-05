@@ -38,6 +38,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * Factory for a {@link DispatcherLeaderProcessFactoryFactory} designed to be used when executing an
  * application in Application Mode.
  */
+//DispatcherLeaderProcessFactoryFactory的工厂设计用于在应用程序模式下执行应用程序时使用。
 @Internal
 public class ApplicationDispatcherLeaderProcessFactoryFactory
         implements DispatcherLeaderProcessFactoryFactory {

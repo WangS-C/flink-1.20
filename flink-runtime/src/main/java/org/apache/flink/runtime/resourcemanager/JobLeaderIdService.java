@@ -38,6 +38,9 @@ public interface JobLeaderIdService {
      * @param initialJobLeaderIdActions to use for job leader id actions
      * @throws Exception which is thrown when clearing up old state
      */
+    //使用给定的作业领导者操作启动服务。
+    //参数：
+    //initialJobLeaderIdActions – 用于作业领导者 ID 操作
     void start(JobLeaderIdActions initialJobLeaderIdActions) throws Exception;
 
     /**

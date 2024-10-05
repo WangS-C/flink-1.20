@@ -35,6 +35,12 @@ public interface LeaderRetrievalDriverFactory {
      * @throws Exception when create a specific {@link LeaderRetrievalDriver} implementation and
      *     start the necessary services.
      */
+    //创建特定的LeaderRetrievalDriver并启动必要的服务。
+    // 例如Zookeeper中的NodeCache、Kubernetes中的ConfigMap watcher。
+    // 他们可以获取领导者信息更改事件，并需要通过LeaderRetrievalEventHandler通知领导者侦听器。
+    //参数：
+    //leaderEventHandler – 领导者检索驱动程序的处理程序，用于通知领导者更改事件。
+    //fatalErrorHandler – 致命错误处理程序
     LeaderRetrievalDriver createLeaderRetrievalDriver(
             LeaderRetrievalEventHandler leaderEventHandler, FatalErrorHandler fatalErrorHandler)
             throws Exception;

@@ -54,6 +54,7 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
 
     private YarnApplicationClusterEntryPoint(
             final Configuration configuration, final PackagedProgram program) {
+        //YarnResourceManagerFactory
         super(configuration, program, YarnResourceManagerFactory.getInstance());
     }
 
@@ -64,6 +65,7 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
 
     public static void main(final String[] args) {
         // startup checks and logging
+        //启动检查和日志记录
         EnvironmentInformation.logEnvironmentInfo(
                 LOG, YarnApplicationClusterEntryPoint.class.getSimpleName(), args);
         SignalHandler.register(LOG);
@@ -71,6 +73,7 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
 
         Map<String, String> env = System.getenv();
 
+        //工作目录
         final String workingDirectory = env.get(ApplicationConstants.Environment.PWD.key());
         Preconditions.checkArgument(
                 workingDirectory != null,
@@ -78,12 +81,14 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
                 ApplicationConstants.Environment.PWD.key());
 
         try {
+            //记录yarn环境信息
             YarnEntrypointUtils.logYarnEnvironmentInformation(env, LOG);
         } catch (IOException e) {
             LOG.warn("Could not log YARN environment information.", e);
         }
 
         final Configuration dynamicParameters =
+                //解析参数或退出
                 ClusterEntrypointUtils.parseParametersOrExit(
                         args,
                         new DynamicParametersConfigurationParserFactory(),
@@ -93,6 +98,7 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
 
         PackagedProgram program = null;
         try {
+            //获取打包程序
             program = getPackagedProgram(configuration);
         } catch (Exception e) {
             LOG.error("Could not create application program.", e);
@@ -100,6 +106,7 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
         }
 
         try {
+            //配置执行
             configureExecution(configuration, program);
         } catch (Exception e) {
             LOG.error("Could not apply application configuration.", e);
@@ -107,6 +114,7 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
         }
 
         YarnApplicationClusterEntryPoint yarnApplicationClusterEntrypoint =
+                //YarnApplicationCluster入口点
                 new YarnApplicationClusterEntryPoint(configuration, program);
 
         ClusterEntrypoint.runClusterEntrypoint(yarnApplicationClusterEntrypoint);

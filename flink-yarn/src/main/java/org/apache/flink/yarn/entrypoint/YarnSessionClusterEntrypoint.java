@@ -71,6 +71,7 @@ public class YarnSessionClusterEntrypoint extends SessionClusterEntrypoint {
                 ApplicationConstants.Environment.PWD.key());
 
         try {
+            //记录yarn环境信息
             YarnEntrypointUtils.logYarnEnvironmentInformation(env, LOG);
         } catch (IOException e) {
             LOG.warn("Could not log YARN environment information.", e);
@@ -85,6 +86,7 @@ public class YarnSessionClusterEntrypoint extends SessionClusterEntrypoint {
                 YarnEntrypointUtils.loadConfiguration(workingDirectory, dynamicParameters, env);
 
         YarnSessionClusterEntrypoint yarnSessionClusterEntrypoint =
+                //入口
                 new YarnSessionClusterEntrypoint(configuration);
 
         ClusterEntrypoint.runClusterEntrypoint(yarnSessionClusterEntrypoint);
