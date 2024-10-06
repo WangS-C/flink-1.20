@@ -348,7 +348,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
     @Override
     public void onStart() throws Exception {
         try {
-            //启动调度程序服务
+            //负责注册监控指标
             startDispatcherServices();
         } catch (Throwable t) {
             final DispatcherException exception =
@@ -362,6 +362,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
         startRecoveredJobs();
 
         this.dispatcherBootstrap =
+                //负责启动Flink应用的main()方法。
                 this.dispatcherBootstrapFactory.create(
                         getSelfGateway(DispatcherGateway.class),
                         this.getRpcService().getScheduledExecutor(),
@@ -406,6 +407,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
     private void runRecoveredJob(final JobGraph recoveredJob) {
         checkNotNull(recoveredJob);
 
+        //初始化作业客户端过期时间
         initJobClientExpiredTime(recoveredJob);
 
         try (MdcCloseable ignored =
@@ -432,6 +434,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
 
             if (jobClientAlivenessCheck == null) {
                 // Use the client heartbeat timeout as the check interval.
+                //使用客户端心跳超时时间作为检查间隔。
                 jobClientAlivenessCheck =
                         this.getRpcService()
                                 .getScheduledExecutor()
