@@ -42,11 +42,17 @@ public class DefaultClusterClientServiceLoader implements ClusterClientServiceLo
     private static final Logger LOG =
             LoggerFactory.getLogger(DefaultClusterClientServiceLoader.class);
 
+    //根据提供的配置发现适当的ClusterClientFactory 。
+    //参数：
+    //configuration ——将使用适当工厂所基于的配置。
+    //返回：
+    //适当的ClusterClientFactory 。
     @Override
     public <ClusterID> ClusterClientFactory<ClusterID> getClusterClientFactory(
             final Configuration configuration) {
         checkNotNull(configuration);
 
+        //yarn 会使用YarnClusterClientFactory
         final ServiceLoader<ClusterClientFactory> loader =
                 ServiceLoader.load(ClusterClientFactory.class);
 

@@ -118,6 +118,7 @@ public class CliFrontend {
 
     private final Options customCommandLineOptions;
 
+    //负责生成Yarn Client信息。
     private final ClusterClientServiceLoader clusterClientServiceLoader;
 
     public CliFrontend(Configuration configuration, List<CustomCommandLine> customCommandLines) {
@@ -172,6 +173,7 @@ public class CliFrontend {
         LOG.info("Running 'run-application' command.");
 
         final Options commandOptions = CliFrontendParser.getRunCommandOptions();
+        //获取命令行
         final CommandLine commandLine = getCommandLine(commandOptions, args, true);
 
         if (commandLine.hasOption(HELP_OPTION.getOpt())) {
@@ -179,6 +181,7 @@ public class CliFrontend {
             return;
         }
 
+        //验证并获取参数的自定义命令行。
         final CustomCommandLine activeCommandLine =
                 validateAndGetActiveCommandLine(checkNotNull(commandLine));
 
@@ -189,6 +192,7 @@ public class CliFrontend {
         final Configuration effectiveConfiguration;
 
         // No need to set a jarFile path for Pyflink job.
+        //无需为 Flink 作业设置 jar 文件路径。
         if (ProgramOptionsUtils.isPythonEntryPoint(commandLine)) {
             programOptions = ProgramOptionsUtils.createPythonProgramOptions(commandLine);
             effectiveConfiguration =
@@ -200,7 +204,9 @@ public class CliFrontend {
         } else {
             programOptions = new ProgramOptions(commandLine);
             programOptions.validate();
+            //解析 JarFilePath URI
             final URI uri = PackagedProgramUtils.resolveURI(programOptions.getJarFilePath());
+            //获得有效的配置
             effectiveConfiguration =
                     getEffectiveConfiguration(
                             activeCommandLine,
@@ -209,9 +215,13 @@ public class CliFrontend {
                             Collections.singletonList(uri.toString()));
         }
 
+        //构建应用程序配置
         final ApplicationConfiguration applicationConfiguration =
                 new ApplicationConfiguration(
-                        programOptions.getProgramArgs(), programOptions.getEntryPointClassName());
+                        programOptions.getProgramArgs(),
+                        //是flink命令行-c选项指定的Flink应用入口类 后面会以反射的形式触发main()方法调用
+                        programOptions.getEntryPointClassName());
+        //提交用户程序执行并在集群上运行用户主方法
         deployer.run(effectiveConfiguration, applicationConfiguration);
     }
 
@@ -1249,6 +1259,11 @@ public class CliFrontend {
      * @param args command line arguments of the client.
      * @return The return code of the program
      */
+    //解析命令行参数并启动请求的操作。
+    //参数：
+    //args – 客户端的命令行参数。
+    //返回：
+    //程序的返回码
     public int parseAndRun(String[] args) {
 
         // check for action
@@ -1262,6 +1277,7 @@ public class CliFrontend {
         String action = args[0];
 
         // remove action from parameters
+        //从参数中删除action
         final String[] params = Arrays.copyOfRange(args, 1, args.length);
 
         try {
@@ -1330,6 +1346,7 @@ public class CliFrontend {
     }
 
     /** Submits the job based on the arguments. */
+    // 根据参数提交作业。
     public static void main(final String[] args) {
         int retCode = INITIAL_RET_CODE;
         try {
@@ -1344,18 +1361,22 @@ public class CliFrontend {
         EnvironmentInformation.logEnvironmentInfo(LOG, "Command Line Client", args);
 
         // 1. find the configuration directory
+        // 找到配置目录
         final String configurationDirectory = getConfigurationDirectoryFromEnv();
 
         // 2. load the global configuration
+        //加载全局配置
         final Configuration configuration =
                 GlobalConfiguration.loadConfiguration(configurationDirectory);
 
         // 3. load the custom command lines
+        // 加载自定义命令行
         final List<CustomCommandLine> customCommandLines =
                 loadCustomCommandLines(configuration, configurationDirectory);
 
         int retCode = INITIAL_RET_CODE;
         try {
+            // 新建CliFrontend实例
             final CliFrontend cli = new CliFrontend(configuration, customCommandLines);
             CommandLine commandLine =
                     cli.getCommandLine(
@@ -1363,8 +1384,10 @@ public class CliFrontend {
                             Arrays.copyOfRange(args, min(args.length, 1), args.length),
                             true);
             Configuration securityConfig = new Configuration(cli.configuration);
+            //编码动态属性
             DynamicPropertiesUtil.encodeDynamicProperties(commandLine, securityConfig);
             SecurityUtils.install(new SecurityConfiguration(securityConfig));
+            //解析命令行参数并启动请求的操作。
             retCode = SecurityUtils.getInstalledContext().runSecured(() -> cli.parseAndRun(args));
         } catch (Throwable t) {
             final Throwable strippedThrowable =
@@ -1427,6 +1450,7 @@ public class CliFrontend {
 
         //	Command line interface of the YARN session, with a special initialization here
         //	to prefix all options with y/yarn.
+        //YARN 会话的命令行界面，此处进行了特殊初始化，以 y/yarn 为所有选项添加前缀。
         final String flinkYarnSessionCLI = "org.apache.flink.yarn.cli.FlinkYarnSessionCli";
         try {
             customCommandLines.add(
@@ -1464,6 +1488,11 @@ public class CliFrontend {
      * @param commandLine The input to the command-line.
      * @return custom command-line which is active (may only be one at a time)
      */
+    //获取参数的自定义命令行。
+    //参数：
+    //commandLine – 命令行的输入。
+    //返回：
+    //处于活动状态的自定义命令行（一次可能只有一个）
     public CustomCommandLine validateAndGetActiveCommandLine(CommandLine commandLine) {
         LOG.debug("Custom commandlines: {}", customCommandLines);
         for (CustomCommandLine cli : customCommandLines) {

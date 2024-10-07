@@ -48,6 +48,10 @@ public class ApplicationClusterDeployer implements ApplicationDeployer {
         this.clientServiceLoader = checkNotNull(clientServiceLoader);
     }
 
+    //提交用户程序执行并在集群上运行用户主方法。
+    //参数：
+    //configuration ——包含有关提交用户程序的所有必要信息的配置。
+    //applicationConfiguration – 特定于要执行的应用程序的ApplicationConfiguration 。
     public <ClusterID> void run(
             final Configuration configuration,
             final ApplicationConfiguration applicationConfiguration)
@@ -57,6 +61,7 @@ public class ApplicationClusterDeployer implements ApplicationDeployer {
 
         LOG.info("Submitting application in 'Application Mode'.");
 
+//        yarn 会使用YarnClusterClientFactory
         final ClusterClientFactory<ClusterID> clientFactory =
                 clientServiceLoader.getClusterClientFactory(configuration);
         try (final ClusterDescriptor<ClusterID> clusterDescriptor =

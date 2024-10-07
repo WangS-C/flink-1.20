@@ -32,6 +32,7 @@ import java.util.Objects;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** Application-specific configurations. */
+//特定于应用程序的配置
 @Internal
 public class ApplicationConfiguration {
 

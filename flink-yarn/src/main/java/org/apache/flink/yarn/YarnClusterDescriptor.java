@@ -513,6 +513,13 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
         }
     }
 
+    //触发应用程序集群的部署。这对应于专用于执行预定义应用程序的集群。
+    // 该集群将在应用程序提交时创建，并在应用程序终止时拆除。另外，应用程序的用户代码的main()将在集群上执行，而不是在客户端上执行。
+    //参数：
+    //clusterSpecification – 定义要部署的集群的集群规范
+    //applicationConfiguration – 应用程序特定的配置参数
+    //返回：
+    //集群的客户端
     @Override
     public ClusterClientProvider<ApplicationId> deployApplicationCluster(
             final ClusterSpecification clusterSpecification,
@@ -536,6 +543,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
         applicationConfiguration.applyToConfiguration(flinkConfiguration);
 
         // No need to do pipelineJars validation if it is a PyFlink job.
+        //如果是 Flink 作业，则无需进行 Pipers 验证。
         if (!(PackagedProgramUtils.isPython(applicationConfiguration.getApplicationClassName())
                 || PackagedProgramUtils.isPython(applicationConfiguration.getProgramArguments()))) {
             final List<String> pipelineJars =

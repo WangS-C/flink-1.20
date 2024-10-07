@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 /** A factory containing all the necessary information for creating clients to Flink clusters. */
+//包含创建 Flink 集群客户端的所有必要信息的工厂
 @Internal
 public interface ClusterClientFactory<ClusterID> {
 
@@ -33,6 +34,7 @@ public interface ClusterClientFactory<ClusterID> {
      * Returns {@code true} if the current {@link ClusterClientFactory} is compatible with the
      * provided configuration, {@code false} otherwise.
      */
+    //如果当前ClusterClientFactory与提供的配置兼容，则返回true ，否则返回false 。
     boolean isCompatibleWith(Configuration configuration);
 
     /**

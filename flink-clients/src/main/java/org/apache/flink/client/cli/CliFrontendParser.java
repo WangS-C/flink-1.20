@@ -385,6 +385,7 @@ public class CliFrontendParser {
 
     static final Options RUN_OPTIONS = getRunCommandOptions();
 
+    //构建通用选项
     private static Options buildGeneralOptions(Options options) {
         options.addOption(HELP_OPTION);
         // backwards compatibility: ignore verbose flag (-v)

@@ -35,6 +35,11 @@ public interface ClusterClientServiceLoader {
      *     used.
      * @return the appropriate {@link ClusterClientFactory}.
      */
+    //根据提供的配置发现适当的ClusterClientFactory 。
+    //参数：
+    //configuration ——将使用适当工厂所基于的配置。
+    //返回：
+    //适当的ClusterClientFactory 。
     <ClusterID> ClusterClientFactory<ClusterID> getClusterClientFactory(
             final Configuration configuration);
 

@@ -65,6 +65,13 @@ public interface ClusterDescriptor<T> extends AutoCloseable {
      * @return Client for the cluster
      * @throws ClusterDeploymentException if the cluster could not be deployed
      */
+    //触发应用程序集群的部署。这对应于专用于执行预定义应用程序的集群。
+    // 该集群将在应用程序提交时创建，并在应用程序终止时拆除。另外，应用程序的用户代码的main()将在集群上执行，而不是在客户端上执行。
+    //参数：
+    //clusterSpecification – 定义要部署的集群的集群规范
+    //applicationConfiguration – 应用程序特定的配置参数
+    //返回：
+    //集群的客户端
     ClusterClientProvider<T> deployApplicationCluster(
             final ClusterSpecification clusterSpecification,
             final ApplicationConfiguration applicationConfiguration)

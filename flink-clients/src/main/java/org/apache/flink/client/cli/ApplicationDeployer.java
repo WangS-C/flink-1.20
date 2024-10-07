@@ -34,6 +34,10 @@ public interface ApplicationDeployer {
      * @param applicationConfiguration an {@link ApplicationConfiguration} specific to the
      *     application to be executed.
      */
+    //提交用户程序执行并在集群上运行用户主方法。
+    //参数：
+    //configuration ——包含有关提交用户程序的所有必要信息的配置。
+    //applicationConfiguration – 特定于要执行的应用程序的ApplicationConfiguration 。
     <ClusterID> void run(
             final Configuration configuration,
             final ApplicationConfiguration applicationConfiguration)
