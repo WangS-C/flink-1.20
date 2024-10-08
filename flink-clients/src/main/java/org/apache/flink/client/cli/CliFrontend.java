@@ -192,7 +192,7 @@ public class CliFrontend {
         final Configuration effectiveConfiguration;
 
         // No need to set a jarFile path for Pyflink job.
-        //无需为 Flink 作业设置 jar 文件路径。
+        // Pyflink 无需设置jar文件路径
         if (ProgramOptionsUtils.isPythonEntryPoint(commandLine)) {
             programOptions = ProgramOptionsUtils.createPythonProgramOptions(commandLine);
             effectiveConfiguration =
@@ -1376,7 +1376,7 @@ public class CliFrontend {
 
         int retCode = INITIAL_RET_CODE;
         try {
-            // 新建CliFrontend实例
+            // 构建CliFrontend实例 构造函数中创建了DefaultClusterClientServiceLoader
             final CliFrontend cli = new CliFrontend(configuration, customCommandLines);
             CommandLine commandLine =
                     cli.getCommandLine(

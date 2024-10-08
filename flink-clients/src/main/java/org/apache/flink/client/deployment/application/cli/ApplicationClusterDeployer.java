@@ -65,6 +65,7 @@ public class ApplicationClusterDeployer implements ApplicationDeployer {
         final ClusterClientFactory<ClusterID> clientFactory =
                 clientServiceLoader.getClusterClientFactory(configuration);
         try (final ClusterDescriptor<ClusterID> clusterDescriptor =
+                //构建YarnClient实例，YarnClient实例负责在客户端提交Flink应用程序
                 clientFactory.createClusterDescriptor(configuration)) {
             final ClusterSpecification clusterSpecification =
                     clientFactory.getClusterSpecification(configuration);
