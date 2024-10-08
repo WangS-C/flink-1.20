@@ -73,6 +73,11 @@ public enum HighAvailabilityMode {
      * @param configuration Configuration which contains the recovery mode
      * @return true if high availability is supported by the recovery mode, otherwise false
      */
+    //如果定义的恢复模式支持高可用性，则返回 true。
+    //参数：
+    //configuration – 包含恢复模式的配置
+    //返回：
+    //如果恢复模式支持高可用性，则为 true，否则为 false
     public static boolean isHighAvailabilityModeActivated(Configuration configuration) {
         HighAvailabilityMode mode = fromConfig(configuration);
         return mode.haActive;

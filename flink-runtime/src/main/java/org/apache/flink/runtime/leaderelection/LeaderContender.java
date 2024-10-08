@@ -33,9 +33,9 @@ public interface LeaderContender {
      *
      * @param leaderSessionID New leader session ID
      */
-//回调方法，该方法由LeaderElectionService在选择此实例作为新领导者时调用。使用新的leader会话ID调用该方法。
-//参数:
-//leaderSessionID -新的领导者会话ID
+    //回调方法，该方法由LeaderElectionService在选择此实例作为新领导者时调用。使用新的leader会话ID调用该方法。
+    //参数:
+    //leaderSessionID -新的领导者会话ID
     void grantLeadership(UUID leaderSessionID);
 
     /**

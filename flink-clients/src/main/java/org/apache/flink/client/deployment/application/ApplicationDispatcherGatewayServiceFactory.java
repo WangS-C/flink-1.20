@@ -100,6 +100,7 @@ public class ApplicationDispatcherGatewayServiceFactory
                             recoveredJobs,
                             recoveredDirtyJobResults,
                             (dispatcherGateway, scheduledExecutor, errorHandler) ->
+                                    //新建ApplicationDispatcherBootstrap实例
                                     new ApplicationDispatcherBootstrap(
                                             application,
                                             recoveredJobIds,
@@ -113,6 +114,7 @@ public class ApplicationDispatcherGatewayServiceFactory
             throw new FlinkRuntimeException("Could not create the Dispatcher rpc endpoint.", e);
         }
 
+        //Dispatcher  启动
         dispatcher.start();
 
         return DefaultDispatcherGatewayService.from(dispatcher);

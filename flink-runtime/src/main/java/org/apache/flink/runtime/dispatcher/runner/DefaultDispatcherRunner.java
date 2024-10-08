@@ -75,6 +75,7 @@ public final class DefaultDispatcherRunner implements DispatcherRunner, LeaderCo
     }
 
     void start() throws Exception {
+        //将通过的LeaderContender注册到领导者选举流程。
         leaderElection.startLeaderElection(this);
     }
 
@@ -116,6 +117,7 @@ public final class DefaultDispatcherRunner implements DispatcherRunner, LeaderCo
                             getClass().getSimpleName(),
                             leaderSessionID,
                             DispatcherLeaderProcess.class.getSimpleName());
+                    //生成并启动dispatcherLeaderProcess
                     startNewDispatcherLeaderProcess(leaderSessionID);
                 });
     }
@@ -123,11 +125,13 @@ public final class DefaultDispatcherRunner implements DispatcherRunner, LeaderCo
     private void startNewDispatcherLeaderProcess(UUID leaderSessionID) {
         stopDispatcherLeaderProcess();
 
+        //返回的实际类型是SessionDispatcherLeaderProcess
         dispatcherLeaderProcess = createNewDispatcherLeaderProcess(leaderSessionID);
 
         final DispatcherLeaderProcess newDispatcherLeaderProcess = dispatcherLeaderProcess;
         FutureUtils.assertNoException(
                 previousDispatcherLeaderProcessTerminationFuture.thenRun(
+                        //启动dispatcherLeaderProcess实例
                         newDispatcherLeaderProcess::start));
     }
 
@@ -141,6 +145,7 @@ public final class DefaultDispatcherRunner implements DispatcherRunner, LeaderCo
     }
 
     private DispatcherLeaderProcess createNewDispatcherLeaderProcess(UUID leaderSessionID) {
+        //返回的实际类型是SessionDispatcherLeaderProcess
         final DispatcherLeaderProcess newDispatcherLeaderProcess =
                 dispatcherLeaderProcessFactory.create(leaderSessionID);
 
@@ -237,6 +242,7 @@ public final class DefaultDispatcherRunner implements DispatcherRunner, LeaderCo
         final DefaultDispatcherRunner dispatcherRunner =
                 new DefaultDispatcherRunner(
                         leaderElection, fatalErrorHandler, dispatcherLeaderProcessFactory);
+        //触发dispatcher组件高可用Leader选举过程。
         dispatcherRunner.start();
         return dispatcherRunner;
     }

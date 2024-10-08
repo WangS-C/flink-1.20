@@ -217,9 +217,11 @@ public class PackagedProgram implements AutoCloseable {
      * This method assumes that the context environment is prepared, or the execution will be a
      * local execution by default.
      */
+    //该方法假设上下文环境已准备好，否则默认执行本地执行。
     public void invokeInteractiveModeForExecution() throws ProgramInvocationException {
         FlinkSecurityManager.monitorUserSystemExitForCurrentThread();
         try {
+            //调用主方法
             callMainMethod(mainClass, args);
         } finally {
             FlinkSecurityManager.unmonitorUserSystemExitForCurrentThread();
@@ -353,6 +355,7 @@ public class PackagedProgram implements AutoCloseable {
         }
 
         try {
+            //反射调用执行main方法
             mainMethod.invoke(null, (Object) args);
         } catch (IllegalArgumentException e) {
             throw new ProgramInvocationException(

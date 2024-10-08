@@ -103,6 +103,8 @@ public class DefaultDispatcherResourceManagerComponentFactory
     }
 
     //用来启动 Dispatcher， ResourceManager，和 WebMonitorEndpoint
+    //dispatcherRunner实例负责dispatcher组件的高可用leader选举操作，
+    //而dispatcher组件负责触发Flink应用main(...)方法执行
     @Override
     public DispatcherResourceManagerComponent create(
             Configuration configuration,
@@ -227,6 +229,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             failureEnrichers);
 
             log.debug("Starting Dispatcher.");
+            //创建并触发dispatcher组件高可用Leader选举过程。
             dispatcherRunner =
                     dispatcherRunnerFactory.createDispatcherRunner(
                             highAvailabilityServices.getDispatcherLeaderElection(),

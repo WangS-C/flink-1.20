@@ -514,7 +514,8 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
     }
 
     //触发应用程序集群的部署。这对应于专用于执行预定义应用程序的集群。
-    // 该集群将在应用程序提交时创建，并在应用程序终止时拆除。另外，应用程序的用户代码的main()将在集群上执行，而不是在客户端上执行。
+    //该集群将在应用程序提交时创建，并在应用程序终止时拆除。
+    //另外，应用程序的用户代码的main()将在集群上执行，而不是在客户端上执行。
     //参数：
     //clusterSpecification – 定义要部署的集群的集群规范
     //applicationConfiguration – 应用程序特定的配置参数
@@ -543,7 +544,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
         applicationConfiguration.applyToConfiguration(flinkConfiguration);
 
         // No need to do pipelineJars validation if it is a PyFlink job.
-        //如果是 Flink 作业，则无需进行 Pipers 验证。
+        //如果是 PyFlink 作业，则无需进行 Pipers 验证。
         if (!(PackagedProgramUtils.isPython(applicationConfiguration.getApplicationClassName())
                 || PackagedProgramUtils.isPython(applicationConfiguration.getProgramArguments()))) {
             final List<String> pipelineJars =
@@ -630,6 +631,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
             throws Exception {
 
         final UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
+        //是否启用了 Kerberos 安全性
         if (HadoopUtils.isKerberosSecurityEnabled(currentUser)) {
             boolean useTicketCache =
                     flinkConfiguration.get(SecurityOptions.KERBEROS_LOGIN_USETICKETCACHE);
@@ -739,6 +741,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
             logDetachedClusterInformation(yarnApplicationId, LOG);
         }
 
+        //将集群入口点信息设置为 config
         setClusterEntrypointInfoToConfig(report);
 
         return () -> {
@@ -895,6 +898,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 
         // ------------------ Initialize the file systems -------------------------
 
+        //初始化文件系统
         org.apache.flink.core.fs.FileSystem.initialize(
                 configuration, PluginUtils.createPluginManagerFromRootFolder(configuration));
 
@@ -902,6 +906,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 
         // hard coded check for the GoogleHDFS client because its not overriding the getScheme()
         // method.
+        //对 GoogleHDFS 客户端进行硬编码检查，因为它没有覆盖 getScheme() 方法。
         if (!fs.getClass().getSimpleName().equals("GoogleHadoopFileSystem")
                 && fs.getScheme().startsWith("file")) {
             LOG.warn(
@@ -1146,19 +1151,23 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 
         // Upload the flink configuration
         // write out configuration file
+        //上传flink配置写出配置文件
         File tmpConfigurationFile = null;
         try {
             String flinkConfigFileName = GlobalConfiguration.getFlinkConfFilename();
             tmpConfigurationFile = File.createTempFile(appId + "-" + flinkConfigFileName, null);
 
             // remove localhost bind hosts as they render production clusters unusable
+            //删除本地主机绑定主机，因为它们会使生产集群无法使用
             removeLocalhostBindHostSetting(configuration, JobManagerOptions.BIND_HOST);
             removeLocalhostBindHostSetting(configuration, TaskManagerOptions.BIND_HOST);
             // this setting is unconditionally overridden anyway, so we remove it for clarity
+            //无论如何，此设置都会被无条件覆盖，因此为了清楚起见，我们将其删除
             configuration.removeConfig(TaskManagerOptions.HOST);
 
             BootstrapTools.writeConfiguration(configuration, tmpConfigurationFile);
 
+            //注册单个本地资源
             fileUploader.registerSingleLocalResource(
                     flinkConfigFileName,
                     new Path(tmpConfigurationFile.getAbsolutePath()),
@@ -1185,6 +1194,8 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
         // and KRB5 configuration files. We are adding these files as container local resources for
         // the container
         // applications (JM/TMs) to have proper secure cluster setup
+        //支持 Yarn 安全集成测试场景 在集成测试设置中，YarnMiniCluster 创建的 Yarn 容器没有 Yarn 站点 XML 和 KRB5 配置文件。
+        // 我们将这些文件添加为容器本地资源，以便容器应用程序 (JMTM) 具有正确的安全集群设置
         Path remoteYarnSiteXmlPath = null;
         if (System.getenv("IN_TESTS") != null) {
             File f = new File(System.getenv("YARN_CONF_DIR"), Utils.YARN_SITE_FILE_NAME);
@@ -1347,7 +1358,12 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
                 new DeploymentFailureHook(yarnApplication, fileUploader.getApplicationDir());
         Runtime.getRuntime().addShutdownHook(deploymentFailureHook);
         LOG.info("Submitting application master " + appId);
-        //提交申请
+        //提交申请 代码最终触发YarnClient客户端提交信息
+        //Application模式下分析到此处依然未涉及到Flink应用main()方法的执行，
+        // 而在Per-Job、Session模式下，CliFrontend会先触发Flink应用main(...)方法执行，
+        // 生成StreamExecutionEnvironment执行环境、Transformation、StreamGraph、JobGraph，
+        // 最后携带着JobGraph信息执行yarnClient.submitApplication()方法
+        // 由此可知Application提交模式下StreamGraph、JobGraph等信息是在YARN ApplicationMaster服务中生成的。
         yarnClient.submitApplication(appContext);
 
         LOG.info("Waiting for the cluster to be allocated");

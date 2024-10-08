@@ -222,6 +222,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
         return terminationFuture;
     }
 
+
     public void startCluster() throws ClusterEntrypointException {
         LOG.info("Starting {}.", getClass().getSimpleName());
 
@@ -251,6 +252,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
 
             try {
                 // clean up any partial state
+                //清理任何部分状态
                 shutDownAsync(
                                 ApplicationStatus.FAILED,
                                 ShutdownBehaviour.GRACEFUL_SHUTDOWN,
@@ -303,9 +305,13 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
 
             final DispatcherResourceManagerComponentFactory
                     dispatcherResourceManagerComponentFactory =
-                    //创建调度程序资源管理器组件工厂
+                    //创建调度程序资源管理器组件工厂 返回的是DefaultDispatcherResourceManagerComponentFactory
                             createDispatcherResourceManagerComponentFactory(configuration);
 
+            //通过一系列调用链路生成dispatcherRunner实例，
+            //dispatcherRunner实例负责dispatcher组件的高可用leader选举操作，
+            //而dispatcher组件负责触发Flink应用main(...)方法执行
+            //用来启动 Dispatcher， ResourceManager，和 WebMonitorEndpoint
             clusterComponent =
                     dispatcherResourceManagerComponentFactory.create(
                             configuration,
@@ -338,6 +344,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
                                     // This is the general shutdown path. If a separate more
                                     // specific shutdown was
                                     // already triggered, this will do nothing
+                                    //这是一般的关闭路径。如果已经触发了单独的更具体的关闭，则这不会执行任何操作
                                     shutDownAsync(
                                             applicationStatus,
                                             ShutdownBehaviour.GRACEFUL_SHUTDOWN,

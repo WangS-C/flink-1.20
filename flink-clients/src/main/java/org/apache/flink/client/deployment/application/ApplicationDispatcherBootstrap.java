@@ -118,6 +118,7 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
         this.errorHandler = checkNotNull(errorHandler);
 
         this.applicationCompletionFuture =
+                //修复JobId 并异步运行应用程序
                 fixJobIdAndRunApplicationAsync(dispatcherGateway, scheduledExecutor);
 
         this.bootstrapCompletionFuture = finishBootstrapTasks(dispatcherGateway);
@@ -210,8 +211,10 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
                 configuration.getOptional(PipelineOptionsInternal.PIPELINE_FIXED_JOB_ID);
         final boolean submitFailedJobOnApplicationError =
                 configuration.get(DeploymentOptions.SUBMIT_FAILED_JOB_ON_APPLICATION_ERROR);
+        //非HA模式
         if (!HighAvailabilityMode.isHighAvailabilityModeActivated(configuration)
                 && !configuredJobId.isPresent()) {
+            //异步运行应用程序
             return runApplicationAsync(
                     dispatcherGateway, scheduledExecutor, false, submitFailedJobOnApplicationError);
         }
@@ -219,6 +222,8 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
             // In HA mode, we only support single-execute jobs at the moment. Here, we manually
             // generate the job id, if not configured, from the cluster id to keep it consistent
             // across failover.
+            //在HA模式下，我们目前仅支持单执行作业。
+            //在这里，我们从集群 ID 手动生成作业 ID（如果未配置），以使其在故障转移期间保持一致。
             configuration.set(
                     PipelineOptionsInternal.PIPELINE_FIXED_JOB_ID,
                     new JobID(
@@ -229,6 +234,7 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
                                     0)
                             .toHexString());
         }
+        //异步运行应用程序
         return runApplicationAsync(
                 dispatcherGateway, scheduledExecutor, true, submitFailedJobOnApplicationError);
     }
@@ -238,6 +244,9 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
      * The returned {@link CompletableFuture} completes when all jobs of the user application
      * succeeded. if any of them fails, or if job submission fails.
      */
+    //通过在给定的scheduledExecutor上调度任务来运行用户程序入口点。
+    //当用户应用程序的所有作业成功时，返回的CompletableFuture完成。
+    //如果其中任何一个失败，或者作业提交失败。
     private CompletableFuture<Void> runApplicationAsync(
             final DispatcherGateway dispatcherGateway,
             final ScheduledExecutor scheduledExecutor,
@@ -248,9 +257,11 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
 
         // we need to hand in a future as return value because we need to get those JobIs out
         // from the scheduled task that executes the user program
+        //我们需要将 future 作为返回值，因为我们需要从执行用户程序的计划任务中获取这些 JobIs
         applicationExecutionTask =
                 scheduledExecutor.schedule(
                         () ->
+                                //运行应用程序入口点
                                 runApplicationEntryPoint(
                                         applicationExecutionFuture,
                                         tolerateMissingResult,
@@ -276,6 +287,8 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
      *
      * <p>This should be executed in a separate thread (or task).
      */
+    //运行用户程序入口点并使用已提交作业的JobIDs完成给定的jobIdsFuture 。
+    //这应该在单独的线程（或任务）中执行。
     private void runApplicationEntryPoint(
             final CompletableFuture<List<JobID>> jobIdsFuture,
             final Set<JobID> tolerateMissingResult,
@@ -298,6 +311,7 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
                     new EmbeddedExecutorServiceLoader(
                             applicationJobIds, dispatcherGateway, scheduledExecutor);
 
+            //执行程序
             ClientUtils.executeProgram(
                     executorServiceLoader,
                     configuration,

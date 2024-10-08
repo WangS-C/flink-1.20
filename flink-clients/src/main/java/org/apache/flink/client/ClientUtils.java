@@ -91,6 +91,7 @@ public enum ClientUtils {
                     "Starting program (detached: {})",
                     !configuration.get(DeploymentOptions.ATTACHED));
 
+            //设置上下文
             ContextEnvironment.setAsContext(
                     executorServiceLoader,
                     configuration,
@@ -110,6 +111,7 @@ public enum ClientUtils {
                     executorServiceLoader, configuration, userCodeClassLoader);
 
             try {
+                //调用交互模式执行
                 program.invokeInteractiveModeForExecution();
             } finally {
                 ContextEnvironment.unsetAsContext();

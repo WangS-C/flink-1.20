@@ -98,7 +98,7 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
 
         PackagedProgram program = null;
         try {
-            //获取打包程序
+            //生成Flink应用入口类main(...)方法信息，后面通过反射方式触发Flink应用main(...)方法执行。
             program = getPackagedProgram(configuration);
         } catch (Exception e) {
             LOG.error("Could not create application program.", e);
@@ -117,6 +117,7 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
                 //YarnApplicationCluster入口点
                 new YarnApplicationClusterEntryPoint(configuration, program);
 
+        //运行集群
         ClusterEntrypoint.runClusterEntrypoint(yarnApplicationClusterEntrypoint);
     }
 

@@ -81,8 +81,10 @@ public class SessionDispatcherLeaderProcess extends AbstractDispatcherLeaderProc
 
     @Override
     protected void onStart() {
+        //启动jobGraphStore
         startServices();
 
+        //一系列调用后触发Flink应用main(...)方法的执行
         onGoingRecoveryOperation =
                 createDispatcherBasedOnRecoveredJobGraphsAndRecoveredDirtyJobResults();
     }
@@ -101,6 +103,7 @@ public class SessionDispatcherLeaderProcess extends AbstractDispatcherLeaderProc
 
     private void createDispatcherIfRunning(
             Collection<JobGraph> jobGraphs, Collection<JobResult> recoveredDirtyJobResults) {
+        //创建调度程序
         runIfStateIs(State.RUNNING, () -> createDispatcher(jobGraphs, recoveredDirtyJobResults));
     }
 
@@ -108,6 +111,7 @@ public class SessionDispatcherLeaderProcess extends AbstractDispatcherLeaderProc
             Collection<JobGraph> jobGraphs, Collection<JobResult> recoveredDirtyJobResults) {
 
         final DispatcherGatewayService dispatcherService =
+                //会新建ApplicationDispatcherBootstrap实例 并在构建时触发Flink应用main
                 dispatcherGatewayServiceFactory.create(
                         DispatcherId.fromUuid(getLeaderSessionId()),
                         jobGraphs,
@@ -126,11 +130,13 @@ public class SessionDispatcherLeaderProcess extends AbstractDispatcherLeaderProc
         return dirtyJobsFuture
                 .thenApplyAsync(
                         dirtyJobs ->
+                                //如果正在运行则恢复作业
                                 this.recoverJobsIfRunning(
                                         dirtyJobs.stream()
                                                 .map(JobResult::getJobId)
                                                 .collect(Collectors.toSet())),
                         ioExecutor)
+                //如果正在运行则创建调度程序
                 .thenAcceptBoth(dirtyJobsFuture, this::createDispatcherIfRunning)
                 .handle(this::onErrorIfRunning);
     }
