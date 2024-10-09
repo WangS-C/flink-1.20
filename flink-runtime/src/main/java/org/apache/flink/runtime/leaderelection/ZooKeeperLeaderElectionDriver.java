@@ -96,6 +96,7 @@ public class ZooKeeperLeaderElectionDriver implements LeaderElectionDriver, Lead
 
         leaderLatch.addListener(this);
         curatorFramework.getConnectionStateListenable().addListener(listener);
+        //启动执行leaderLatch  选举为leader时回调LeaderLatchListener的isLeader()方法
         leaderLatch.start();
         treeCache.start();
     }
@@ -189,6 +190,7 @@ public class ZooKeeperLeaderElectionDriver implements LeaderElectionDriver, Lead
         }
     }
 
+    //选举为leader时回调此方法
     @Override
     public void isLeader() {
         final UUID leaderSessionID = UUID.randomUUID();

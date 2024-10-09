@@ -30,6 +30,9 @@ public interface LeaderElectionDriver extends AutoCloseable {
      *
      * @return {@code true} if the driver has leadership, otherwise {@code false}
      */
+    //返回当前是否具有领导权。
+    //返回：
+    //如果有领导权，则为true ，否则为false
     boolean hasLeadership();
 
     /**
@@ -38,6 +41,10 @@ public interface LeaderElectionDriver extends AutoCloseable {
      * @param componentId identifying the component for which to publish the leader information
      * @param leaderInformation leader information of the respective component
      */
+    //发布给定组件的领导者信息。
+    //参数：
+    //componentId – 标识要发布领导者信息的组件
+    //leaderInformation – 各个组件的领导者信息
     void publishLeaderInformation(String componentId, LeaderInformation leaderInformation);
 
     /**

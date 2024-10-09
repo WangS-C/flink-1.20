@@ -189,9 +189,11 @@ public class DefaultLeaderElectionService extends DefaultLeaderElection.ParentSe
                     "The DefaultLeaderElectionService should have established a connection to the backend before it's started.");
 
             if (leaderElectionDriver == null) {
+                //创建LeaderElectionDriver组件，并赋值issuedLeaderSessionId。
                 createLeaderElectionDriver();
             }
 
+            //添加componentId -> WebMonitorEndpoint的映射
             Preconditions.checkState(
                     leaderContenderRegistry.put(componentId, contender) == null,
                     "There shouldn't be any contender registered under the passed component '%s'.",
@@ -202,6 +204,7 @@ public class DefaultLeaderElectionService extends DefaultLeaderElection.ParentSe
                     componentId,
                     leaderElectionDriver);
 
+            //前面赋值了issuedLeaderSessionId。
             if (issuedLeaderSessionID != null) {
                 // notifying the LeaderContender shouldn't happen in the contender's main thread
                 runInLeaderEventThread(
@@ -343,6 +346,8 @@ public class DefaultLeaderElectionService extends DefaultLeaderElection.ParentSe
                                 confirmedLeaderInformation,
                                 componentId,
                                 newConfirmedLeaderInformation);
+
+                //发布领导信息  只是将自己的信息写入Zookeeper路径中。
                 leaderElectionDriver.publishLeaderInformation(
                         componentId, newConfirmedLeaderInformation);
             } else {
@@ -407,8 +412,11 @@ public class DefaultLeaderElectionService extends DefaultLeaderElection.ParentSe
                 issuedLeaderSessionID == null,
                 "The leadership should have been granted while not having the leadership acquired.");
 
+        //赋值issuedLeaderSessionID
         issuedLeaderSessionID = newLeaderSessionId;
 
+        //此时leaderContenderRegistry还未添加componentId -> WebMonitorEndpoint的映射，
+        // onGrantLeadershipInternal(...)直接退出，因此leaderElectionDriver创建完成并退回到上面的register(...)方法中。
         leaderContenderRegistry
                 .keySet()
                 .forEach(
@@ -442,6 +450,7 @@ public class DefaultLeaderElectionService extends DefaultLeaderElection.ParentSe
                 componentId,
                 issuedLeaderSessionID);
 
+        //回调grantLeadership方法
         leaderContenderRegistry.get(componentId).grantLeadership(issuedLeaderSessionID);
     }
 

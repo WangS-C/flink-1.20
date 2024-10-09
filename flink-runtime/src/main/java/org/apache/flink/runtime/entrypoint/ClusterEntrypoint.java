@@ -295,7 +295,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
     private void runCluster(Configuration configuration, PluginManager pluginManager)
             throws Exception {
         synchronized (lock) {
-            //初始化服务
+            //初始化基础服务
             initializeServices(configuration, pluginManager);
 
             // write host information into configuration
@@ -387,8 +387,8 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
 
             rpcSystem = RpcSystem.load(configuration);
 
+            //初始化和启动PekkoRpcService
             commonRpcService =
-                    //创建远程rpc服务
                     RpcUtils.createRemoteRpcService(
                             rpcSystem,
                             configuration,
@@ -399,7 +399,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
                             //JobManager 绑定的本地 RPC 端口
                             configuration.getOptional(JobManagerOptions.RPC_BIND_PORT));
 
-            //启动JMX实例
+            //启动一个 JMXService，客户端用于连接JobManager JVM 进行监控
             JMXService.startInstance(configuration.get(JMXServerOptions.JMX_SERVER_PORT));
 
             // update the configuration used to create the high availability services
@@ -407,6 +407,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
             configuration.set(JobManagerOptions.ADDRESS, commonRpcService.getAddress());
             configuration.set(JobManagerOptions.PORT, commonRpcService.getPort());
 
+            //初始化一个负责集群io的线程池
             ioExecutor =
                     Executors.newFixedThreadPool(
                             ClusterEntrypointUtils.getPoolSize(configuration),
@@ -421,22 +422,24 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
             // one-time fashion is required because BlobServer may connect to external file systems
             //由于 BlobServer 可能连接到外部文件系统，因此需要一次性获取委托令牌并将其传播到本地 JVM 接收器
             delegationTokenManager.obtainDelegationTokens();
-            //创建高可用性服务
+            //创建一个ZooKeeperLeaderElectionHaServices类型的高可用服务
             haServices = createHaServices(configuration, ioExecutor, rpcSystem);
+
+            //初始化BlobServer服务端
             blobServer =
-                    //创建 blob 服务器
                     BlobUtils.createBlobServer(
                             configuration,
                             Reference.borrowed(workingDirectory.unwrap().getBlobStorageDirectory()),
                             haServices.createBlobStore());
             blobServer.start();
             configuration.set(BlobServerOptions.PORT, String.valueOf(blobServer.getPort()));
-            //创建心跳服务
+            //创建一个心跳服务，管理组件心跳
             heartbeatServices = createHeartbeatServices(configuration);
             failureEnrichers = FailureEnricherUtils.getFailureEnrichers(configuration);
             //创建指标注册表
             metricRegistry = createMetricRegistry(configuration, pluginManager, rpcSystem);
 
+            //性能监控服务
             final RpcService metricQueryServiceRpcService =
                     //启动远程metrics rpc服务
                     MetricUtils.startRemoteMetricsRpcService(
@@ -458,8 +461,8 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
                             ConfigurationUtils.getSystemResourceMetricsProbingInterval(
                                     configuration));
 
+            //初始化一个FileExecutionGraphInfoStore类型的ExecutionGraph store服务
             executionGraphInfoStore =
-                    //创建可序列化的执行图存储
                     createSerializableExecutionGraphStore(
                             configuration, commonRpcService.getScheduledExecutor());
         }

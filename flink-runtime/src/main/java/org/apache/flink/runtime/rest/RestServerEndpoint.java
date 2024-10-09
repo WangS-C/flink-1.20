@@ -181,9 +181,11 @@ public abstract class RestServerEndpoint implements RestService {
 
             log.info("Starting rest endpoint.");
 
+            //创建Router
             final Router router = new Router();
             final CompletableFuture<String> restAddressFuture = new CompletableFuture<>();
 
+            //客户端请求Handler生成。
             handlers = initializeHandlers(restAddressFuture);
 
             /* sort the handlers such that they are ordered the following:
@@ -193,9 +195,12 @@ public abstract class RestServerEndpoint implements RestService {
              * /jobs/:jobid/config
              * /:*
              */
+            //将Handlers按请求地址信息排序，目的是确认请求URL和Handler的一一对应关系
             Collections.sort(handlers, RestHandlerUrlComparator.INSTANCE);
 
+            //确认Handler的唯一性
             checkAllEndpointsAndHandlersAreUnique(handlers);
+            //将所有的Handler注册到Router当中。
             handlers.forEach(handler -> registerHandler(router, handler, log));
 
             MultipartRoutes multipartRoutes = createMultipartRoutes(handlers);
@@ -249,6 +254,8 @@ public abstract class RestServerEndpoint implements RestService {
                     new NioEventLoopGroup(
                             0, new ExecutorThreadFactory("flink-rest-server-netty-worker"));
 
+            //Netty服务端启动操作，Handlers注册完以后开发Netty服务端的启动操作，
+            // 通道初始化器生成、Netty服务端启动、遍历端口范围，防止端口冲突后绑定端口。
             bootstrap = new ServerBootstrap();
             bootstrap
                     .group(bossGroup, workerGroup)
@@ -257,6 +264,7 @@ public abstract class RestServerEndpoint implements RestService {
 
             Iterator<Integer> portsIterator;
             try {
+                //遍历端口范围
                 portsIterator = NetUtils.getPortRangeFromString(restBindPortRange);
             } catch (IllegalConfigurationException e) {
                 throw e;
@@ -311,8 +319,10 @@ public abstract class RestServerEndpoint implements RestService {
 
             restAddressFuture.complete(restBaseUrl);
 
+            //Netty服务端启动后，修改WebMonitorEndpoint状态为RUNNING状态，
             state = State.RUNNING;
 
+            //进行Leader选举和启动其他基础服务。
             startInternal();
         }
     }
@@ -607,6 +617,10 @@ public abstract class RestServerEndpoint implements RestService {
         // technically the first check is redundant since a duplicate instance also returns the same
         // headers which
         // should fail the second check, but we get a better error message
+        //检查所有处理程序是否
+        // 1) 实例仅注册一次
+        // 2) 为每个端点仅注册 1 个处理程序（由 (version, method, url) 定义）
+        // 从技术上讲，第一个检查是多余的，因为重复的实例也会返回相同的标头第二次检查应该失败，但我们得到了更好的错误消息
         final Set<String> uniqueEndpoints = new HashSet<>();
         final Set<ChannelInboundHandler> distinctHandlers =
                 Collections.newSetFromMap(new IdentityHashMap<>());

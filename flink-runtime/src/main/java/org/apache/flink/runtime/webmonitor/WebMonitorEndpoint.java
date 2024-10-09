@@ -1144,6 +1144,7 @@ public class WebMonitorEndpoint<T extends RestfulGateway> extends RestServerEndp
 
     @Override
     public void startInternal() throws Exception {
+        //开始Leader选举过程。
         leaderElection.startLeaderElection(this);
 
         startExecutionGraphCacheCleanupTask();
@@ -1213,6 +1214,7 @@ public class WebMonitorEndpoint<T extends RestfulGateway> extends RestServerEndp
                 "{} was granted leadership with leaderSessionID={}",
                 getRestBaseUrl(),
                 leaderSessionID);
+        //确认LeaderContender已接受由给定领导会话id标识的领导。它还会发布领导者地址，在该地址下可以访问领导者。
         leaderElection.confirmLeadership(leaderSessionID, getRestBaseUrl());
     }
 

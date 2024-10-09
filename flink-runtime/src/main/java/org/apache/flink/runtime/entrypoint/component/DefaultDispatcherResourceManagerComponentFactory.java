@@ -105,6 +105,12 @@ public class DefaultDispatcherResourceManagerComponentFactory
     //用来启动 Dispatcher， ResourceManager，和 WebMonitorEndpoint
     //dispatcherRunner实例负责dispatcher组件的高可用leader选举操作，
     //而dispatcher组件负责触发Flink应用main(...)方法执行
+    // WebmonitorEndpoint：Rest服务，内部由Netty实现。客户端发起的所有请求都会被该组件接收处理。
+    // Dispatcher：负责接收客户端提交的JobGraph请求，启动一个JobMaster。
+    // 内部持有一个JobGraphStore，当物理执行图构成过程中主节点发生故障时，
+    // 可以从JobGraphStore中从新拉起一个新的JobGraph。
+    // ResourceManager：Flink集群的资源管理器，作用于Flink和资源管理集群(Yarn、K8s等)之间。
+    // 主要功能包括启动新的TaskManager、为作业申请slot、维持和TaskManager、JobMaster的心跳等功能。
     @Override
     public DispatcherResourceManagerComponent create(
             Configuration configuration,
@@ -135,6 +141,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
             resourceManagerRetrievalService =
                     highAvailabilityServices.getResourceManagerLeaderRetriever();
 
+//            Dispatcher leader检索服务
             final LeaderGatewayRetriever<DispatcherGateway> dispatcherGatewayRetriever =
                     //Dispatcher网关
                     new RpcGatewayRetriever<>(
@@ -144,6 +151,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             new ExponentialBackoffRetryStrategy(
                                     12, Duration.ofMillis(10), Duration.ofMillis(50)));
 
+            //ResourceManager leader检索服务
             final LeaderGatewayRetriever<ResourceManagerGateway> resourceManagerGatewayRetriever =
                     //ResourceManager网关
                     new RpcGatewayRetriever<>(
@@ -170,6 +178,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                                     dispatcherGatewayRetriever,
                                     executor);
 
+            //WebmonitorEndpoint的创建过程
             webMonitorEndpoint =
                     restEndpointFactory.createRestEndpoint(
                             configuration,
@@ -182,6 +191,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             fatalErrorHandler);
 
             log.debug("Starting Dispatcher REST endpoint.");
+            // WebmonitorEndpoint 启动
             webMonitorEndpoint.start();
 
             final String hostname = RpcUtils.getHostname(rpcService);

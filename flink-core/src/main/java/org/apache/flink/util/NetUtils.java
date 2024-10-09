@@ -408,6 +408,13 @@ public class NetUtils {
      * @return Set of ports from the range definition
      * @throws NumberFormatException If an invalid string is passed.
      */
+    //返回由范围定义定义的可用端口的迭代器。
+    //参数：
+    //rangeDefinition – 描述单个端口、端口范围或多个范围的字符串。
+    //返回：
+    //范围定义中的端口集
+    //投掷：
+    //NumberFormatException – 如果传递了无效字符串。
     public static Iterator<Integer> getPortRangeFromString(String rangeDefinition)
             throws NumberFormatException {
         final String[] ranges = rangeDefinition.trim().split(",");
