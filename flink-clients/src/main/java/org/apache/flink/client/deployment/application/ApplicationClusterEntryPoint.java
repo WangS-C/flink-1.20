@@ -73,11 +73,14 @@ public class ApplicationClusterEntryPoint extends ClusterEntrypoint {
             createDispatcherResourceManagerComponentFactory(final Configuration configuration) {
         //创建调度程序资源管理器组件工厂
         return new DefaultDispatcherResourceManagerComponentFactory(
+                //Dispatcher工厂
                 new DefaultDispatcherRunnerFactory(
                         ApplicationDispatcherLeaderProcessFactoryFactory.create(
                                 //使用StandaloneDispatcher
                                 configuration, SessionDispatcherFactory.INSTANCE, program)),
+                //ResourceManager 工厂
                 resourceManagerFactory,
+                //WebmonitorEndpoint 工厂
                 JobRestEndpointFactory.INSTANCE);
     }
 

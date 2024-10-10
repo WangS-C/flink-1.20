@@ -39,6 +39,7 @@ class DefaultLeaderElection implements LeaderElection {
     @Override
     public void startLeaderElection(LeaderContender contender) throws Exception {
         Preconditions.checkNotNull(contender);
+        //注册LeaderContender
         parentService.register(componentId, contender);
     }
 
@@ -68,6 +69,7 @@ class DefaultLeaderElection implements LeaderElection {
          * {@code ParentService}. Leadership changes are starting to be reported to the {@code
          * LeaderContender}.
          */
+        //在具有底层ParentService componentId下注册LeaderContender 。领导层变动开始向LeaderContender报告。
         abstract void register(String componentId, LeaderContender contender) throws Exception;
 
         /**
