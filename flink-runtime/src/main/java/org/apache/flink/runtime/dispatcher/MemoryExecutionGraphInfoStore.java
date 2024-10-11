@@ -47,6 +47,8 @@ import java.util.stream.Collectors;
  * {@link ExecutionGraphInfoStore} implementation which stores the {@link ArchivedExecutionGraph} in
  * memory. The memory store support to keep maximum job graphs and remove the timeout ones.
  */
+//ExecutionGraphInfoStore实现，将ArchivedExecutionGraph存储在内存中。
+//内存存储支持保留最大作业图并删除超时作业图。
 public class MemoryExecutionGraphInfoStore implements ExecutionGraphInfoStore {
 
     private static final Logger LOG = LoggerFactory.getLogger(MemoryExecutionGraphInfoStore.class);
