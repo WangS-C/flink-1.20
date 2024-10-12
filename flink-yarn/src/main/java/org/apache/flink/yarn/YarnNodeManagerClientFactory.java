@@ -29,5 +29,10 @@ public interface YarnNodeManagerClientFactory {
      * @param callbackHandler which handles the events from YARN NodeManager.
      * @return a {@link NMClientAsync} instance.
      */
+    //使用给定的回调处理程序创建 YARN NodeManager 客户端。
+    //参数：
+    //callbackHandler – 处理来自 YARN NodeManager 的事件。
+    //返回：
+    //NMClientAsync实例。
     NMClientAsync createNodeManagerClient(NMClientAsync.CallbackHandler callbackHandler);
 }

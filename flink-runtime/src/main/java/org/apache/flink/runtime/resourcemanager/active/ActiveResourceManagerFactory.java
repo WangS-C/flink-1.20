@@ -110,6 +110,7 @@ public abstract class ActiveResourceManagerFactory<WorkerType extends ResourceID
 
         //活动资源管理器
         return new ActiveResourceManager<>(
+                //创建了YarnResourceManagerDriver
                 createResourceManagerDriver(
                         configuration, webInterfaceUrl, rpcService.getAddress()),
                 configuration,

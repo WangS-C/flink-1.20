@@ -117,6 +117,7 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
 
         LOG.info("Starting resource manager service.");
 
+        //开始选举
         leaderElection.startLeaderElection(this);
     }
 
@@ -183,6 +184,7 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
     //  LeaderContender
     // ------------------------------------------------------------------------
 
+    // 选举成功后
     @Override
     public void grantLeadership(UUID newLeaderSessionID) {
         handleLeaderEventExecutor.execute(
@@ -200,6 +202,7 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
                                 newLeaderSessionID);
 
                         try {
+                            //启动新的领导者资源管理器
                             startNewLeaderResourceManager(newLeaderSessionID);
                         } catch (Throwable t) {
                             fatalErrorHandler.onFatalError(
@@ -245,11 +248,14 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
     //  Internal
     // ------------------------------------------------------------------------
 
+    //启动新的领导者资源管理器
     @GuardedBy("lock")
     private void startNewLeaderResourceManager(UUID newLeaderSessionID) throws Exception {
+        //停止领导者资源管理器
         stopLeaderResourceManager();
 
         this.leaderSessionID = newLeaderSessionID;
+        //创建ResourceManager
         this.leaderResourceManager =
                 resourceManagerFactory.createResourceManager(rmProcessContext, newLeaderSessionID);
 
@@ -259,6 +265,7 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
                 .thenComposeAsync(
                         (ignore) -> {
                             synchronized (lock) {
+                                //如果是领导者则启动资源管理器
                                 return startResourceManagerIfIsLeader(newLeaderResourceManager);
                             }
                         },
@@ -266,6 +273,7 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
                 .thenAcceptAsync(
                         (isStillLeader) -> {
                             if (isStillLeader) {
+                                //确认Leader 并发布信息
                                 leaderElection.confirmLeadership(
                                         newLeaderSessionID, newLeaderResourceManager.getAddress());
                             }
@@ -281,6 +289,7 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
     private CompletableFuture<Boolean> startResourceManagerIfIsLeader(
             ResourceManager<?> resourceManager) {
         if (isLeader(resourceManager)) {
+            //启动
             resourceManager.start();
             forwardTerminationFuture(resourceManager);
             return resourceManager.getStartedFuture().thenApply(ignore -> true);

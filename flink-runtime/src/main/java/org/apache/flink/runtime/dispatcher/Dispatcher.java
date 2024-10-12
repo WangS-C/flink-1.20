@@ -412,6 +412,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
 
         try (MdcCloseable ignored =
                 MdcUtils.withContext(MdcUtils.asContextData(recoveredJob.getJobID()))) {
+            //运行
             runJob(createJobMasterRunner(recoveredJob), ExecutionType.RECOVERY);
         } catch (Throwable throwable) {
             onFatalError(
@@ -685,6 +686,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
 
     private void runJob(JobManagerRunner jobManagerRunner, ExecutionType executionType)
             throws Exception {
+        //启动
         jobManagerRunner.start();
         jobManagerRunnerRegistry.register(jobManagerRunner);
 

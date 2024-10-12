@@ -35,6 +35,7 @@ public class DefaultYarnNodeManagerClientFactory implements YarnNodeManagerClien
     @Override
     public NMClientAsync createNodeManagerClient(NMClientAsync.CallbackHandler callbackHandler) {
         // create the client to communicate with the node managers
+        // 创建客户端与节点管理器通信
         return NMClientAsync.createNMClientAsync(callbackHandler);
     }
 }

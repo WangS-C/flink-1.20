@@ -181,6 +181,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
     @Override
     protected void initializeInternal() throws Exception {
         isRunning = true;
+        // yarn 容器回调处理程序
         final YarnContainerEventHandler yarnContainerEventHandler = new YarnContainerEventHandler();
         try {
             resourceManagerClient =
@@ -191,7 +192,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
             resourceManagerClient.start();
 
             final RegisterApplicationMasterResponse registerApplicationMasterResponse =
-                    //注册应用程序主控
+                    //向resourceManager注册此ApplicationMaster。注册成功后，启动心跳线程。
                     registerApplicationMaster();
             //从之前的尝试中获取容器
             getContainersFromPreviousAttempts(registerApplicationMasterResponse);
@@ -206,6 +207,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
             throw new ResourceManagerException("Could not start resource manager client.", e);
         }
 
+        //使用给定的回调处理程序创建 YARN NodeManager 客户端。
         nodeManagerClient =
                 yarnNodeManagerClientFactory.createNodeManagerClient(yarnContainerEventHandler);
         nodeManagerClient.init(yarnConfig);
@@ -595,6 +597,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
     }
 
     private RegisterApplicationMasterResponse registerApplicationMaster() throws Exception {
+
         return resourceManagerClient.registerApplicationMaster(
                 configuration.getRpcAddress(),
                 ResourceManagerUtils.parseRestBindPortFromWebInterfaceUrl(
