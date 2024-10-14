@@ -47,8 +47,7 @@ public interface ResourceManagerDriver<WorkerType extends ResourceIDRetrievable>
             ResourceEventHandler<WorkerType> resourceEventHandler,
             ScheduledExecutor mainThreadExecutor,
             Executor ioExecutor,
-            BlockedNodeRetriever blockedNodeRetriever)
-            throws Exception;
+            BlockedNodeRetriever blockedNodeRetriever) throws Exception;
 
     /** Terminate the deployment specific components. */
     void terminate() throws Exception;
@@ -62,10 +61,12 @@ public interface ResourceManagerDriver<WorkerType extends ResourceIDRetrievable>
      *
      * @param finalStatus The application status to report.
      * @param optionalDiagnostics A diagnostics message or {@code null}.
+     *
      * @throws Exception if the application could not be deregistered.
      */
-    void deregisterApplication(ApplicationStatus finalStatus, @Nullable String optionalDiagnostics)
-            throws Exception;
+    void deregisterApplication(
+            ApplicationStatus finalStatus,
+            @Nullable String optionalDiagnostics) throws Exception;
 
     /**
      * Request resource from the external resource manager.
@@ -90,9 +91,23 @@ public interface ResourceManagerDriver<WorkerType extends ResourceIDRetrievable>
      * until the returned future is completed successfully.
      *
      * @param taskExecutorProcessSpec Resource specification of the requested worker.
+     *
      * @return Future that wraps worker node of the requested resource, in the deployment specific
-     *     type.
+     *         type.
      */
+    //向外部资源管理器请求资源。
+    //此方法从外部资源管理器请求新资源，并尝试根据提供的 taskExecutorProcessSpec 在分配的资源内启动任务管理器。
+    //返回的 future 将使用部署特定类型的工作节点完成，或者在分配失败的情况下例外。
+    //注意：返回的 future 可以被 ResourceManager 取消。
+    //这意味着ResourceManager不再需要这个资源，Driver应该尝试从外部资源管理器取消这个请求。
+    //注意：返回的 future 完成并不一定意味着资源分配和任务管理器启动成功。
+    // 未来完成后，分配和启动失败仍然可能发生。在这种情况下，将调用ResourceEventHandler. onWorkerTerminated 。
+    //未来保证在 rpc 主线程中完成，在尝试启动任务管理器之前，即在任务管理器注册之前。
+    // 它还保证不会在所请求的工作线程上调用ResourceEventHandler. onWorkerTerminated ，直到返回的 future 成功完成。
+    //参数：
+    //taskExecutorProcessSpec – 所请求的工作线程的资源规范。
+    //返回：
+    //以部署特定类型包装所请求资源的工作节点的 Future。
     CompletableFuture<WorkerType> requestResource(TaskExecutorProcessSpec taskExecutorProcessSpec);
 
     /**

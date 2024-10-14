@@ -273,10 +273,10 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
             //注册指标
             registerMetrics();
 
-            //启动心跳服务
+            //启动心跳服务  启动了俩个心跳 跟TaskManager和跟JobManager的
             startHeartbeatServices();
 
-            //使用给定的领导者 ID 和资源管理器操作启动槽管理器。
+            //启动slotManager  并开启了一个定时任务定时申请所需资源
             slotManager.start(
                     getFencingToken(),
                     getMainThreadExecutor(),

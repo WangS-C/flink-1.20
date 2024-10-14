@@ -349,6 +349,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
                         declaredWorkerNumber);
 
                 // release unwanted workers.
+                //释放不需要的工人。
                 int remainingReleasingWorkerNumber =
                         releaseUnWantedResources(
                                 resourceDeclaration.getUnwantedWorkers(),
@@ -356,6 +357,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
 
                 if (remainingReleasingWorkerNumber > 0) {
                     // release not allocated workers
+                    //释放未分配的工人
                     remainingReleasingWorkerNumber =
                             releaseUnallocatedWorkers(
                                     workerResourceSpec, remainingReleasingWorkerNumber);
@@ -363,6 +365,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
 
                 if (remainingReleasingWorkerNumber > 0) {
                     // release starting workers
+                    // 释放起始工人
                     remainingReleasingWorkerNumber =
                             releaseAllocatedWorkers(
                                     currentAttemptUnregisteredWorkers,
@@ -372,6 +375,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
 
                 if (remainingReleasingWorkerNumber > 0) {
                     // release registered workers
+                    //释放注册工人
                     remainingReleasingWorkerNumber =
                             releaseAllocatedWorkers(
                                     workerNodeMap.keySet(),
@@ -387,6 +391,8 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
                 // trying to start new workers.
                 // Otherwise, ActiveResourceManager will always re-requesting the worker,
                 // which keeps the main thread busy.
+                //如果启动工作程序失败，我们应该等待一段时间再尝试启动新的工作程序。
+                // 否则，ActiveResourceManager将始终重新请求worker，这会使主线程保持忙碌。
                 if (startWorkerCoolDown.isDone()) {
                     int requestWorkerNumber = -releaseOrRequestWorkerNumber;
                     log.info(
@@ -512,6 +518,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
                 pendingCount);
 
         final CompletableFuture<WorkerType> requestResourceFuture =
+                //请求资源
                 resourceManagerDriver.requestResource(taskExecutorProcessSpec);
         unallocatedWorkerFutures.put(requestResourceFuture, workerResourceSpec);
 
@@ -719,6 +726,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
         @Override
         public void declareResourceNeeded(Collection<ResourceDeclaration> resourceDeclarations) {
             validateRunsInMainThread();
+            //声明所需资源
             ActiveResourceManager.this.declareResourceNeeded(resourceDeclarations);
         }
     }

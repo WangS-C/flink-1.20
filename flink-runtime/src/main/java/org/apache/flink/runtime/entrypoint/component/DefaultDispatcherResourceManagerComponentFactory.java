@@ -109,7 +109,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
     // Dispatcher：负责接收客户端提交的JobGraph请求，启动一个JobMaster。
     // 内部持有一个JobGraphStore，当物理执行图构成过程中主节点发生故障时，
     // 可以从JobGraphStore中从新拉起一个新的JobGraph。
-    // ResourceManager：Flink集群的资源管理器，作用于Flink和资源管理集群(Yarn、K8s等)之间。
+    // ResourceManager：Flink集群的资源管理器，作用于Flink和资源管理集群(Yarn、K8s等)之间。启动了一个slotManager
     // 主要功能包括启动新的TaskManager、为作业申请slot、维持和TaskManager、JobMaster的心跳等功能。
     @Override
     public DispatcherResourceManagerComponent create(

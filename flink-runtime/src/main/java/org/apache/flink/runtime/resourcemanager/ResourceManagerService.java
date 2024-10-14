@@ -33,6 +33,7 @@ public interface ResourceManagerService extends AutoCloseableAsync {
      *
      * @throws Exception if the service cannot be started
      */
+    // 启动服务。
     void start() throws Exception;
 
     /**

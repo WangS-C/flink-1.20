@@ -184,7 +184,7 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
     //  LeaderContender
     // ------------------------------------------------------------------------
 
-    // 选举成功后
+    // 选举成功后,回调此方法
     @Override
     public void grantLeadership(UUID newLeaderSessionID) {
         handleLeaderEventExecutor.execute(
@@ -255,7 +255,7 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
         stopLeaderResourceManager();
 
         this.leaderSessionID = newLeaderSessionID;
-        //创建ResourceManager
+        //创建ResourceManager 创建了SlotManager  和 JobLeaderIdService
         this.leaderResourceManager =
                 resourceManagerFactory.createResourceManager(rmProcessContext, newLeaderSessionID);
 
@@ -289,7 +289,7 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
     private CompletableFuture<Boolean> startResourceManagerIfIsLeader(
             ResourceManager<?> resourceManager) {
         if (isLeader(resourceManager)) {
-            //启动
+            //启动 回回调到 org.apache.flink.runtime.resourcemanager.ResourceManager.onStart 方法
             resourceManager.start();
             forwardTerminationFuture(resourceManager);
             return resourceManager.getStartedFuture().thenApply(ignore -> true);

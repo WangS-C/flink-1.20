@@ -224,12 +224,14 @@ public class FineGrainedSlotManager implements SlotManager {
         if (resourceAllocator.isSupported()) {
             clusterReconciliationCheck =
                     scheduledExecutor.scheduleWithFixedDelay(
+                            //检查并申请所需资源
                             () -> mainThreadExecutor.execute(this::checkClusterReconciliation),
                             0L,
                             taskManagerTimeout.toMilliseconds(),
                             TimeUnit.MILLISECONDS);
         }
 
+        //注册SlotManager指标
         registerSlotManagerMetrics();
     }
 
@@ -395,10 +397,12 @@ public class FineGrainedSlotManager implements SlotManager {
         }
     }
 
+    //延迟声明所需资源
     private void declareNeededResourcesWithDelay() {
         Preconditions.checkState(resourceAllocator.isSupported());
 
         if (declareNeededResourceDelay.toMillis() <= 0) {
+            //声明所需资源
             declareNeededResources();
         } else {
             if (declareNeededResourceFuture == null || declareNeededResourceFuture.isDone()) {
@@ -407,6 +411,7 @@ public class FineGrainedSlotManager implements SlotManager {
                         () ->
                                 mainThreadExecutor.execute(
                                         () -> {
+                                            //声明所需资源
                                             declareNeededResources();
                                             Preconditions.checkNotNull(declareNeededResourceFuture)
                                                     .complete(null);
@@ -429,6 +434,7 @@ public class FineGrainedSlotManager implements SlotManager {
                                         Collectors.mapping(Map.Entry::getKey, Collectors.toSet())));
 
         // registered TaskManagers except unwanted worker.
+        //已注册的 TaskManager，但不需要的工作人员除外。
         Stream<WorkerResourceSpec> registeredTaskManagerStream =
                 taskManagerTracker.getRegisteredTaskManagers().stream()
                         .filter(t -> !unWantedTaskManagers.containsKey(t.getInstanceId()))
@@ -437,6 +443,7 @@ public class FineGrainedSlotManager implements SlotManager {
                                         WorkerResourceSpec.fromTotalResourceProfile(
                                                 t.getTotalResource(), t.getDefaultNumSlots()));
         // pending TaskManagers.
+        //待处理的任务管理器。
         Stream<WorkerResourceSpec> pendingTaskManagerStream =
                 taskManagerTracker.getPendingTaskManagers().stream()
                         .map(
@@ -463,6 +470,7 @@ public class FineGrainedSlotManager implements SlotManager {
                                         unWantedTaskManagerBySpec.getOrDefault(
                                                 spec, Collections.emptySet()))));
 
+        //声明所需资源
         resourceAllocator.declareResourceNeeded(resourceDeclarations);
     }
 
@@ -815,6 +823,7 @@ public class FineGrainedSlotManager implements SlotManager {
     private void checkClusterReconciliation() {
         if (checkResourcesNeedReconcile()) {
             // only declare on needed.
+            //仅在需要时声明。
             declareNeededResourcesWithDelay();
         }
     }
