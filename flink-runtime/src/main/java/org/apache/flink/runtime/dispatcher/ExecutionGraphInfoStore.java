@@ -76,6 +76,11 @@ public interface ExecutionGraphInfoStore extends Closeable {
      * @param jobId identifying the job for which to retrieve the {@link JobDetails}
      * @return {@link JobDetails} of the requested job or null if the job is not available
      */
+    //返回给定作业的JobDetails }。
+    //参数：
+    //jobId – 标识要检索其JobDetails的作业
+    //返回：
+    //请求的作业的JobDetails ，如果作业不可用，则为 null
     @Nullable
     JobDetails getAvailableJobDetails(JobID jobId);
 }

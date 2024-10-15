@@ -89,6 +89,7 @@ public class DeclarativeSlotPoolService implements SlotPoolService {
 
         this.declarativeSlotPool =
                 declarativeSlotPoolFactory.create(
+                        //notifyNewResourceRequirements是declareResourceRequirements()
                         jobId, this::declareResourceRequirements, idleSlotTimeout, rpcTimeout);
     }
 
@@ -285,21 +286,25 @@ public class DeclarativeSlotPoolService implements SlotPoolService {
      */
     protected void onReleaseTaskManager(ResourceCounter previouslyFulfilledRequirement) {}
 
+    //连接到资源管理器
     @Override
     public void connectToResourceManager(ResourceManagerGateway resourceManagerGateway) {
         assertHasBeenStarted();
 
         resourceRequirementServiceConnectionManager.connect(
                 resourceRequirements ->
+                        //声明所需资源
                         resourceManagerGateway.declareRequiredResources(
                                 jobMasterId, resourceRequirements, rpcTimeout));
 
         declareResourceRequirements(declarativeSlotPool.getResourceRequirements());
     }
 
+    //声明资源需求
     private void declareResourceRequirements(Collection<ResourceRequirement> resourceRequirements) {
         assertHasBeenStarted();
 
+        //声明资源需求
         resourceRequirementServiceConnectionManager.declareResourceRequirements(
                 ResourceRequirements.create(jobId, jobManagerAddress, resourceRequirements));
     }

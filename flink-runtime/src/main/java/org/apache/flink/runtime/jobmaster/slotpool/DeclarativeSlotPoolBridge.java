@@ -223,6 +223,7 @@ public class DeclarativeSlotPoolBridge extends DeclarativeSlotPoolService implem
         // we have to first reserve all matching slots before fulfilling the requests
         // otherwise it can happen that the scheduler reserves one of the new slots
         // for a request which has been triggered by fulfilling a pending request
+        //在满足请求之前，我们必须首先保留所有匹配的插槽，否则调度程序可能会为通过满足挂起的请求而触发的请求保留一个新插槽
         for (RequestSlotMatchingStrategy.RequestSlotMatch requestSlotMatch : requestSlotMatches) {
             final PendingRequest pendingRequest = requestSlotMatch.getPendingRequest();
             final PhysicalSlot slot = requestSlotMatch.getSlot();
@@ -288,9 +289,11 @@ public class DeclarativeSlotPoolBridge extends DeclarativeSlotPoolService implem
                 resourceProfile);
 
         final PendingRequest pendingRequest =
+                //创建正常请求
                 PendingRequest.createNormalRequest(
                         slotRequestId, resourceProfile, preferredAllocations);
 
+        //内部请求新Slot
         return internalRequestNewSlot(pendingRequest, timeout);
     }
 
@@ -316,6 +319,7 @@ public class DeclarativeSlotPoolBridge extends DeclarativeSlotPoolService implem
 
     private CompletableFuture<PhysicalSlot> internalRequestNewSlot(
             PendingRequest pendingRequest, @Nullable Time timeout) {
+        //内部请求新分配的Slot
         internalRequestNewAllocatedSlot(pendingRequest);
 
         if (timeout == null) {
@@ -348,6 +352,7 @@ public class DeclarativeSlotPoolBridge extends DeclarativeSlotPoolService implem
         pendingRequests.put(pendingRequest.getSlotRequestId(), pendingRequest);
 
         getDeclarativeSlotPool()
+                //增加资源需求
                 .increaseResourceRequirementsBy(
                         ResourceCounter.withResource(pendingRequest.getResourceProfile(), 1));
     }

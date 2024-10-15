@@ -127,6 +127,7 @@ public class DefaultDeclarativeSlotPool implements DeclarativeSlotPool {
         }
         totalResourceRequirements = totalResourceRequirements.add(increment);
 
+        //声明资源需求
         declareResourceRequirements();
     }
 
@@ -148,6 +149,7 @@ public class DefaultDeclarativeSlotPool implements DeclarativeSlotPool {
     }
 
     private void declareResourceRequirements() {
+        //获取资源需求
         final Collection<ResourceRequirement> resourceRequirements = getResourceRequirements();
 
         log.debug(
@@ -157,6 +159,9 @@ public class DefaultDeclarativeSlotPool implements DeclarativeSlotPool {
                 resourceRequirements,
                 System.lineSeparator(),
                 fulfilledResourceRequirements);
+        //org.apache.flink.runtime.jobmaster.slotpool.DeclarativeSlotPoolService.DeclarativeSlotPoolService
+        //中定义了 declareResourceRequirements方法
+        //所以会调用到DeclarativeSlotPoolService#declareResourceRequirements
         notifyNewResourceRequirements.accept(resourceRequirements);
     }
 
@@ -167,6 +172,7 @@ public class DefaultDeclarativeSlotPool implements DeclarativeSlotPool {
         for (Map.Entry<ResourceProfile, Integer> resourceRequirement :
                 totalResourceRequirements.getResourcesWithCount()) {
             currentResourceRequirements.add(
+                    //新建
                     ResourceRequirement.create(
                             resourceRequirement.getKey(), resourceRequirement.getValue()));
         }

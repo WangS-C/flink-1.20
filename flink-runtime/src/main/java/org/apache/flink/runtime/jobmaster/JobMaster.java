@@ -358,6 +358,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
 
         this.slotPoolService =
                 checkNotNull(slotPoolServiceSchedulerFactory)
+                        //创建SlotPoolService
                         .createSlotPoolService(
                                 jid,
                                 createDeclarativeSlotPoolFactory(
@@ -380,6 +381,9 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
         this.failureEnrichers = checkNotNull(failureEnrichers);
 
         this.schedulerNG =
+                //创建调度程序 代表Flink Task任务的调度器。调度器负责管理作业执行的所有相关过程。
+                // 包括JobGraph到ExecutionGraph的转换过程、作业的发布、取消、停止过程、
+                // 作业Task的发布、取消、停止过程、资源申请与释放、作业和Task的Failover等。
                 createScheduler(
                         slotPoolServiceSchedulerFactory,
                         executionDeploymentTracker,
@@ -457,6 +461,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     @Override
     protected void onStart() throws JobMasterException {
         try {
+            //开始作业执行
             startJobExecution();
         } catch (Exception e) {
             final JobMasterException jobMasterException =
@@ -1126,6 +1131,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
         JobShuffleContext context = new JobShuffleContextImpl(jobGraph.getJobID(), this);
         shuffleMaster.registerJob(context);
 
+        //启动作业主服务
         startJobMasterServices();
 
         log.info(
@@ -1134,22 +1140,27 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
                 jobGraph.getJobID(),
                 getFencingToken());
 
+        //开始安排
         startScheduling();
     }
 
     private void startJobMasterServices() throws Exception {
         try {
+            //创建TaskManager心跳管理器
             this.taskManagerHeartbeatManager = createTaskManagerHeartbeatManager(heartbeatServices);
+            //创建ResourceManager心跳管理器
             this.resourceManagerHeartbeatManager =
                     createResourceManagerHeartbeatManager(heartbeatServices);
 
             // start the slot pool make sure the slot pool now accepts messages for this leader
+            //启动 slotPool确保 slotPool现在接受该领导者的消息
             slotPoolService.start(getFencingToken(), getAddress(), getMainThreadExecutor());
 
             // job is ready to go, try to establish connection with resource manager
             //   - activate leader retrieval for the resource manager
             //   - on notification of the leader, the connection will be established and
             //     the slot pool will start requesting slots
+            //作业已准备就绪，尝试与资源管理器建立连接 - 激活资源管理器的领导者检索 - 在领导者通知后，将建立连接并且插槽池将开始请求插槽
             resourceManagerLeaderRetriever.start(new ResourceManagerLeaderListener());
         } catch (Exception e) {
             handleStartJobMasterServicesError(e);
@@ -1217,6 +1228,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     private void startScheduling() {
+        //开始安排
         schedulerNG.startScheduling();
     }
 
@@ -1538,6 +1550,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
                         long timeoutMillis) {
                     Time timeout = Time.milliseconds(timeoutMillis);
 
+                    //注册JobMaster
                     return gateway.registerJobMaster(
                             jobMasterId,
                             jobManagerResourceID,

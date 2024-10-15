@@ -67,7 +67,9 @@ class JobScopedResourceTracker {
                             newResourceRequirement.getResourceProfile(),
                             newResourceRequirement.getNumberOfRequiredSlots());
         }
+        //找到多余的槽位
         findExcessSlots();
+        //尝试分配多余的插槽
         tryAssigningExcessSlots();
     }
 

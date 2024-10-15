@@ -588,6 +588,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
                             .thenApply(
                                     acknowledge -> {
                                         validateRunsInMainThread();
+                                        //流程资源需求
                                         slotManager.processResourceRequirements(
                                                 resourceRequirements);
                                         return null;
@@ -1571,6 +1572,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
         public void unblockResources(Collection<BlockedNode> unBlockedNodes) {
             // when a node is unblocked, we should trigger the resource requirements because the
             // slots on this node become available again.
+            //当节点被解除阻塞时，我们应该触发资源需求，因为该节点上的插槽再次可用。
             slotManager.triggerResourceRequirementsCheck();
         }
     }

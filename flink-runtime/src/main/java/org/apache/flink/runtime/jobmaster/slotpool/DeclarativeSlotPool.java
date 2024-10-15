@@ -47,6 +47,9 @@ public interface DeclarativeSlotPool {
      *
      * @param increment increment by which to increase the resource requirements
      */
+    //按增量增加资源需求。
+    //参数：
+    //increment ——增加资源需求的增量
     void increaseResourceRequirementsBy(ResourceCounter increment);
 
     /**

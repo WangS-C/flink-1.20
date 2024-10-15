@@ -90,11 +90,13 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
     public void allocateSlotsAndDeploy(
             final List<Execution> executionsToDeploy,
             final Map<ExecutionVertexID, ExecutionVertexVersion> requiredVersionByVertex) {
+        //验证执行状态
         validateExecutionStates(executionsToDeploy);
 
         transitionToScheduled(executionsToDeploy);
 
         final Map<ExecutionAttemptID, ExecutionSlotAssignment> executionSlotAssignmentMap =
+                //分配Slot
                 allocateSlotsFor(executionsToDeploy);
 
         final List<ExecutionDeploymentHandle> deploymentHandles =
@@ -124,6 +126,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
                 executionsToDeploy.stream()
                         .map(Execution::getAttemptId)
                         .collect(Collectors.toList());
+        //分配slot
         return executionSlotAllocator.allocateSlotsFor(executionAttemptIds);
     }
 

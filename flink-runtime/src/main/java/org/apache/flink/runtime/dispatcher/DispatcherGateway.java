@@ -42,6 +42,10 @@ public interface DispatcherGateway extends FencedRpcGateway<DispatcherId>, Restf
      * @param timeout RPC timeout
      * @return A future acknowledge if the submission succeeded
      */
+    //向调度员提交作业。
+    //参数：
+    //jobGraph – 要提交的 JobGraph
+    //timeout – RPC 超时
     CompletableFuture<Acknowledge> submitJob(JobGraph jobGraph, @RpcTimeout Time timeout);
 
     CompletableFuture<Acknowledge> submitFailedJob(

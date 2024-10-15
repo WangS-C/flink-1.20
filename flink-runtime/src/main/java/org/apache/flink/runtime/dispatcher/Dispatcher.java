@@ -526,6 +526,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
         try (MdcCloseable ignored = MdcUtils.withContext(MdcUtils.asContextData(jobID))) {
             log.info("Received JobGraph submission '{}' ({}).", jobGraph.getName(), jobID);
         }
+        //检查给定作业是否已执行。
         return isInGloballyTerminalState(jobID)
                 .thenComposeAsync(
                         isTerminated -> {
@@ -546,6 +547,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
                             } else if (jobManagerRunnerRegistry.isRegistered(jobID)
                                     || submittedAndWaitingTerminationJobIDs.contains(jobID)) {
                                 // job with the given jobID is not terminated, yet
+                                //具有给定 jobID 的作业尚未终止
                                 return FutureUtils.completedExceptionally(
                                         DuplicateJobSubmissionException.of(jobID));
                             } else if (isPartialResourceConfigured(jobGraph)) {
@@ -556,6 +558,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
                                                         + "have resources configured. The limitation will be "
                                                         + "removed in future versions."));
                             } else {
+                                //内部提交作业
                                 return internalSubmitJob(jobGraph);
                             }
                         },
@@ -586,6 +589,11 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
      * @return a successfully completed future with {@code true} if the job has already finished,
      *     either successfully or as a failure
      */
+    //检查给定作业是否已执行。
+    //参数：
+    //jobId – 标识提交的作业
+    //返回：
+    //如果作业已经完成，无论是成功还是失败，则成功完成的 future 为true
     private CompletableFuture<Boolean> isInGloballyTerminalState(JobID jobId) {
         return jobResultStore.hasJobResultEntryAsync(jobId);
     }
@@ -610,18 +618,21 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
     }
 
     private CompletableFuture<Acknowledge> internalSubmitJob(JobGraph jobGraph) {
+        //应用并行度覆盖
         applyParallelismOverrides(jobGraph);
         log.info("Submitting job '{}' ({}).", jobGraph.getName(), jobGraph.getJobID());
 
         // track as an outstanding job
         submittedAndWaitingTerminationJobIDs.add(jobGraph.getJobID());
 
+        //运行job
         return waitForTerminatingJob(jobGraph.getJobID(), jobGraph, this::persistAndRunJob)
                 .handle((ignored, throwable) -> handleTermination(jobGraph.getJobID(), throwable))
                 .thenCompose(Function.identity())
                 .whenComplete(
                         (ignored, throwable) ->
                                 // job is done processing, whether failed or finished
+                                //作业已完成处理，无论失败还是完成
                                 submittedAndWaitingTerminationJobIDs.remove(jobGraph.getJobID()));
     }
 
@@ -656,6 +667,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
 
     private void persistAndRunJob(JobGraph jobGraph) throws Exception {
         jobGraphWriter.putJobGraph(jobGraph);
+        //初始化作业客户端过期时间
         initJobClientExpiredTime(jobGraph);
         runJob(createJobMasterRunner(jobGraph), ExecutionType.SUBMISSION);
     }
@@ -900,6 +912,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
     @Override
     public CompletableFuture<JobStatus> requestJobStatus(JobID jobId, Time timeout) {
         Optional<JobManagerRunner> maybeJob = getJobManagerRunner(jobId);
+        //请求工作状态
         return maybeJob.map(job -> job.requestJobStatus(timeout))
                 .orElseGet(
                         () -> {
@@ -907,6 +920,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
                             final JobDetails jobDetails =
                                     executionGraphInfoStore.getAvailableJobDetails(jobId);
                             if (jobDetails == null) {
+                                //异常完成
                                 return FutureUtils.completedExceptionally(
                                         new FlinkJobNotFoundException(jobId));
                             } else {

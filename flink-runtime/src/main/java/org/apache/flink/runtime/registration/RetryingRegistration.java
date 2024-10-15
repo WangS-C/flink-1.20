@@ -156,10 +156,12 @@ public abstract class RetryingRegistration<
             }
 
             // upon success, start the registration attempts
+            //成功后，开始尝试注册
             CompletableFuture<Void> rpcGatewayAcceptFuture =
                     rpcGatewayFuture.thenAcceptAsync(
                             (G rpcGateway) -> {
                                 log.info("Resolved {} address, beginning registration", targetName);
+                                //注册
                                 register(
                                         rpcGateway,
                                         1,
@@ -169,6 +171,7 @@ public abstract class RetryingRegistration<
                             rpcService.getScheduledExecutor());
 
             // upon failure, retry, unless this is cancelled
+            //失败时重试，除非此操作被取消
             rpcGatewayAcceptFuture.whenCompleteAsync(
                     (Void v, Throwable failure) -> {
                         if (failure != null && !canceled) {
@@ -219,9 +222,11 @@ public abstract class RetryingRegistration<
                     attempt,
                     timeoutMillis);
             CompletableFuture<RegistrationResponse> registrationFuture =
+                    //调用注册
                     invokeRegistration(gateway, fencingToken, timeoutMillis);
 
             // if the registration was successful, let the TaskExecutor know
+            //如果注册成功，让TaskExecutor知道
             CompletableFuture<Void> registrationAcceptFuture =
                     registrationFuture.thenAcceptAsync(
                             (RegistrationResponse result) -> {

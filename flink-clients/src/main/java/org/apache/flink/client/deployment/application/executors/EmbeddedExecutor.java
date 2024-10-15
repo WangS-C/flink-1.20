@@ -101,6 +101,7 @@ public class EmbeddedExecutor implements PipelineExecutor {
             return getJobClientFuture(optJobId.get(), userCodeClassloader);
         }
 
+        //提交
         return submitAndGetJobClientFuture(pipeline, configuration, userCodeClassloader);
     }
 
@@ -119,6 +120,7 @@ public class EmbeddedExecutor implements PipelineExecutor {
         final Time timeout =
                 Time.milliseconds(configuration.get(ClientOptions.CLIENT_TIMEOUT).toMillis());
 
+        //获得JobGraph
         final JobGraph jobGraph =
                 PipelineExecutorUtils.getJobGraph(pipeline, configuration, userCodeClassloader);
         final JobID actualJobId = jobGraph.getJobID();
@@ -131,6 +133,7 @@ public class EmbeddedExecutor implements PipelineExecutor {
         }
 
         final CompletableFuture<JobID> jobSubmissionFuture =
+                //开始提交JobGraph信息。
                 submitJob(configuration, dispatcherGateway, jobGraph, timeout);
 
         return jobSubmissionFuture
@@ -138,6 +141,7 @@ public class EmbeddedExecutor implements PipelineExecutor {
                         FunctionUtils.uncheckedFunction(
                                 jobId -> {
                                     org.apache.flink.client.ClientUtils
+                                            //等待作业初始化完成
                                             .waitUntilJobInitializationFinished(
                                                     () ->
                                                             dispatcherGateway
@@ -174,6 +178,7 @@ public class EmbeddedExecutor implements PipelineExecutor {
                 .thenCompose(
                         blobServerAddress -> {
                             try {
+                                //提取并上传JobGraph文件
                                 ClientUtils.extractAndUploadJobGraphFiles(
                                         jobGraph,
                                         () -> new BlobClient(blobServerAddress, configuration));
@@ -181,6 +186,7 @@ public class EmbeddedExecutor implements PipelineExecutor {
                                 throw new CompletionException(e);
                             }
 
+                            //向dispatcher提交任务
                             return dispatcherGateway.submitJob(jobGraph, rpcTimeout);
                         })
                 .thenApply(ack -> jobGraph.getJobID());

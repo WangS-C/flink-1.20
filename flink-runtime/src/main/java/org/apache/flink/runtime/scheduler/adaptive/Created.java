@@ -38,6 +38,7 @@ class Created extends StateWithoutExecutionGraph {
     }
 
     /** Starts the scheduling by going into the {@link WaitingForResources} state. */
+    //通过进入WaitingForResources状态来启动调度。
     void startScheduling() {
         context.goToWaitingForResources(null);
     }

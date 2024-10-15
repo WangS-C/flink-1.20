@@ -222,6 +222,7 @@ public abstract class SchedulerBase implements SchedulerNG, CheckpointScheduling
                 new DeploymentStateTimeMetrics(jobGraph.getJobType(), jobStatusMetricsSettings);
 
         this.executionGraph =
+                //创建和恢复执行图
                 createAndRestoreExecutionGraph(
                         completedCheckpointStore,
                         checkpointsCleaner,
@@ -378,6 +379,7 @@ public abstract class SchedulerBase implements SchedulerNG, CheckpointScheduling
             VertexParallelismStore vertexParallelismStore)
             throws Exception {
 
+        //创建ExecutionGraph
         final ExecutionGraph newExecutionGraph =
                 executionGraphFactory.createAndRestoreExecutionGraph(
                         jobGraph,
@@ -624,6 +626,7 @@ public abstract class SchedulerBase implements SchedulerNG, CheckpointScheduling
     @Override
     public final void startScheduling() {
         mainThreadExecutor.assertRunningInMainThread();
+        //登记工作指标
         registerJobMetrics(
                 jobManagerJobMetricGroup,
                 executionGraph,
@@ -632,6 +635,7 @@ public abstract class SchedulerBase implements SchedulerNG, CheckpointScheduling
                 executionGraph::registerJobStatusListener,
                 executionGraph.getStatusTimestamp(JobStatus.INITIALIZING),
                 jobStatusMetricsSettings);
+        //启动所有操作员协调员
         operatorCoordinatorHandler.startAllOperatorCoordinators();
         startSchedulingInternal();
     }

@@ -149,6 +149,7 @@ public class StreamingJobGraphGenerator {
             ClassLoader userClassLoader, StreamGraph streamGraph, @Nullable JobID jobID) {
         // TODO Currently, we construct a new thread pool for the compilation of each job. In the
         // future, we may refactor the job submission framework and make it reusable across jobs.
+        //目前，我们为每个作业的编译构建一个新的线程池。在未来，我们可能会重构作业提交框架并使其可跨作业重用。
         final ExecutorService serializationExecutor =
                 Executors.newFixedThreadPool(
                         Math.max(
@@ -160,6 +161,7 @@ public class StreamingJobGraphGenerator {
         try {
             return new StreamingJobGraphGenerator(
                     userClassLoader, streamGraph, jobID, serializationExecutor)
+                    //根据 StreamGraph，生成 JobGraph
                     .createJobGraph();
         } finally {
             serializationExecutor.shutdown();

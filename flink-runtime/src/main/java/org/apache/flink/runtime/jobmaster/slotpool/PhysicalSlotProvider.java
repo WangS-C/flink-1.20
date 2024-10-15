@@ -36,6 +36,12 @@ public interface PhysicalSlotProvider {
      * @param physicalSlotRequests physicalSlotRequest slot requirements
      * @return futures of the allocated slots
      */
+    //提交分配物理槽位的请求。
+    //物理槽可以从已经可用于作业的槽中分配，也可以从资源管理器请求一个新的槽。
+    //参数：
+    //physicalSlotRequests –physicalSlotRequest 槽位要求
+    //返回：
+    //分配时段的期货
     Map<SlotRequestId, CompletableFuture<PhysicalSlotRequest.Result>> allocatePhysicalSlots(
             Collection<PhysicalSlotRequest> physicalSlotRequests);
 

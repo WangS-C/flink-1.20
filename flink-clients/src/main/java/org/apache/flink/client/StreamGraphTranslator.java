@@ -53,6 +53,7 @@ public class StreamGraphTranslator implements FlinkPipelineTranslator {
                 pipeline instanceof StreamGraph, "Given pipeline is not a DataStream StreamGraph.");
 
         StreamGraph streamGraph = (StreamGraph) pipeline;
+        //获得JobGraph
         return streamGraph.getJobGraph(userClassloader, null);
     }
 

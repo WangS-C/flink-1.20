@@ -176,6 +176,13 @@ public interface SlotPool extends AllocatedSlotActions, AutoCloseable {
      * @param timeout timeout for the allocation procedure
      * @return a newly allocated slot that was previously not available.
      */
+    //向资源管理器请求分配新的插槽。此方法不会从池中已可用的槽中返回槽，而是将一个新槽添加到立即分配并返回的该池中。
+    //参数：
+    //slotRequestId – 标识请求的槽位
+    //resourceProfile – 指定所请求槽的资源要求的资源配置文件
+    //preferredAllocations – 新分配槽的首选分配 timeout – 分配过程超时
+    //返回：
+    //以前不可用的新分配的插槽。
     CompletableFuture<PhysicalSlot> requestNewAllocatedSlot(
             SlotRequestId slotRequestId,
             ResourceProfile resourceProfile,

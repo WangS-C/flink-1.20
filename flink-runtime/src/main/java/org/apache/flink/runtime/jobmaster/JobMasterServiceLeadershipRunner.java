@@ -280,6 +280,7 @@ public class JobMasterServiceLeadershipRunner implements JobManagerRunner, Leade
                                                         handleJobAlreadyDoneIfValidLeader(
                                                                 leaderSessionId);
                                                     } else {
+                                                        //如果领导者有效，则创建新的作业主服务流程
                                                         createNewJobMasterServiceProcessIfValidLeader(
                                                                 leaderSessionId);
                                                     }
@@ -298,6 +299,7 @@ public class JobMasterServiceLeadershipRunner implements JobManagerRunner, Leade
                 leaderSessionId,
                 () ->
                         ThrowingRunnable.unchecked(
+                                //创建新的作业主服务流程
                                         () -> createNewJobMasterServiceProcess(leaderSessionId))
                                 .run(),
                 "create new job master service process");

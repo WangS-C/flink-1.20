@@ -33,5 +33,10 @@ public interface EmbeddedJobClientCreator {
      * @param userCodeClassloader the class loader to deserialize user code.
      * @return the job client.
      */
+    //创建适合执行作业的上下文的JobClient 。
+    //参数：
+    //jobId – 与返回的客户端关联的作业的作业 ID。 userCodeClassloader – 用于反序列化用户代码的类加载器。
+    //返回：
+    //Job client
     JobClient getJobClient(final JobID jobId, final ClassLoader userCodeClassloader);
 }

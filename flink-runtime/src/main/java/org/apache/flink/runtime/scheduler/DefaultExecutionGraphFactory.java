@@ -169,6 +169,7 @@ public class DefaultExecutionGraphFactory implements ExecutionGraphFactory {
                                                 .getParallelism())
                         .sum();
 
+        //构建ExecutionGraph
         final ExecutionGraph newExecutionGraph =
                 DefaultExecutionGraphBuilder.buildGraph(
                         jobGraph,

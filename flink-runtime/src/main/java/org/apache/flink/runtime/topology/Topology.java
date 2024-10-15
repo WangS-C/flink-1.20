@@ -32,6 +32,9 @@ public interface Topology<
      *
      * @return Iterable over pipelined regions in this topology
      */
+    //返回此拓扑中的所有管道区域。
+    //返回：
+    //在此拓扑中的流水线区域上可迭代
     Iterable<? extends PR> getAllPipelinedRegions();
 
     /**

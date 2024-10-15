@@ -42,6 +42,14 @@ public interface ResourceAllocationStrategy {
      * @return a {@link ResourceAllocationResult} based on the current status, which contains
      *     whether the requirements can be fulfilled and the actions to take
      */
+    //尝试做出分配决策以满足资源需求。该策略根据当前状态生成一系列要采取的操作。
+    //注意：出于性能考虑，可以直接对输入参数执行修改。如果参数在其他地方重复使用，请提前进行深拷贝。
+    //参数：
+    //missingResources – 尚未满足的资源需求，按 jobId 索引
+    //taskManagerResourceInfoProvider – 提供当前集群已注册/ 待处理的资源
+    //blockedTaskManagerChecker – 阻塞任务管理器检查器
+    //返回：
+    //基于当前状态的ResourceAllocationResult ，其中包含是否可以满足要求以及要采取的操作
     ResourceAllocationResult tryFulfillRequirements(
             Map<JobID, Collection<ResourceRequirement>> missingResources,
             TaskManagerResourceInfoProvider taskManagerResourceInfoProvider,

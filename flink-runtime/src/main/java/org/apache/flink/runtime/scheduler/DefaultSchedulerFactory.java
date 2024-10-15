@@ -128,6 +128,7 @@ public class DefaultSchedulerFactory implements SchedulerNGFactory {
                 new CheckpointsCleaner(
                         jobMasterConfiguration.get(CheckpointingOptions.CLEANER_PARALLEL_MODE));
 
+        //创建 DefaultScheduler
         return new DefaultScheduler(
                 log,
                 jobGraph,

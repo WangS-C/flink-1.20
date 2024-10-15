@@ -33,6 +33,11 @@ public interface ExecutionSlotAllocator {
      * @param executionAttemptIds executions to allocate slots for
      * @return Map of slot assignments to the executions
      */
+    //为给定的执行分配插槽。
+    //参数：
+    //executionAttemptIds – 为其分配槽的执行
+    //返回：
+    //执行的槽位分配图
     Map<ExecutionAttemptID, ExecutionSlotAssignment> allocateSlotsFor(
             List<ExecutionAttemptID> executionAttemptIds);
 

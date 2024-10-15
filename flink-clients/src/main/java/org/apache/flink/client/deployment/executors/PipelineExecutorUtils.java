@@ -47,6 +47,13 @@ public class PipelineExecutorUtils {
      * @param userClassloader the classloader which can load user classes.
      * @return the corresponding {@link JobGraph}.
      */
+    //创建与提供的Pipeline对应的JobGraph 。
+    //参数：
+    //pipeline – 我们正在计算其作业图的管道。
+    //configuration – 包含必要信息的配置，例如要包含的 jar 和类路径、作业的并行性以及用于引导其状态的潜在保存点设置。
+    //userClassloader – 可以加载用户类的类加载器。
+    //返回：
+    //相应的JobGraph 。
     public static JobGraph getJobGraph(
             @Nonnull final Pipeline pipeline,
             @Nonnull final Configuration configuration,

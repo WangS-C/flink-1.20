@@ -36,6 +36,11 @@ public interface JobMasterServiceProcessFactory {
      * @param leaderSessionId leaderSessionId for which to create a {@link JobMasterServiceProcess}
      * @return the newly created {@link JobMasterServiceProcess}
      */
+    //为给定的leaderSessionId 创建一个新的JobMasterServiceProcess 。
+    //参数：
+    //leaderSessionId – 为其创建JobMasterServiceProcess LeaderSessionId
+    //返回：
+    //新创建的JobMasterServiceProcess
     JobMasterServiceProcess create(UUID leaderSessionId);
 
     /**

@@ -2499,6 +2499,11 @@ public class StreamExecutionEnvironment implements AutoCloseable {
      *     on submission succeeded.
      * @throws Exception which occurs during job execution.
      */
+    //异步触发程序执行。该环境将执行程序中导致“接收器”操作的所有部分。例如，接收器操作是打印结果或将它们转发到消息队列。
+    //参数：
+    //streamGraph – 表示转换的流图
+    //返回：
+    //可用于与提交的作业进行通信的JobClient ，在提交成功时完成。
     @Internal
     public JobClient executeAsync(StreamGraph streamGraph) throws Exception {
         checkNotNull(streamGraph, "StreamGraph cannot be null.");
@@ -3030,6 +3035,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
                 configuration.get(DeploymentOptions.TARGET),
                 "No execution.target specified in your configuration file.");
 
+        //返回的EmbeddedExecutorServiceLoader
         final PipelineExecutorFactory executorFactory =
                 executorServiceLoader.getExecutorFactory(configuration);
 
@@ -3038,6 +3044,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
                 "Cannot find compatible factory for specified execution.target (=%s)",
                 configuration.get(DeploymentOptions.TARGET));
 
+        //返回EmbeddedExecutor
         return executorFactory.getExecutor(configuration);
     }
 }

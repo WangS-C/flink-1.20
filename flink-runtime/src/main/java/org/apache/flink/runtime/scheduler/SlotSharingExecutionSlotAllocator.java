@@ -119,6 +119,7 @@ class SlotSharingExecutionSlotAllocator implements ExecutionSlotAllocator {
                         .map(ExecutionAttemptID::getExecutionVertexId)
                         .collect(Collectors.toList());
 
+        //为顶点分配槽
         return allocateSlotsForVertices(vertexIds).stream()
                 .collect(
                         Collectors.toMap(
@@ -155,6 +156,19 @@ class SlotSharingExecutionSlotAllocator implements ExecutionSlotAllocator {
      *
      * @param executionVertexIds Execution vertices to allocate slots for
      */
+    //从物理共享槽创建逻辑SlotSharingExecutionSlotAllocator. SlotExecutionVertexAssignment 。
+    //分配有以下步骤：
+    //使用SlotSharingStrategy将执行映射到ExecutionSlotSharingGroup
+    //检查哪些ExecutionSlotSharingGroup已经拥有共享槽
+    //对于所有涉及的还没有共享槽的ExecutionSlotSharingGroup ：
+    //使用SharedSlotProfileRetriever创建一个SlotProfile future，然后
+    //从PhysicalSlotProvider分配物理槽
+    //根据返回的物理槽期货创建共享槽
+    //为所有相应共享槽的执行分配逻辑槽未来。
+    //如果物理槽请求失败，则共享槽内关联的逻辑槽请求将被取消
+    //根据逻辑槽 future 生成SlotSharingExecutionSlotAllocator. SlotExecutionVertexAssignment并返回结果。
+    //参数：
+    //executionVertexIds – 为其分配槽的执行顶点
     private List<SlotExecutionVertexAssignment> allocateSlotsForVertices(
             List<ExecutionVertexID> executionVertexIds) {
 
@@ -170,12 +184,14 @@ class SlotSharingExecutionSlotAllocator implements ExecutionSlotAllocator {
         Set<ExecutionSlotSharingGroup> groupsToAssign = new HashSet<>(executionsByGroup.keySet());
 
         Map<ExecutionSlotSharingGroup, SharedSlot> assignedSlots =
+                //尝试分配现有的共享插槽  第一次启动时是没有的
                 tryAssignExistingSharedSlots(groupsToAssign);
         slots.putAll(assignedSlots);
         groupsToAssign.removeAll(assignedSlots.keySet());
 
         if (!groupsToAssign.isEmpty()) {
             Map<ExecutionSlotSharingGroup, SharedSlot> allocatedSlots =
+                    //分配新的Slot
                     allocateSharedSlots(groupsToAssign, sharedSlotProfileRetriever);
             slots.putAll(allocatedSlots);
             groupsToAssign.removeAll(allocatedSlots.keySet());
@@ -277,6 +293,7 @@ class SlotSharingExecutionSlotAllocator implements ExecutionSlotAllocator {
         }
 
         Map<SlotRequestId, CompletableFuture<PhysicalSlotRequest.Result>> allocateResult =
+                //提交分配物理槽位的请求
                 slotProvider.allocatePhysicalSlots(slotRequests);
 
         allocateResult.forEach(

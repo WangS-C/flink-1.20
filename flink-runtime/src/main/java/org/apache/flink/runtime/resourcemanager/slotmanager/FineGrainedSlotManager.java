@@ -331,8 +331,10 @@ public class FineGrainedSlotManager implements SlotManager {
                     resourceRequirements.getJobId(), resourceRequirements.getTargetAddress());
         }
 
+        //通知资源需求
         resourceTracker.notifyResourceRequirements(
                 resourceRequirements.getJobId(), resourceRequirements.getResourceRequirements());
+        //延迟检查资源需求
         checkResourceRequirementsWithDelay();
     }
 
@@ -598,6 +600,8 @@ public class FineGrainedSlotManager implements SlotManager {
      * changes with each check, thus reduce the frequency of unnecessary re-allocations, the checks
      * are performed with a slight delay.
      */
+    //根据ResourceAllocationStrategy的实现，检查资源需求并可能进行重新分配可能会很繁重。
+    // 为了每次检查覆盖更多的变化，从而减少不必要的重新分配的频率，检查会稍微延迟执行。
     private void checkResourceRequirementsWithDelay() {
         if (requirementsCheckDelay.toMillis() <= 0) {
             checkResourceRequirements();
@@ -608,6 +612,7 @@ public class FineGrainedSlotManager implements SlotManager {
                         () ->
                                 mainThreadExecutor.execute(
                                         () -> {
+                                            //检查资源需求
                                             checkResourceRequirements();
                                             Preconditions.checkNotNull(requirementsCheckFuture)
                                                     .complete(null);
@@ -646,10 +651,12 @@ public class FineGrainedSlotManager implements SlotManager {
                                         Map.Entry::getKey, e -> new ArrayList<>(e.getValue())));
 
         final ResourceAllocationResult result =
+                //尝试满足要求
                 resourceAllocationStrategy.tryFulfillRequirements(
                         missingResources, taskManagerTracker, this::isBlockedTaskManager);
 
         // Allocate slots according to the result
+        //根据结果分配slots
         allocateSlotsAccordingTo(result.getAllocationsOnRegisteredResources());
 
         final Set<PendingTaskManagerId> failAllocations;

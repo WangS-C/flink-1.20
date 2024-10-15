@@ -34,5 +34,8 @@ public interface SchedulerOperations {
      *
      * @param verticesToDeploy The execution vertices to deploy
      */
+    //分配槽并在返回槽时部署顶点。只有在所有顶点都分配了槽位后才会部署顶点。将尊重给定的顺序，即索引较小的任务将更早部署。仅接受处于 CREATED 状态的顶点。如果调度非创建的顶点，将会发生错误。
+    //参数：
+    //verticesToDeploy – 要部署的执行顶点
     void allocateSlotsAndDeploy(List<ExecutionVertexID> verticesToDeploy);
 }

@@ -42,5 +42,8 @@ public interface PipelineExecutorFactory {
      *
      * @return the executor instance.
      */
+    //实例化与提供的配置兼容的PipelineExecutor 。
+    //返回：
+    //执行者实例。
     PipelineExecutor getExecutor(final Configuration configuration);
 }

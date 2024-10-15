@@ -35,6 +35,12 @@ public interface JobMasterServiceFactory {
      *     JobMasterService}
      * @return Future which contains the newly created {@link JobMasterService}
      */
+    //为给定的leaderSessionId和onCompletionActions创建一个新的JobMasterService 。
+    //参数：
+    //leaderSessionId – 为其创建JobMasterService LeaderSessionId
+    //onCompletionActions – 赋予创建的JobMasterService的 onCompletionActions
+    //返回：
+    //Future 包含新创建的JobMasterService
     CompletableFuture<JobMasterService> createJobMasterService(
             UUID leaderSessionId, OnCompletionActions onCompletionActions);
 }

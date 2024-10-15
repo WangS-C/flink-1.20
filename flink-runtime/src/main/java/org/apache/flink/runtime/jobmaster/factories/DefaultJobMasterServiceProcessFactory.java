@@ -61,6 +61,7 @@ public class DefaultJobMasterServiceProcessFactory implements JobMasterServicePr
                 jobId,
                 leaderSessionId,
                 jobMasterServiceFactory,
+                //创建存档执行图
                 cause -> createArchivedExecutionGraph(JobStatus.FAILED, cause));
     }
 

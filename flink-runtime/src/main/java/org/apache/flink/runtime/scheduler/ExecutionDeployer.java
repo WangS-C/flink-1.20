@@ -41,6 +41,10 @@ public interface ExecutionDeployer {
      * @param requiredVersionByVertex required versions of the execution vertices. If the actual
      *     version does not match, the deployment of the execution will be rejected.
      */
+    //分配槽并部署执行。
+    //参数：
+    //executionsToDeploy – 要部署的执行
+    //requiredVersionByVertex – 执行顶点所需的版本。如果实际版本不匹配，部署执行将被拒绝。
     void allocateSlotsAndDeploy(
             final List<Execution> executionsToDeploy,
             final Map<ExecutionVertexID, ExecutionVertexVersion> requiredVersionByVertex);

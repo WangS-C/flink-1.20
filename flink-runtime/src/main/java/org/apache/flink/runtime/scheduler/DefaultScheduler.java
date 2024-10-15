@@ -139,6 +139,7 @@ public class DefaultScheduler extends SchedulerBase implements SchedulerOperatio
             final ExecutionDeployer.Factory executionDeployerFactory)
             throws Exception {
 
+        //父类中触发ExecutionGraph实例的创建过程
         super(
                 log,
                 jobGraph,
@@ -472,6 +473,7 @@ public class DefaultScheduler extends SchedulerBase implements SchedulerOperatio
                         .map(this::getCurrentExecutionOfVertex)
                         .collect(Collectors.toList());
 
+        //分配Slot并部署
         executionDeployer.allocateSlotsAndDeploy(executionsToDeploy, requiredVersionByVertex);
     }
 

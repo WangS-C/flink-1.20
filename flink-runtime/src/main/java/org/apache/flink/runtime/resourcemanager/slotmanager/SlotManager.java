@@ -102,6 +102,9 @@ public interface SlotManager extends AutoCloseable {
      *
      * @param resourceRequirements resource requirements of a job
      */
+    //通知槽管理器有关作业的资源要求。
+    //参数：
+    //resourceRequirements – 作业的资源需求
     void processResourceRequirements(ResourceRequirements resourceRequirements);
 
     /**

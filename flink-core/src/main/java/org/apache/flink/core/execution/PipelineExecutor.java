@@ -42,6 +42,14 @@ public interface PipelineExecutor {
      * @param userCodeClassloader the {@link ClassLoader} to deserialize usercode
      * @return a {@link CompletableFuture} with the {@link JobClient} corresponding to the pipeline.
      */
+    //根据提供的配置执行Pipeline并返回一个JobClient ，它允许与正在执行的作业进行交互，例如取消它或获取保存点。
+    //注意：调用者负责管理返回的JobClient的生命周期。这意味着应该在调用站点显式调用close() 。
+    //参数：
+    //pipeline要执行的Pipeline
+    //configuration – 具有所需执行参数的Configuration
+    //userCodeClassloader – 反序列化用户代码的ClassLoader
+    //返回：
+    //具有与管道对应的JobClient的CompletableFuture 。
     CompletableFuture<JobClient> execute(
             final Pipeline pipeline,
             final Configuration configuration,

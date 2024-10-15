@@ -170,6 +170,7 @@ public class DefaultOperatorCoordinatorHandler implements OperatorCoordinatorHan
     private void startOperatorCoordinators(Collection<OperatorCoordinatorHolder> coordinators) {
         try {
             for (OperatorCoordinatorHolder coordinator : coordinators) {
+                //启动
                 coordinator.start();
             }
         } catch (Throwable t) {

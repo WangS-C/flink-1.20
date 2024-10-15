@@ -85,6 +85,11 @@ public interface ResourceManagerGateway
      * @param resourceRequirements resource requirements
      * @return The confirmation that the requirements have been processed
      */
+    //声明作业的绝对资源需求。
+    //参数：
+    //jobMasterId – JobMaster 的 id resourceRequirements – 资源需求
+    //返回：
+    //确认要求已得到处理
     CompletableFuture<Acknowledge> declareRequiredResources(
             JobMasterId jobMasterId,
             ResourceRequirements resourceRequirements,

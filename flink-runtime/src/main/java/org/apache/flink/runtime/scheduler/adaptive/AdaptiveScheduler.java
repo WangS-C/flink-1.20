@@ -565,6 +565,7 @@ public class AdaptiveScheduler
                         () ->
                                 new IllegalStateException(
                                         "Can only start scheduling when being in Created state."))
+                //开始安排
                 .startScheduling();
     }
 
@@ -1406,6 +1407,13 @@ public class AdaptiveScheduler
      * @param <T> Type of the target state
      * @return A target state instance
      */
+    //将调度程序转换到另一个状态。当已经有正在进行的转换时，此方法可以防止状态转换。这实际上意味着您不能从 State 构造函数或 State#onLeave 调用此方法。
+    //参数：
+    //targetState – 要转换到的状态
+    //类型参数：
+    //< T > – 目标状态的类型
+    //返回：
+    //目标状态实例
     @VisibleForTesting
     <T extends State> T transitionToState(StateFactory<T> targetState) {
         Preconditions.checkState(
