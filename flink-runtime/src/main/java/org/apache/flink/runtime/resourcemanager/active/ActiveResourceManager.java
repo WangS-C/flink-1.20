@@ -235,6 +235,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
         this.resourceDeclarations = Collections.unmodifiableCollection(resourceDeclarations);
         log.debug("Update resource declarations to {}.", resourceDeclarations);
 
+        //检查资源声明
         checkResourceDeclarations();
     }
 

@@ -300,6 +300,8 @@ public class TaskManagerRunner implements FatalErrorHandler {
         synchronized (lock) {
             //启动TaskManagerRunnerServices
             startTaskManagerRunnerServices();
+
+            //会对调到org.apache.flink.runtime.taskexecutor.TaskExecutor.onStart
             taskExecutorService.start();
         }
     }
@@ -498,6 +500,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                             pluginManager,
                             //创建任务执行器服务
                             TaskManagerRunner::createTaskExecutorService);
+            //启动
             taskManagerRunner.start();
         } catch (Exception exception) {
             throw new FlinkException("Failed to start the TaskManagerRunner.", exception);

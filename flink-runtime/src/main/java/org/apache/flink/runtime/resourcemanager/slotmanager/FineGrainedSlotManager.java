@@ -636,7 +636,9 @@ public class FineGrainedSlotManager implements SlotManager {
             if (resourceAllocator.isSupported()
                     && !taskManagerTracker.getPendingTaskManagers().isEmpty()) {
                 taskManagerTracker.replaceAllPendingAllocations(Collections.emptyMap());
+                //检查资源是否需要协调
                 checkResourcesNeedReconcile();
+                //延迟声明所需资源
                 declareNeededResourcesWithDelay();
             }
             return;
@@ -695,6 +697,7 @@ public class FineGrainedSlotManager implements SlotManager {
 
         if (resourceAllocator.isSupported()) {
             checkResourcesNeedReconcile();
+            //延迟声明所需资源
             declareNeededResourcesWithDelay();
         }
     }

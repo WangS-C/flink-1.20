@@ -26,6 +26,7 @@ import java.util.Collection;
 public interface ResourceAllocator {
 
     /** Whether allocate/release resources are supported. */
+    //是否支持分配/ 释放资源。
     boolean isSupported();
 
     /**
