@@ -87,6 +87,8 @@ public class ApplicationClusterEntryPoint extends ClusterEntrypoint {
     @Override
     protected ExecutionGraphInfoStore createSerializableExecutionGraphStore(
             final Configuration configuration, final ScheduledExecutor scheduledExecutor) {
+        //ExecutionGraphInfoStore实现，将ArchivedExecutionGraph存储在内存中。
+        //内存存储支持保留最大作业图并删除超时作业图。
         return new MemoryExecutionGraphInfoStore();
     }
 
@@ -127,6 +129,7 @@ public class ApplicationClusterEntryPoint extends ClusterEntrypoint {
     @Override
     protected void cleanupDirectories(ShutdownBehaviour shutdownBehaviour) throws IOException {
         // Close the packaged program explicitly to clean up temporary jars.
+        //显式关闭打包程序以清理临时 jar。
         program.close();
         super.cleanupDirectories(shutdownBehaviour);
     }

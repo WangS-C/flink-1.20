@@ -34,6 +34,7 @@ import org.apache.flink.yarn.configuration.YarnResourceManagerDriverConfiguratio
  * {@link ActiveResourceManagerFactory} implementation which creates a {@link ActiveResourceManager}
  * with {@link YarnResourceManagerDriver}.
  */
+//ActiveResourceManagerFactory实现使用YarnResourceManagerDriver创建ActiveResourceManager 。
 public class YarnResourceManagerFactory extends ActiveResourceManagerFactory<YarnWorkerNode> {
 
     private static final YarnResourceManagerFactory INSTANCE = new YarnResourceManagerFactory();
@@ -44,6 +45,7 @@ public class YarnResourceManagerFactory extends ActiveResourceManagerFactory<Yar
         return INSTANCE;
     }
 
+    //创建ResourceManagerDriver
     @Override
     protected ResourceManagerDriver<YarnWorkerNode> createResourceManagerDriver(
             Configuration configuration, String webInterfaceUrl, String rpcAddress) {
@@ -71,6 +73,8 @@ public class YarnResourceManagerFactory extends ActiveResourceManagerFactory<Yar
         // Multiple leader session is not supported by the Yarn deployment, because Flink RM relies
         // on the registration response from Yarn RM for recovering previous resources, but Yarn
         // only allows each AM process to register for once.
+        //Yarn 部署不支持多个 Leader 会话，因为 Flink RM 依赖于
+        //Yarn RM 的注册响应来恢复之前的资源，但 Yarn 只允许每个 AM 进程注册一次。
         return false;
     }
 }

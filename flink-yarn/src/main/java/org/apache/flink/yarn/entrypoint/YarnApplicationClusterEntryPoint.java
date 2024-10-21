@@ -49,6 +49,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /** An {@link ApplicationClusterEntryPoint} for Yarn. */
+//Yarn 的ApplicationClusterEntryPoint 。
 @Internal
 public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEntryPoint {
 
@@ -144,6 +145,7 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
         final File userLibDir = YarnEntrypointUtils.getUsrLibDir(configuration).orElse(null);
 
         // No need to do pipelineJars validation if it is a PyFlink job.
+        //如果是 PyFlink 作业，则无需进行 Pipers 验证。
         if (!(PackagedProgramUtils.isPython(jobClassName)
                 || PackagedProgramUtils.isPython(programArguments))) {
             final File userApplicationJar = getUserApplicationJar(userLibDir, configuration);

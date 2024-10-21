@@ -111,6 +111,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * <p>Specialization of this class can be used for the session mode and the per-job mode
  */
+//Flink 集群入口点的基类。
+//此类的特化可用于会话模式和每作业模式
 public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErrorHandler {
 
     @Internal
@@ -121,12 +123,16 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
 
     protected static final Logger LOG = LoggerFactory.getLogger(ClusterEntrypoint.class);
 
+    //启动失败返回码
     protected static final int STARTUP_FAILURE_RETURN_CODE = 1;
+    //运行时失败返回码
     protected static final int RUNTIME_FAILURE_RETURN_CODE = 2;
 
+    //初始化关闭超时
     private static final Time INITIALIZATION_SHUTDOWN_TIMEOUT = Time.seconds(30L);
 
     /** The lock to guard startup / shutdown / manipulation methods. */
+    //用于保护启动/ 关闭/ 操作方法的锁
     private final Object lock = new Object();
 
     private final Configuration configuration;
@@ -603,6 +609,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
     // Internal methods
     // --------------------------------------------------
 
+    //生成集群配置
     private Configuration generateClusterConfiguration(Configuration configuration) {
         final Configuration resultConfiguration =
                 new Configuration(Preconditions.checkNotNull(configuration));
@@ -664,6 +671,11 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
      * @param diagnostics additional information about the shut down, can be {@code null}
      * @return Future which is completed once the shut down
      */
+    //关闭集群组件并通过向ResourceManager发送信号从资源管理系统取消注册 Flink 应用程序。
+    //参数：
+    //applicationStatus – 终止应用程序
+    //shutdownBehaviour – 关闭行为
+    //diagnostics – 有关关闭的附加信息，可以为null
     private CompletableFuture<Void> closeClusterComponent(
             ApplicationStatus applicationStatus,
             ShutdownBehaviour shutdownBehaviour,
@@ -689,6 +701,9 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
      * @param shutdownBehaviour specifying the shutdown behaviour
      * @throws IOException if the temporary directories could not be cleaned up
      */
+    //清理ClusterEntrypoint创建的临时目录。
+    //参数：
+    //shutdownBehaviour – 指定关闭行为
     protected void cleanupDirectories(ShutdownBehaviour shutdownBehaviour) throws IOException {
         IOException ioException = null;
 
@@ -705,6 +720,8 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
                 // We only clean up the working directory if we gracefully shut down or if its path
                 // is nondeterministic. If it is a process failure, then we want to keep the working
                 // directory for potential recoveries.
+                //仅当我们正常关闭或工作目录的路径不确定时，我们才会清理工作目录。
+                //如果是进程失败，那么我们希望保留工作目录以供潜在的恢复使用。
                 if (!workingDirectory.isDeterministic()
                         || shutdownBehaviour == ShutdownBehaviour.GRACEFUL_SHUTDOWN) {
                     try {
@@ -819,8 +836,10 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
     /** Shutdown behaviour of a {@link ClusterEntrypoint}. */
     protected enum ShutdownBehaviour {
         // Graceful shutdown means that the process wants to terminate and will clean everything up
+        //优雅关闭意味着进程想要终止并将清理所有内容
         GRACEFUL_SHUTDOWN,
         // Process failure means that we don't clean up things so that they could be recovered
+        //进程失败意味着我们没有清理东西以便它们可以恢复
         PROCESS_FAILURE,
     }
 }

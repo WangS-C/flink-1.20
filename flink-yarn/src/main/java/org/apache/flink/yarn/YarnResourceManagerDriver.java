@@ -79,6 +79,7 @@ import java.util.concurrent.Phaser;
 import java.util.stream.Collectors;
 
 /** Implementation of {@link ResourceManagerDriver} for Yarn deployment. */
+//用于 Yarn 部署的ResourceManagerDriver的实现。
 public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<YarnWorkerNode> {
 
     /**
