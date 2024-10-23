@@ -45,6 +45,7 @@ import java.util.concurrent.Executor;
  *
  * @param <T> type of the workers of the ResourceManager
  */
+//ResourceManager工厂
 public abstract class ResourceManagerFactory<T extends ResourceIDRetrievable> {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -119,6 +120,7 @@ public abstract class ResourceManagerFactory<T extends ResourceIDRetrievable> {
     }
 
     /** This indicates whether the process should be terminated after losing leadership. */
+    //这表明进程在失去领导权后是否应该终止。
     protected boolean supportMultiLeaderSession() {
         return true;
     }
@@ -128,6 +130,8 @@ public abstract class ResourceManagerFactory<T extends ResourceIDRetrievable> {
      * {@link ResourceManagerRuntimeServices}. This can be overwritten by {@link
      * #getEffectiveConfigurationForResourceManager}.
      */
+    //此方法中的配置更改对于ResourceManager和ResourceManagerRuntimeServices都是可见的。
+    //这可以被getEffectiveConfigurationForResourceManager覆盖
     protected Configuration getEffectiveConfigurationForResourceManagerAndRuntimeServices(
             final Configuration configuration) {
         return configuration;
@@ -137,6 +141,8 @@ public abstract class ResourceManagerFactory<T extends ResourceIDRetrievable> {
      * Configuration changes in this method will be visible to only {@link ResourceManager}. This
      * can overwrite {@link #getEffectiveConfigurationForResourceManagerAndRuntimeServices}.
      */
+    //此方法中的配置更改仅对ResourceManager可见。
+    //这可以覆盖getEffectiveConfigurationForResourceManagerAndRuntimeServices 。
     protected Configuration getEffectiveConfigurationForResourceManager(
             final Configuration configuration) {
         return configuration;

@@ -40,6 +40,7 @@ import java.util.concurrent.ScheduledExecutorService;
  *
  * @param <T> type of the {@link RestfulGateway}
  */
+//WebMonitorEndpoint工厂
 public interface RestEndpointFactory<T extends RestfulGateway> {
 
     WebMonitorEndpoint<T> createRestEndpoint(

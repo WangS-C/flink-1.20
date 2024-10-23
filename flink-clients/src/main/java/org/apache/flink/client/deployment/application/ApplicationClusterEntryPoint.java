@@ -78,7 +78,7 @@ public class ApplicationClusterEntryPoint extends ClusterEntrypoint {
                         ApplicationDispatcherLeaderProcessFactoryFactory.create(
                                 //使用StandaloneDispatcher
                                 configuration, SessionDispatcherFactory.INSTANCE, program)),
-                //ResourceManager 工厂
+                //ResourceManager 工厂  YarnResourceManagerFactory
                 resourceManagerFactory,
                 //WebmonitorEndpoint 工厂
                 JobRestEndpointFactory.INSTANCE);

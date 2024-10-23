@@ -342,6 +342,7 @@ public class ClusterEntrypointTest extends TestLogger {
                 workingDir.exists());
     }
 
+    //调试startCluster方法
     private CompletableFuture<ApplicationStatus> startClusterEntrypoint(
             TestingEntryPoint testingEntryPoint) throws Exception {
         testingEntryPoint.startCluster();
