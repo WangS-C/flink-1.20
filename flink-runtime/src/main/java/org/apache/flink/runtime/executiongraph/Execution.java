@@ -688,6 +688,7 @@ public class Execution
 
         // because of several possibly previous states, we need to again loop until we make a
         // successful atomic state transition
+        //根据之前的状态，我们直接进入取消（不需要取消调用）——或者取消（取消调用需要发送到任务管理器），因为之前有几个可能的状态，我们需要再次循环，直到我们做出一个成功的原子状态转换
         assertRunningInJobMasterMainThread();
         while (true) {
 
@@ -695,12 +696,15 @@ public class Execution
 
             if (current == CANCELING || current == CANCELED) {
                 // already taken care of, no need to cancel again
+                //已经处理完毕，无需再次取消
                 return;
             }
 
             // these two are the common cases where we need to send a cancel call
+            //这两种是我们需要发送取消呼叫的常见情况
             else if (current == INITIALIZING || current == RUNNING || current == DEPLOYING) {
                 // try to transition to canceling, if successful, send the cancel call
+                //尝试过渡到取消，如果成功，发送取消调用
                 if (startCancelling(NUM_CANCEL_CALL_TRIES)) {
                     return;
                 }
@@ -716,16 +720,18 @@ public class Execution
                 // covers the following cases:
                 // 		a) restarts of this vertex
                 // 		b) a global failure (which may result in a FAILED job state)
+                //在取消之前完成。无论如何，该任务已从 TaskManager 中删除，而其消费者从未部署过的管道分区仍可在 TM 上进行缓冲，因为此处未处理 FINISHED 执行的管道分区涵盖以下情况： b) 全局失败（这可能导致 FAILED 作业状态）
                 sendReleaseIntermediateResultPartitionsRpcCall();
 
                 return;
             } else if (current == FAILED) {
                 // failed before it could be cancelled.
                 // in any case, the task is removed from the TaskManager already
-
+                //在取消之前失败。在任何情况下，该任务都已从 TaskManager 中删除
                 return;
             } else if (current == CREATED || current == SCHEDULED) {
                 // from here, we can directly switch to cancelled, because no task has been deployed
+                //从这里我们可以直接切换到canceled，因为还没有部署任何任务
                 if (cancelAtomically()) {
                     return;
                 }

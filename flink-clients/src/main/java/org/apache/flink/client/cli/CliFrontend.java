@@ -604,6 +604,7 @@ public class CliFrontend {
                                 formatType,
                                 getClientTimeout(effectiveConfiguration));
                     } else {
+                        //以保存点停止
                         stopWithSavepoint(
                                 clusterClient,
                                 jobId,

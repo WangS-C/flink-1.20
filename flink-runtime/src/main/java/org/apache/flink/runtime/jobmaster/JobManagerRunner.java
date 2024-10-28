@@ -70,6 +70,7 @@ public interface JobManagerRunner extends AutoCloseableAsync {
      * @param timeout of this operation
      * @return Future acknowledge of the operation
      */
+    //取消当前执行的作业。
     CompletableFuture<Acknowledge> cancel(Time timeout);
 
     /**

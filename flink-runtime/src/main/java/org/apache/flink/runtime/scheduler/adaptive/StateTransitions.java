@@ -49,6 +49,12 @@ public interface StateTransitions {
          *     Canceling} state
          * @param failureCollection collection of failures that are propagated
          */
+        //转换到Canceling状态。
+        //参数：
+        //executionGraph – 传递到Canceling状态的executionGraph
+        //executionGraphHandler – 传递到Canceling状态的executionGraphHandler
+        //operatorCoordinatorHandler – 传递到Canceling状态的operatorCoordinatorHandler
+        //failureCollection – 传播的故障的集合
         void goToCanceling(
                 ExecutionGraph executionGraph,
                 ExecutionGraphHandler executionGraphHandler,
@@ -91,6 +97,7 @@ public interface StateTransitions {
          * @param archivedExecutionGraph archivedExecutionGraph which is passed to the {@link
          *     Finished} state
          */
+        //转换到Finished状态。
         void goToFinished(ArchivedExecutionGraph archivedExecutionGraph);
     }
 
@@ -153,6 +160,15 @@ public interface StateTransitions {
          * @param failureCollection collection of failures that are propagated
          * @return Location of the savepoint.
          */
+        //转换到StopWithSavepoint状态。
+        //参数：
+        //executionGraph – 要传递到StopWithSavepoint状态的executionGraph
+        //executionGraphHandler – 传递到StopWithSavepoint状态的executionGraphHandler
+        //operatorCoordinatorHandler – 传递到StopWithSavepoint状态的operatorCoordinatorHandler
+        //savepointFuture – 保存点完成的未来。
+        //failureCollection – 传播的故障的集合
+        //返回：
+        //保存点的位置。
         CompletableFuture<String> goToStopWithSavepoint(
                 ExecutionGraph executionGraph,
                 ExecutionGraphHandler executionGraphHandler,

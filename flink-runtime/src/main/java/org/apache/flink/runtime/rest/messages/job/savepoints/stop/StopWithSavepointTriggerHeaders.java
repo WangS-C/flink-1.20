@@ -26,6 +26,7 @@ import org.apache.flink.runtime.rest.messages.job.savepoints.SavepointTriggerMes
 import org.apache.flink.shaded.netty4.io.netty.handler.codec.http.HttpResponseStatus;
 
 /** These headers define the protocol for triggering a "stop" action. */
+//这些标头定义了触发“停止”操作的协议。
 public class StopWithSavepointTriggerHeaders
         extends AsynchronousOperationTriggerMessageHeaders<
                 StopWithSavepointRequestBody, SavepointTriggerMessageParameters> {

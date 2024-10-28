@@ -66,6 +66,9 @@ public interface RestfulGateway extends RpcGateway {
      * @param timeout of the operation
      * @return A future acknowledge if the cancellation succeeded
      */
+    //取消指定的作业。
+    //参数：
+    //jobId – 标识要取消的作业 操作timeout
     CompletableFuture<Acknowledge> cancelJob(JobID jobId, @RpcTimeout Time timeout);
 
     /**

@@ -1042,6 +1042,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
             }
             // Executions are being canceled. Go into cancelling and wait for
             // all vertices to be in their final state.
+            //Executions正在被取消。进入取消并等待所有顶点都处于最终状态。
             else if (current == JobStatus.FAILING) {
                 if (transitionState(current, JobStatus.CANCELLING)) {
                     return;

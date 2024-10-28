@@ -655,11 +655,13 @@ public class RestClusterClient<T> implements ClusterClient<T> {
         if (isDetachedMode) {
             // we just return the savepoint trigger id in detached savepoint,
             // that means the client could exit immediately
+            //我们只是返回分离保存点中的保存点触发器ID，这意味着客户端可以立即退出
             futureResult =
                     responseFuture.thenApply((TriggerResponse tr) -> tr.getTriggerId().toString());
         } else {
             // otherwise we need to wait the savepoint to be succeeded
             // and return the savepoint path
+            //否则我们需要等待保存点成功并返回保存点路径
             futureResult =
                     responseFuture
                             .thenCompose(

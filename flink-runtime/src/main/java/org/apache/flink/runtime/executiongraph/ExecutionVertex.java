@@ -479,6 +479,7 @@ public class ExecutionVertex
     public CompletableFuture<?> cancel() {
         // to avoid any case of mixup in the presence of concurrent calls,
         // we copy a reference to the stack to make sure both calls go to the same Execution
+        //为了避免并发调用时发生任何混淆，我们复制对堆栈的引用，以确保两个调用都进入同一个执行
         final Execution exec = currentExecution;
         exec.cancel();
         return exec.getReleaseFuture();

@@ -160,6 +160,14 @@ public interface ClusterClient<T> extends AutoCloseable {
      * @param formatType a binary format of the savepoint
      * @return a {@link CompletableFuture} containing the path where the savepoint is located
      */
+    //停止 Flink 集群上的程序，该程序的作业管理器是在此客户端的配置中配置的。停止仅适用于流媒体程序。请注意，程序在发送停止命令后可能会继续运行一段时间，因为在源停止发出数据后，所有操作员都需要完成处理。
+    //参数：
+    //jobId – 要停止的流式传输程序的作业 ID
+    //advanceToEndOfEventTime – 指示源是否应在管道中注入MAX_WATERMARK标志
+    //savepointDirectory – 保存点应写入的目录
+    //formatType – 保存点的二进制格式
+    //返回：
+    //包含保存点所在路径的CompletableFuture
     CompletableFuture<String> stopWithSavepoint(
             final JobID jobId,
             final boolean advanceToEndOfEventTime,

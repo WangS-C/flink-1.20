@@ -76,6 +76,7 @@ public interface JobMasterGateway
      * @param timeout of this operation
      * @return Future acknowledge of the operation
      */
+    //取消当前执行的作业。
     CompletableFuture<Acknowledge> cancel(@RpcTimeout Time timeout);
 
     /**
@@ -255,6 +256,11 @@ public interface JobMasterGateway
      * @param timeout for the rpc call
      * @return Future which is completed with the savepoint path once completed
      */
+    //使用保存点停止作业。
+    //参数：
+    //targetDirectory – 将保存点数据写入其中，如果应使用默认保存点目录，则为 null
+    //terminate - 指示作业是否应终止或只是暂停的标志
+    //timeout – 用于 rpc 调用
     CompletableFuture<String> stopWithSavepoint(
             @Nullable final String targetDirectory,
             final SavepointFormatType formatType,

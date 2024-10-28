@@ -47,6 +47,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
 /** Request handler for the cancel and stop request. */
+//取消和停止请求的请求处理程序。
 public class JobCancellationHandler
         extends AbstractRestHandler<
                 RestfulGateway,

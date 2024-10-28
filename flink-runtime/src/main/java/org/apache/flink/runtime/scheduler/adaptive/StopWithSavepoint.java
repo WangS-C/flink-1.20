@@ -162,6 +162,9 @@ class StopWithSavepoint extends StateWithExecutionGraph {
      * is a small risk that the job is cancelled at the very moment that the savepoint completes,
      * causing it to not be reported to the user. See FLINK-28127.
      */
+    //取消作业并使未来的保存点操作失败。
+    //我们不会在这里等待internalSavepointFuture ，这样如果保存点花费太长时间（或卡住），用户仍然可以取消作业。
+    //由于我们实际上并没有取消保存点（没有 API 可以这样做），因此存在一个小风险，即作业在保存点完成的那一刻被取消，导致它不会报告给用户。请参阅 FLINK-28127。
     @Override
     public void cancel() {
         operationFailureCause = new FlinkException("The job was cancelled.");
@@ -194,6 +197,10 @@ class StopWithSavepoint extends StateWithExecutionGraph {
      * <p>For maintainability reasons this method should not mutate any state that affects state
      * transitions in other methods.
      */
+    //重新启动检查点调度程序，如果只有保存点失败而没有任务失败/ 作业终止，则转换回Executing 。
+    //此方法必须假设onFailure / onGloballyTerminalState可能已经在等待保存点操作完成，渴望触发状态转换（因此进行hasPendingStateTransition检查）。
+    //如果违反上述规定（例如，总是转换到另一个状态），那么根据其他实现细节，将会发生一些非常糟糕的事情，例如调度程序因尝试多次状态转换而导致 JVM 崩溃，或者有效地丢弃 onFailure/ onGloballyTerminalState 调用，或者我们当我们已经处于另一个状态时触发状态转换。
+    //出于可维护性的原因，此方法不应改变影响其他方法中状态转换的任何状态。
     private void onSavepointFailure(Throwable cause) {
         // revert side-effect of Executing#stopWithSavepoint
         checkpointScheduling.startCheckpointScheduler();
@@ -242,6 +249,7 @@ class StopWithSavepoint extends StateWithExecutionGraph {
         if (globallyTerminalState == JobStatus.FINISHED) {
             // do not set this in other cases
             // handleGlobalFailure circles back to onFailure()
+            //在其他情况下不要设置此项handleGlobalFailure会返回到onFailure()
             hasPendingStateTransition = true;
             FutureUtils.assertNoException(
                     internalSavepointFuture.handle(
