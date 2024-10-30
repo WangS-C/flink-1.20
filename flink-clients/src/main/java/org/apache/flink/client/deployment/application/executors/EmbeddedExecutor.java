@@ -117,6 +117,11 @@ public class EmbeddedExecutor implements PipelineExecutor {
             final Configuration configuration,
             final ClassLoader userCodeClassloader)
             throws MalformedURLException {
+
+        //这里为什么使用client.timeout呢  会因为Hudi 分区过多等场景导致任务无法启动
+        //报错信息里面提示的都是akka.ask.timeout参数
+        //详情见 org.apache.flink.runtime.rpc.akka.AkkaInvocationHandler#invokeRpc
+        //会解析带@RpcTimeout注解的参数作为超时时间
         final Time timeout =
                 Time.milliseconds(configuration.get(ClientOptions.CLIENT_TIMEOUT).toMillis());
 
