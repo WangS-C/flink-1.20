@@ -285,6 +285,7 @@ public class ResourceManagerServiceImpl implements ResourceManagerService, Leade
      * Returns a future that completes as {@code true} if the resource manager is still leader and
      * started, and {@code false} if it's no longer leader.
      */
+    //如果资源管理器仍然是领导者并已启动， true返回一个 future，如果它不再是领导者，则返回false 。
     @GuardedBy("lock")
     private CompletableFuture<Boolean> startResourceManagerIfIsLeader(
             ResourceManager<?> resourceManager) {
