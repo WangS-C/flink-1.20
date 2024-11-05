@@ -108,6 +108,7 @@ public final class DefaultDispatcherRunner implements DispatcherRunner, LeaderCo
     // Leader election
     // ---------------------------------------------------------------
 
+    //选举后,回调至此方法
     @Override
     public void grantLeadership(UUID leaderSessionID) {
         runActionIfRunning(
@@ -242,7 +243,7 @@ public final class DefaultDispatcherRunner implements DispatcherRunner, LeaderCo
         final DefaultDispatcherRunner dispatcherRunner =
                 new DefaultDispatcherRunner(
                         leaderElection, fatalErrorHandler, dispatcherLeaderProcessFactory);
-        //触发dispatcher组件高可用Leader选举过程。
+        //触发dispatcher组件高可用Leader选举过程。 回调org.apache.flink.runtime.dispatcher.runner.DefaultDispatcherRunner.grantLeadership
         dispatcherRunner.start();
         return dispatcherRunner;
     }

@@ -98,6 +98,7 @@ public abstract class AbstractDispatcherLeaderProcess implements DispatcherLeade
     private void startInternal() {
         log.info("Start {}.", getClass().getSimpleName());
         state = State.RUNNING;
+        //实际调用的SessionDispatcherLeaderProcess
         onStart();
     }
 

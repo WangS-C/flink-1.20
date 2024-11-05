@@ -27,6 +27,8 @@ import org.apache.flink.datastream.api.ExecutionEnvironment;
  * utilities create a {@link ExecutionEnvironment} that should be used when {@link
  * ExecutionEnvironment#getInstance()} ()} is called.
  */
+//在 CLI 客户端或测试实用程序创建调用ExecutionEnvironment ExecutionEnvironment. getInstance() ()}
+// 时应使用的 ExecutionEnvironment 的情况下，将使用特殊的ExecutionEnvironment 。
 public class ExecutionContextEnvironment extends ExecutionEnvironmentImpl {
     public ExecutionContextEnvironment(
             final PipelineExecutorServiceLoader executorServiceLoader,

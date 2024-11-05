@@ -123,6 +123,7 @@ public enum JobMasterServiceLeadershipRunnerFactory implements JobManagerRunnerF
                         initializationTimestamp,
                         jobMasterServiceFactory);
 
+        //创建
         return new JobMasterServiceLeadershipRunner(
                 jobMasterServiceProcessFactory,
                 jobManagerLeaderElection,

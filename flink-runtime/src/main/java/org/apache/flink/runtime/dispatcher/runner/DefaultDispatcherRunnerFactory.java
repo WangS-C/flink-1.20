@@ -60,6 +60,7 @@ public class DefaultDispatcherRunnerFactory implements DispatcherRunnerFactory {
                         fatalErrorHandler);
 
         //创建并触发dispatcher组件高可用Leader选举过程。
+        //选举后 回调org.apache.flink.runtime.dispatcher.runner.DefaultDispatcherRunner.grantLeadership
         return DefaultDispatcherRunner.create(
                 leaderElection, fatalErrorHandler, dispatcherLeaderProcessFactory);
     }

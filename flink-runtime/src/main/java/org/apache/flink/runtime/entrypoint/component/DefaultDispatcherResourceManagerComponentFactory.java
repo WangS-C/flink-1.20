@@ -239,7 +239,8 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             failureEnrichers);
 
             log.debug("Starting Dispatcher.");
-            //创建并触发dispatcher组件高可用Leader选举过程。
+            //创建并触发dispatcher组件高可用Leader选举过程。 实际创建的是DefaultDispatcherRunner
+            // 选举后 回调至org.apache.flink.runtime.dispatcher.runner.DefaultDispatcherRunner.grantLeadership
             dispatcherRunner =
                     dispatcherRunnerFactory.createDispatcherRunner(
                             highAvailabilityServices.getDispatcherLeaderElection(),

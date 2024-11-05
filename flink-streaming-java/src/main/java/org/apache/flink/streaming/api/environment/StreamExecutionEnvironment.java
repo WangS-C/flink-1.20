@@ -2507,8 +2507,11 @@ public class StreamExecutionEnvironment implements AutoCloseable {
     @Internal
     public JobClient executeAsync(StreamGraph streamGraph) throws Exception {
         checkNotNull(streamGraph, "StreamGraph cannot be null.");
+
+        //返回EmbeddedExecutor
         final PipelineExecutor executor = getPipelineExecutor();
 
+        //调用execute
         CompletableFuture<JobClient> jobClientFuture =
                 executor.execute(streamGraph, configuration, userClassloader);
 

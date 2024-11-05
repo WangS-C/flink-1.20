@@ -669,7 +669,10 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
         jobGraphWriter.putJobGraph(jobGraph);
         //初始化作业客户端过期时间
         initJobClientExpiredTime(jobGraph);
-        runJob(createJobMasterRunner(jobGraph), ExecutionType.SUBMISSION);
+        //运行作业
+        runJob(
+                //创建JobMasterRunner
+                createJobMasterRunner(jobGraph), ExecutionType.SUBMISSION);
     }
 
     private JobManagerRunner createJobMasterRunner(JobGraph jobGraph) throws Exception {
@@ -698,7 +701,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
 
     private void runJob(JobManagerRunner jobManagerRunner, ExecutionType executionType)
             throws Exception {
-        //启动
+        //启动 会回调至org.apache.flink.runtime.jobmaster.JobMasterServiceLeadershipRunner.grantLeadership
         jobManagerRunner.start();
         jobManagerRunnerRegistry.register(jobManagerRunner);
 

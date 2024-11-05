@@ -40,6 +40,7 @@ public enum SessionDispatcherFactory implements DispatcherFactory {
                     partialDispatcherServicesWithJobPersistenceComponents)
             throws Exception {
         // create the default dispatcher
+        //创建默认调度程序
         return new StandaloneDispatcher(
                 rpcService,
                 fencingToken,

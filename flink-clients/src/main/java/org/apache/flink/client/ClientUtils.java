@@ -107,6 +107,7 @@ public enum ClientUtils {
                     suppressSysout);
 
             // For DataStream v2.
+            //设置流执行环境的工厂实例
             ExecutionContextEnvironment.setAsContext(
                     executorServiceLoader, configuration, userCodeClassLoader);
 

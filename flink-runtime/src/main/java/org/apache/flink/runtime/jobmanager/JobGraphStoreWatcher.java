@@ -34,6 +34,9 @@ public interface JobGraphStoreWatcher {
      * @param jobGraphListener use jobGraphListener to notify the {@link DefaultJobGraphStore}
      * @throws Exception when start internal services
      */
+    //在JobGraphStore上启动观察程序。
+    //参数：
+    //jobGraphListener – 使用 jobGraphListener 通知DefaultJobGraphStore
     void start(JobGraphStore.JobGraphListener jobGraphListener) throws Exception;
 
     /**
