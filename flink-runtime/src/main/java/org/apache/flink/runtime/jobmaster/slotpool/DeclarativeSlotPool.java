@@ -64,6 +64,9 @@ public interface DeclarativeSlotPool {
      *
      * @param resourceRequirements new resource requirements
      */
+    //将资源要求设置为给定的resourceRequirements。
+    //参数：
+    //resourceRequirements – 新的资源需求
     void setResourceRequirements(ResourceCounter resourceRequirements);
 
     /**

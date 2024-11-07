@@ -108,5 +108,8 @@ public interface JobResultStore {
      * @return A set of dirty {@code JobResults} from the store.
      * @throws IOException if collecting the set of dirty results failed for IO reasons.
      */
+    //获取标记为dirty持久化JobResult实例。这对于恢复完成步骤很有用。
+    //返回：
+    //来自商店的一组脏JobResults 。
     Set<JobResult> getDirtyResults() throws IOException;
 }

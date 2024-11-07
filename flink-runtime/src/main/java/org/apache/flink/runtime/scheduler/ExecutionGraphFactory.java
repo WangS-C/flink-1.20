@@ -52,6 +52,19 @@ public interface ExecutionGraphFactory {
      * @return restored {@link ExecutionGraph}
      * @throws Exception if the {@link ExecutionGraph} could not be created and restored
      */
+    //从给定的JobGraph和服务创建和恢复ExecutionGraph 。
+    //参数：
+    //jobGraph – 用于初始化 ExecutionGraph 的 jobGraph
+    //completedCheckpointStore – CompletedCheckpointStore 传递给 CheckpointCoordinator
+    //checkpointsCleaner – checkpointsCleaner 传递给 CheckpointCoordinator
+    //checkpointIdCounter – 传递给 CheckpointCoordinator 的 checkpointIdCounter
+    //partitionLocationConstraint – 此作业的partitionLocationConstraint
+    //initializationTimestamp – 创建 ExecutionGraph 时的初始化时间戳
+    //vertexAttemptNumberStore – vertexAttemptNumberStore 保存有关先前运行的顶点尝试的信息
+    //vertexParallelismStore – vertexMaxParallelismStore 保存有关顶点最大并行度设置的信息
+    //executionStateUpdateListener – 各个执行的状态转换的侦听器 log – 用于记录日志的日志
+    //返回：
+    //恢复ExecutionGraph
     ExecutionGraph createAndRestoreExecutionGraph(
             JobGraph jobGraph,
             CompletedCheckpointStore completedCheckpointStore,

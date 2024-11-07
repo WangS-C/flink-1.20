@@ -46,6 +46,10 @@ public enum ClientUtils {
      * @param clientSupplier supplier of blob client to upload files with
      * @throws FlinkException if the upload fails
      */
+    //从给定的JobGraph中提取执行所需的所有文件，并使用给定的Supplier的BlobClient上传它们。
+    //参数：
+    //jobGraph – 需要文件的jobgraph
+    //clientSupplier – 用于上传文件的 blob 客户端的供应商
     public static void extractAndUploadJobGraphFiles(
             JobGraph jobGraph, SupplierWithException<BlobClient, IOException> clientSupplier)
             throws FlinkException {

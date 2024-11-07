@@ -155,6 +155,8 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
      * Optionally shuts down the given dispatcherGateway when the application completes (either
      * successfully or in case of failure), depending on the corresponding config option.
      */
+    //记录最终应用程序状态并在发生意外故障时调用错误处理程序。
+    // 当应用程序完成时（成功或失败），可以选择关闭给定的dispatcherGateway，具体取决于相应的配置选项。
     private CompletableFuture<Acknowledge> finishBootstrapTasks(
             final DispatcherGateway dispatcherGateway) {
         final CompletableFuture<Acknowledge> shutdownFuture =
@@ -274,6 +276,7 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
 
         return applicationExecutionFuture.thenCompose(
                 jobIds ->
+                        //获取应用结果
                         getApplicationResult(
                                 dispatcherGateway,
                                 jobIds,
@@ -307,6 +310,7 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
         }
         final List<JobID> applicationJobIds = new ArrayList<>(recoveredJobIds);
         try {
+            //创建了EmbeddedExecutorServiceLoader
             final PipelineExecutorServiceLoader executorServiceLoader =
                     new EmbeddedExecutorServiceLoader(
                             applicationJobIds, dispatcherGateway, scheduledExecutor);
@@ -383,10 +387,12 @@ public class ApplicationDispatcherBootstrap implements DispatcherBootstrap {
         final Time retryPeriod =
                 Time.milliseconds(configuration.get(ClientOptions.CLIENT_RETRY_PERIOD).toMillis());
         final CompletableFuture<JobResult> jobResultFuture =
+                //定期轮询作业的JobStatus ，当作业达到最终状态时，它会请求其JobResult 。
                 JobStatusPollingUtils.getJobResult(
                         dispatcherGateway, jobId, scheduledExecutor, timeout, retryPeriod);
         if (tolerateMissingResult) {
             // Return "unknown" job result if dispatcher no longer knows the actual result.
+            //如果调度程序不再知道实际结果，则返回“未知”作业结果。
             return FutureUtils.handleException(
                     jobResultFuture,
                     FlinkJobNotFoundException.class,

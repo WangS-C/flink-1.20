@@ -52,6 +52,7 @@ public class DefaultDispatcherRunnerFactory implements DispatcherRunnerFactory {
             throws Exception {
 
         final DispatcherLeaderProcessFactory dispatcherLeaderProcessFactory =
+                //ApplicationDispatcherLeaderProcessFactoryFactory
                 dispatcherLeaderProcessFactoryFactory.createFactory(
                         jobPersistenceComponentFactory,
                         ioExecutor,

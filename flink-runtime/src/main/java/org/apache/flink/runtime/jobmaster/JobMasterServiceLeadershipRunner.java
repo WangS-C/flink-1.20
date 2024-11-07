@@ -244,9 +244,11 @@ public class JobMasterServiceLeadershipRunner implements JobManagerRunner, Leade
         }
     }
 
+    //回调至此方法
     @Override
     public void grantLeadership(UUID leaderSessionID) {
         runIfStateRunning(
+                //异步启动作业主服务进程
                 () -> startJobMasterServiceProcessAsync(leaderSessionID),
                 "starting a new JobMasterServiceProcess");
     }
@@ -342,6 +344,7 @@ public class JobMasterServiceLeadershipRunner implements JobManagerRunner, Leade
                 leaderSessionId,
                 JobMasterServiceProcess.class.getSimpleName());
 
+        //创建了DefaultJobMasterServiceProcess 里面会创建JobMasterService
         jobMasterServiceProcess = jobMasterServiceProcessFactory.create(leaderSessionId);
 
         forwardIfValidLeader(

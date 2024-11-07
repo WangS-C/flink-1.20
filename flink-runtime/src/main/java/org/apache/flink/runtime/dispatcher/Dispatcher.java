@@ -358,7 +358,10 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
             throw exception;
         }
 
+        //开始清理重试
         startCleanupRetries();
+
+        //开始恢复工作
         startRecoveredJobs();
 
         this.dispatcherBootstrap =

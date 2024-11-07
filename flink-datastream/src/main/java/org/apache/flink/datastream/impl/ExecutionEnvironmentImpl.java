@@ -133,6 +133,7 @@ public class ExecutionEnvironmentImpl implements ExecutionEnvironment {
 
     @Override
     public void execute(String jobName) throws Exception {
+        //获的StreamGraph
         StreamGraph streamGraph = getStreamGraph();
         if (jobName != null) {
             streamGraph.setJobName(jobName);
@@ -313,6 +314,7 @@ public class ExecutionEnvironmentImpl implements ExecutionEnvironment {
     }
 
     /** Get {@link StreamGraph} and clear all transformations. */
+    //获取StreamGraph并清除所有转换。
     public StreamGraph getStreamGraph() {
         final StreamGraph streamGraph = getStreamGraphGenerator(transformations).generate();
         transformations.clear();

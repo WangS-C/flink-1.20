@@ -1010,6 +1010,7 @@ public class AdaptiveScheduler
 
     @Override
     public void goToWaitingForResources(@Nullable ExecutionGraph previousExecutionGraph) {
+        //声明所需的资源
         declareDesiredResources();
 
         transitionToState(
@@ -1026,6 +1027,7 @@ public class AdaptiveScheduler
 
         if (!newDesiredResources.equals(this.desiredResources)) {
             this.desiredResources = newDesiredResources;
+            //会触发资源申请
             declarativeSlotPool.setResourceRequirements(this.desiredResources);
         }
     }

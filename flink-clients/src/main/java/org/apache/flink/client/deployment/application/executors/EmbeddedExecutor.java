@@ -183,7 +183,7 @@ public class EmbeddedExecutor implements PipelineExecutor {
                 .thenCompose(
                         blobServerAddress -> {
                             try {
-                                //提取并上传JobGraph文件
+                                //从给定的JobGraph中提取执行所需的所有文件，并使用给定的Supplier的BlobClient上传它们。
                                 ClientUtils.extractAndUploadJobGraphFiles(
                                         jobGraph,
                                         () -> new BlobClient(blobServerAddress, configuration));

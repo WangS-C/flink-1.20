@@ -35,6 +35,8 @@ public interface JobGraphWriter extends LocallyCleanableResource, GloballyCleana
      *
      * <p>If a job graph with the same {@link JobID} exists, it is replaced.
      */
+    //添加JobGraph实例。
+    //如果存在具有相同JobID的作业图，则将其替换。
     void putJobGraph(JobGraph jobGraph) throws Exception;
 
     /**

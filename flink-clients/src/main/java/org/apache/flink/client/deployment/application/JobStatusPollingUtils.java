@@ -46,6 +46,14 @@ class JobStatusPollingUtils {
      * @param retryPeriod the interval between two consecutive job status requests
      * @return a future that will contain the job's {@link JobResult}.
      */
+    //定期轮询作业的JobStatus ，当作业达到最终状态时，它会请求其JobResult 。
+    //参数：
+    //dispatcherGateway – 用于请求作业详细信息的DispatcherGateway 。
+    // jobId – 作业的 ID scheduledExecutor – 用于定期请求作业状态的执行器
+    // rpcTimeout – rpc 的超时时间
+    // retryPeriod – 两次连续作业状态请求之间的时间间隔
+    //返回：
+    //将包含作业的JobResult的 future 。
     static CompletableFuture<JobResult> getJobResult(
             final DispatcherGateway dispatcherGateway,
             final JobID jobId,

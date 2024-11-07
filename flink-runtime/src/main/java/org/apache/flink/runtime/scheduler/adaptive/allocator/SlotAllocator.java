@@ -33,6 +33,9 @@ public interface SlotAllocator {
      * @param vertices vertices to schedule
      * @return required resources
      */
+    //计算调度给定顶点所需的总资源。
+    //参数：
+    //vertices – 要安排的顶点
     ResourceCounter calculateRequiredSlots(Iterable<JobInformation.VertexInformation> vertices);
 
     /**

@@ -65,6 +65,7 @@ public class PipelineExecutorUtils {
         final ExecutionConfigAccessor executionConfigAccessor =
                 ExecutionConfigAccessor.fromConfiguration(configuration);
         final JobGraph jobGraph =
+                //触发translate 至 JobGraph的转换
                 FlinkPipelineTranslationUtil.getJobGraph(
                         userClassloader,
                         pipeline,

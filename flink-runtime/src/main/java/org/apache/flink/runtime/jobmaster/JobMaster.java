@@ -458,6 +458,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     // Lifecycle management
     // ----------------------------------------------------------------------------------------------
 
+    //回调至此方法
     @Override
     protected void onStart() throws JobMasterException {
         try {

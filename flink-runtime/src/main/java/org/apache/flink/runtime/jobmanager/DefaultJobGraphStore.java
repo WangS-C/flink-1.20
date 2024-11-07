@@ -209,6 +209,7 @@ public class DefaultJobGraphStore<R extends ResourceVersion<R>>
 
         while (!success) {
             synchronized (lock) {
+                //验证正在运行
                 verifyIsRunning();
 
                 final R currentVersion = jobGraphStateHandleStore.exists(name);

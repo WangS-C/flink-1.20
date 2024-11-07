@@ -40,6 +40,9 @@ public interface DeclareResourceRequirementServiceConnectionManager
      *
      * @param resourceRequirements resourceRequirements to declare at the connected service
      */
+    //声明连接服务的给定资源要求。如果没有建立连接，则该调用将被忽略。
+    //参数：
+    //resourceRequirements – 在连接的服务上声明的资源要求
     void declareResourceRequirements(ResourceRequirements resourceRequirements);
 
     /** Service that accepts resource requirements. */

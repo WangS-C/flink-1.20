@@ -81,6 +81,7 @@ public enum ClientUtils {
             boolean enforceSingleJobExecution,
             boolean suppressSysout)
             throws ProgramInvocationException {
+        //实际上是EmbeddedExecutorServiceLoader
         checkNotNull(executorServiceLoader);
         final ClassLoader userCodeClassLoader = program.getUserCodeClassLoader();
         final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
@@ -99,6 +100,7 @@ public enum ClientUtils {
                     enforceSingleJobExecution,
                     suppressSysout);
 
+            //设置流上下文环境
             StreamContextEnvironment.setAsContext(
                     executorServiceLoader,
                     configuration,
@@ -107,7 +109,7 @@ public enum ClientUtils {
                     suppressSysout);
 
             // For DataStream v2.
-            //设置流执行环境的工厂实例
+            //设置执行上下文环境
             ExecutionContextEnvironment.setAsContext(
                     executorServiceLoader, configuration, userCodeClassLoader);
 
@@ -133,6 +135,10 @@ public enum ClientUtils {
      *     job reaches the FAILED state.
      * @throws JobInitializationException If the initialization failed
      */
+    //此方法会阻塞，直到作业状态不再是 INITIALIZING 为止。
+    //参数：
+    //jobStatusSupplier – 返回工作状态的供应商。
+    //jobResultSupplier – 返回作业结果的供应商。仅当作业达到 FAILED 状态时才会调用此函数。
     public static void waitUntilJobInitializationFinished(
             SupplierWithException<JobStatus, Exception> jobStatusSupplier,
             SupplierWithException<JobResult, Exception> jobResultSupplier,

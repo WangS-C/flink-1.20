@@ -89,6 +89,7 @@ public class ApplicationDispatcherGatewayServiceFactory
             JobGraphWriter jobGraphWriter,
             JobResultStore jobResultStore) {
 
+        //获取恢复的作业 ID
         final List<JobID> recoveredJobIds = getRecoveredJobIds(recoveredJobs);
 
         final Dispatcher dispatcher;

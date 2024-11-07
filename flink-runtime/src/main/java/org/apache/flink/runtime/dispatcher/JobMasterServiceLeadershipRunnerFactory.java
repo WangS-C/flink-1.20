@@ -71,6 +71,7 @@ public enum JobMasterServiceLeadershipRunnerFactory implements JobManagerRunnerF
 
         final JobResultStore jobResultStore = highAvailabilityServices.getJobResultStore();
 
+        //获取jobManagerLeaderElection
         final LeaderElection jobManagerLeaderElection =
                 highAvailabilityServices.getJobManagerLeaderElection(jobGraph.getJobID());
 
@@ -97,6 +98,7 @@ public enum JobMasterServiceLeadershipRunnerFactory implements JobManagerRunnerF
                                 jobGraph.getUserJarBlobKeys(), jobGraph.getClasspaths())
                         .asClassLoader();
 
+        //创建DefaultJobMasterServiceFactory
         final DefaultJobMasterServiceFactory jobMasterServiceFactory =
                 new DefaultJobMasterServiceFactory(
                         MdcUtils.scopeToJob(

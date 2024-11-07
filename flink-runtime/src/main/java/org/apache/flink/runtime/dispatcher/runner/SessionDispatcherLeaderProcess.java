@@ -125,6 +125,7 @@ public class SessionDispatcherLeaderProcess extends AbstractDispatcherLeaderProc
     private CompletableFuture<Void>
             createDispatcherBasedOnRecoveredJobGraphsAndRecoveredDirtyJobResults() {
         final CompletableFuture<Collection<JobResult>> dirtyJobsFuture =
+                //获取标记为dirty持久化JobResult实例。这对于恢复完成步骤很有用。
                 CompletableFuture.supplyAsync(this::getDirtyJobResultsIfRunning, ioExecutor);
 
         return dirtyJobsFuture
