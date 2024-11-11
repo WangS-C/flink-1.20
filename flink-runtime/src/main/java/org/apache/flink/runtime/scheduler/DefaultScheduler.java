@@ -236,7 +236,9 @@ public class DefaultScheduler extends SchedulerBase implements SchedulerOperatio
         log.info(
                 "Starting scheduling with scheduling strategy [{}]",
                 schedulingStrategy.getClass().getName());
+        //切换至Running
         transitionToRunning();
+        //开始安排
         schedulingStrategy.startScheduling();
     }
 

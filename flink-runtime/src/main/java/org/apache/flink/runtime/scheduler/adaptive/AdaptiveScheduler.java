@@ -559,7 +559,9 @@ public class AdaptiveScheduler
 
     @Override
     public void startScheduling() {
+        //检查空闲时间超过JobManagerOptions. SLOT_IDLE_TIMEOUT的插槽，并将它们释放回 ResourceManager。
         checkIdleSlotTimeout();
+
         state.as(Created.class)
                 .orElseThrow(
                         () ->
@@ -1464,11 +1466,14 @@ public class AdaptiveScheduler
      * Check for slots that are idle for more than {@link JobManagerOptions#SLOT_IDLE_TIMEOUT} and
      * release them back to the ResourceManager.
      */
+    //检查空闲时间超过JobManagerOptions. SLOT_IDLE_TIMEOUT的插槽，并将它们释放回 ResourceManager。
     private void checkIdleSlotTimeout() {
         if (getState().getJobStatus().isGloballyTerminalState()) {
             // Job has reached the terminal state, so we can return all slots to the ResourceManager
             // to speed things up because we no longer need them. This optimization lets us skip
             // waiting for the slot pool service to close.
+            //作业已达到最终状态，因此我们可以将所有槽返回给 ResourceManager 以加快速度，因为我们不再需要它们。
+            //这种优化让我们可以跳过等待槽池服务关闭的过程。
             for (SlotInfo slotInfo : declarativeSlotPool.getAllSlotsInformation()) {
                 declarativeSlotPool.releaseSlot(
                         slotInfo.getAllocationId(),
@@ -1481,8 +1486,12 @@ public class AdaptiveScheduler
             // prevent idleness check running again while scheduler was already shut down
             // don't release slots because JobMaster may want to hold on to slots in case
             // it re-acquires leadership
+            //当调度程序已经关闭时，不采取任何措施阻止空闲检查再次运行 不要释放插槽，
+            //因为 JobMaster 可能希望保留插槽，以防它重新获得领导权
             return;
         }
+
+        //释放已超过空闲时间并且不再需要的slot
         declarativeSlotPool.releaseIdleSlots(System.currentTimeMillis());
         getMainThreadExecutor()
                 .schedule(

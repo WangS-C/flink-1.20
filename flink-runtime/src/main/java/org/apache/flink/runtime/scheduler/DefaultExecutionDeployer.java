@@ -93,6 +93,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
         //验证执行状态
         validateExecutionStates(executionsToDeploy);
 
+        //切换至Scheduled
         transitionToScheduled(executionsToDeploy);
 
         final Map<ExecutionAttemptID, ExecutionSlotAssignment> executionSlotAssignmentMap =
@@ -100,9 +101,11 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
                 allocateSlotsFor(executionsToDeploy);
 
         final List<ExecutionDeploymentHandle> deploymentHandles =
+                //创建部署句柄
                 createDeploymentHandles(
                         executionsToDeploy, requiredVersionByVertex, executionSlotAssignmentMap);
 
+        //等待所有插槽并部署
         waitForAllSlotsAndDeploy(deploymentHandles);
     }
 
@@ -154,6 +157,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
     private void waitForAllSlotsAndDeploy(final List<ExecutionDeploymentHandle> deploymentHandles) {
         FutureUtils.assertNoException(
                 assignAllResourcesAndRegisterProducedPartitions(deploymentHandles)
+                        //部署全部
                         .handle(deployAll(deploymentHandles)));
     }
 
@@ -190,6 +194,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
                 checkState(slotAssigned.isDone());
 
                 FutureUtils.assertNoException(
+                        //部署或处理错误
                         slotAssigned.handle(deployOrHandleError(deploymentHandle)));
             }
             return null;
@@ -313,6 +318,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
             }
 
             if (throwable == null) {
+                //安全部署任务
                 deployTaskSafe(execution);
             } else {
                 handleTaskDeploymentFailure(execution, throwable);

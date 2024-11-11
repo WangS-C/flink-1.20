@@ -59,6 +59,11 @@ public interface ShuffleMaster<T extends ShuffleDescriptor> extends AutoCloseabl
      *
      * @param context the corresponding shuffle context of the target job.
      */
+    //将目标作业与相应的JobShuffleContext一起注册到此 shuffle master。
+    //通过shuffle context，我们可以获取一些基本信息，比如作业ID、作业配置等。
+    //它使ShuffleMaster能够向JobMaster通知丢失的结果分区，以便JobMaster能够更早地识别和重现不可用的分区。
+    //参数：
+    //context – 目标作业对应的 shuffle 上下文。
     default void registerJob(JobShuffleContext context) {}
 
     /**

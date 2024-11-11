@@ -561,6 +561,7 @@ public class Execution
      *
      * @throws JobException if the execution cannot be deployed to the assigned resource
      */
+    //将执行部署到先前分配的资源。
     public void deploy() throws JobException {
         assertRunningInJobMasterMainThread();
 
@@ -573,11 +574,13 @@ public class Execution
         // Check if the TaskManager died in the meantime
         // This only speeds up the response to TaskManagers failing concurrently to deployments.
         // The more general check is the rpcTimeout of the deployment call
+        //检查任务管理器是否在此期间死亡 这只会加快对任务管理器同时部署失败的响应速度。更一般的检查是部署调用的 rpc 超时
         if (!slot.isAlive()) {
             throw new JobException("Target slot (TaskManager) for deployment is no longer alive.");
         }
 
         // make sure exactly one deployment call happens from the correct state
+        //确保在正确的状态下发生一次部署调用
         ExecutionState previous = this.state;
         if (previous == SCHEDULED) {
             if (!transitionState(previous, DEPLOYING)) {
@@ -625,6 +628,7 @@ public class Execution
             final TaskDeploymentDescriptor deployment =
                     vertex.getExecutionGraphAccessor()
                             .getTaskDeploymentDescriptorFactory()
+                            //创建部署描述符
                             .createDeploymentDescriptor(
                                     this,
                                     slot.getAllocationId(),
@@ -639,10 +643,12 @@ public class Execution
             final ComponentMainThreadExecutor jobMasterMainThreadExecutor =
                     vertex.getExecutionGraphAccessor().getJobMasterMainThreadExecutor();
 
+            //通知待部署
             getVertex().notifyPendingDeployment(this);
             // We run the submission in the future executor so that the serialization of large TDDs
             // does not block
             // the main thread and sync back to the main thread once submission is completed.
+            //我们在Future执行器中运行提交，以便大型 TDD 的序列化不会阻塞主线程，并在提交完成后同步回主线程。
             CompletableFuture.supplyAsync(
                             () -> taskManagerGateway.submitTask(deployment, rpcTimeout), executor)
                     .thenCompose(Function.identity())

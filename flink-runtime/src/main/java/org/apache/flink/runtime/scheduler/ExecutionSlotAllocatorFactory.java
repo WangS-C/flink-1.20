@@ -29,5 +29,8 @@ public interface ExecutionSlotAllocatorFactory {
      * @param context for slot allocation
      * @return The instantiated slot allocator
      */
+    //实例化ExecutionSlotAllocator 。
+    //参数：
+    //context – 用于插槽分配
     ExecutionSlotAllocator createInstance(ExecutionSlotAllocationContext context);
 }

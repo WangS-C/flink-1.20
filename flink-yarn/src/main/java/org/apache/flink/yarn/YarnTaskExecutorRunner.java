@@ -66,6 +66,7 @@ public class YarnTaskExecutorRunner {
         SignalHandler.register(LOG);
         JvmShutdownSafeguard.installAsShutdownHook(LOG);
 
+        //YARN 任务执行器的实例入口点
         runTaskManagerSecurely(args);
     }
 

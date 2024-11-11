@@ -69,6 +69,18 @@ public interface ExecutionDeployer {
          * @param mainThreadExecutor the main thread executor
          * @return an instantiated {@link ExecutionDeployer}
          */
+        //使用给定参数实例化ExecutionDeployer 。
+        //请注意，执行顶点的版本将在调度执行之前被记录。
+        //如果发生全局故障，或者作业被取消，或者当当前所有执行都失败/ 取消时重新启动执行顶点，则版本可能会更改。
+        //一旦版本变更，之前触发的执行部署将被跳过。
+        //参数：
+        //log ——记录器
+        //executionSlotAllocator – 分配槽的分配器
+        //executionOperations – 执行的操作
+        //executionVertexVersioner – 记录执行顶点版本的版本控制器。
+        //partitionRegistrationTimeout – 分区注册超时
+        //allocationReservationFunc – 为本地恢复保留分配的函数
+        //mainThreadExecutor – 主线程执行器
         ExecutionDeployer createInstance(
                 final Logger log,
                 final ExecutionSlotAllocator executionSlotAllocator,

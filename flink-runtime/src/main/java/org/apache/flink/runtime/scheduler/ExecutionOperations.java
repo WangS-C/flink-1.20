@@ -33,6 +33,9 @@ public interface ExecutionOperations {
      * @param execution to deploy.
      * @throws JobException if the execution cannot be deployed to the assigned resource
      */
+    //部署执行。
+    //参数：
+    //execution ——部署。
     void deploy(Execution execution) throws JobException;
 
     /**

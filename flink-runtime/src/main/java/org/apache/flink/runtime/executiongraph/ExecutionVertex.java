@@ -553,6 +553,7 @@ public class ExecutionVertex
     void notifyPendingDeployment(Execution execution) {
         // only forward this notification if the execution is still the current execution
         // otherwise we have an outdated execution
+        //仅当执行仍然是当前执行时才转发此通知，否则我们有一个过时的执行
         if (isCurrentExecution(execution)) {
             getExecutionGraphAccessor()
                     .getExecutionDeploymentListener()

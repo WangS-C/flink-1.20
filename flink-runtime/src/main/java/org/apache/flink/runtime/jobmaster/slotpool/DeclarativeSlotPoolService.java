@@ -297,6 +297,7 @@ public class DeclarativeSlotPoolService implements SlotPoolService {
                         resourceManagerGateway.declareRequiredResources(
                                 jobMasterId, resourceRequirements, rpcTimeout));
 
+        //声明资源需求
         declareResourceRequirements(declarativeSlotPool.getResourceRequirements());
     }
 

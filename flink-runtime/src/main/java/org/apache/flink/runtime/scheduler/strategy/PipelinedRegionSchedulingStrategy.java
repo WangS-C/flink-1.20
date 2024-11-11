@@ -243,6 +243,7 @@ public class PipelinedRegionSchedulingStrategy implements SchedulingStrategy {
             Set<SchedulingPipelinedRegion> regionsToSchedule) {
         Set<SchedulingPipelinedRegion> nextRegions = new HashSet<>();
         // cache consumedPartitionGroup's consumable status to avoid compute repeatedly.
+        //缓存consumedPartitionGroup的consumable状态以避免重复计算。
         final Map<ConsumedPartitionGroup, Boolean> consumableStatusCache = new HashMap<>();
         final Set<ConsumedPartitionGroup> visitedConsumedPartitionGroups = new HashSet<>();
 
@@ -260,6 +261,7 @@ public class PipelinedRegionSchedulingStrategy implements SchedulingStrategy {
                                     }
                                     // If this group has been visited, there is no need
                                     // to repeat the determination.
+                                    //如果该组已经访问过，则无需重复判断。
                                     if (visitedConsumedPartitionGroups.contains(
                                             producedPartitionGroup)) {
                                         return;

@@ -32,6 +32,10 @@ public interface YarnResourceManagerClientFactory {
      * @param callbackHandler which handles the events from YARN ResourceManager.
      * @return an {@link AMRMClientAsync} instance.
      */
+    //使用给定的回调处理程序创建 YARN ResourceManager 客户端。
+    //参数：
+    //yarnHeartbeatIntervalMillis – 客户端和 YARN ResourceManager 之间的心跳间隔。
+    //callbackHandler – 处理来自 YARN ResourceManager 的事件。
     AMRMClientAsync<AMRMClient.ContainerRequest> createResourceManagerClient(
             int yarnHeartbeatIntervalMillis, AMRMClientAsync.CallbackHandler callbackHandler);
 }

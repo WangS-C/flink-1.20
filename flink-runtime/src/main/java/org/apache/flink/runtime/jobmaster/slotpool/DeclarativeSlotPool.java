@@ -181,6 +181,10 @@ public interface DeclarativeSlotPool {
      * @return the resource requirements that the slot was fulfilling; empty if the slot was
      *     currently free
      */
+    //释放由allocationId 指定的槽（如果存在）。
+    //参数：
+    //allocationId – 标识要失败的插槽的 AllocationId
+    //cause – 插槽失败的原因
     ResourceCounter releaseSlot(AllocationID allocationId, Exception cause);
 
     /**
@@ -198,6 +202,9 @@ public interface DeclarativeSlotPool {
      *
      * @param currentTimeMillis current time
      */
+    //释放已超过空闲时隙超时并且不再需要满足资源需求的时隙。
+    //参数：
+    //currentTimeMillis – 当前时间
     void releaseIdleSlots(long currentTimeMillis);
 
     /**

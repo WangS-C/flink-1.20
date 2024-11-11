@@ -73,6 +73,7 @@ public class PhysicalSlotProviderImpl implements PhysicalSlotProvider {
                                         PhysicalSlotRequest::getSlotRequestId,
                                         Function.identity()));
         Map<SlotRequestId, Optional<PhysicalSlot>> availablePhysicalSlots =
+                //尝试从可用的分配
                 tryAllocateFromAvailable(physicalSlotRequestsById.values());
 
         return availablePhysicalSlots.entrySet().stream()

@@ -384,6 +384,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
                 //创建调度程序 代表Flink Task任务的调度器。调度器负责管理作业执行的所有相关过程。
                 // 包括JobGraph到ExecutionGraph的转换过程、作业的发布、取消、停止过程、
                 // 作业Task的发布、取消、停止过程、资源申请与释放、作业和Task的Failover等。
+                //slotPoolServiceSchedulerFactory 实际类似是 DefaultSlotPoolServiceSchedulerFactory
                 createScheduler(
                         slotPoolServiceSchedulerFactory,
                         executionDeploymentTracker,
@@ -1130,6 +1131,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
         validateRunsInMainThread();
 
         JobShuffleContext context = new JobShuffleContextImpl(jobGraph.getJobID(), this);
+        //将目标作业与相应的JobShuffleContext一起注册到此 shuffle master
         shuffleMaster.registerJob(context);
 
         //启动作业主服务

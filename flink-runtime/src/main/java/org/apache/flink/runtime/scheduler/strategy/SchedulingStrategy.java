@@ -32,6 +32,7 @@ import java.util.Set;
 public interface SchedulingStrategy {
 
     /** Called when the scheduling is started (initial scheduling operation). */
+    //调度开始时调用（初始调度操作）。
     void startScheduling();
 
     /**

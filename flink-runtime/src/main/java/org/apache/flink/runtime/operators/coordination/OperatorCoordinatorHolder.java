@@ -98,6 +98,19 @@ import static org.apache.flink.util.Preconditions.checkState;
  * <p>Actions from the coordinator to the "outside world" (like completing a checkpoint and sending
  * an event) are also enqueued back into the scheduler main-thread executor, strictly in order.
  */
+//OperatorCoordinatorHolder持有OperatorCoordinator并管理其与其余组件的所有交互。它提供上下文并负责检查点和恰好一次语义。
+//恰一语义
+//语义在OperatorCoordinator. checkpointCoordinator(long, CompletableFuture)下描述。
+//单一机制
+//恰好一次语义的机制如下：
+//事件通过一个特殊的通道SubtaskGatewayImpl传递。如果我们当前没有触发检查点，那么事件就会直接通过。
+//随着协调器未来检查点的完成，该子任务网关将关闭。之后发生的事件被保留（缓冲），因为它们属于检查点之后的纪元。
+//一旦作业中的所有协调员都完成了检查点，就会注入源的障碍。如果协调器从其子任务之一接收到AcknowledgeCheckpointEvent ，这表示该子任务已收到检查点屏障并完成检查点，则协调器重新打开相应的子任务网关并发送出缓冲的事件。
+//如果任务同时失败，事件将从网关中删除。从协调器的角度来看，这些事件会丢失，因为它们在最新的完整检查点之后被发送到失败的子任务。
+//重要提示：一个关键假设是从调度程序到任务的所有事件都严格按顺序传输。注入检查点屏障后从协调器发送的事件不得超过检查点屏障。目前这是由 Flink 的 RPC 机制来保证的。
+//并发和线程模型
+//该组件严格在调度程序的主线程执行器中运行。所有“来自外部”的调用要么已经在主线程执行器中（当来自调度程序时），要么被放入主线程执行器中（当来自检查点协调器时）。我们依靠执行器来保持严格的调用顺序。
+//从协调器到“外部世界”的操作（例如完成检查点和发送事件）也严格按顺序排回到调度程序主线程执行器中。
 public class OperatorCoordinatorHolder
         implements OperatorCoordinatorCheckpointContext, AutoCloseable {
 

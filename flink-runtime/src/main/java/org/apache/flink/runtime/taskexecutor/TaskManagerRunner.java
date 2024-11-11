@@ -301,7 +301,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
             //启动TaskManagerRunnerServices
             startTaskManagerRunnerServices();
 
-            //会对调到org.apache.flink.runtime.taskexecutor.TaskExecutor.onStart
+            //会回调到org.apache.flink.runtime.taskexecutor.TaskExecutor.onStart
             taskExecutorService.start();
         }
     }

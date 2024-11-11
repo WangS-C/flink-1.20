@@ -121,12 +121,14 @@ public class TaskDeploymentDescriptorFactory {
         return new TaskDeploymentDescriptor(
                 jobID,
                 serializedJobInformation,
+                //获取序列化任务信息
                 getSerializedTaskInformation(
                         executionVertex.getJobVertex().getTaskInformationOrBlobKey()),
                 execution.getAttemptId(),
                 allocationID,
                 taskRestore,
                 new ArrayList<>(producedPartitions),
+                //创建输入部署描述符
                 createInputGateDeploymentDescriptors(executionVertex));
     }
 
@@ -143,6 +145,7 @@ public class TaskDeploymentDescriptorFactory {
             // need to request the one matching our sub task index.
             // TODO Refactor after removing the consumers from the intermediate result partitions
 
+            //如果生成的分区注册了多个消费者，我们需要请求与我们的子任务索引匹配的消费者。
             IntermediateResult consumedIntermediateResult =
                     executionVertex
                             .getExecutionGraphAccessor()
@@ -172,6 +175,7 @@ public class TaskDeploymentDescriptorFactory {
                 consumedClusterPartitionShuffleDescriptors;
         try {
             consumedClusterPartitionShuffleDescriptors =
+                    //获取集群分区洗牌描述符
                     getClusterPartitionShuffleDescriptors(executionVertex);
         } catch (Throwable e) {
             throw new ClusterDatasetCorruptedException(
@@ -187,6 +191,7 @@ public class TaskDeploymentDescriptorFactory {
             // For FLIP-205, the JobGraph generating side ensure that the cluster partition is
             // produced with only one subpartition. Therefore, we always consume the partition with
             // subpartition index of 0.
+            //对于 FLIP-205，JobGraph 生成方确保生成的集群分区仅包含一个子分区。因此，我们总是消耗子分区索引为0的分区。
             inputGates.add(
                     new InputGateDeploymentDescriptor(
                             entry.getKey(),
@@ -257,6 +262,7 @@ public class TaskDeploymentDescriptorFactory {
             // For FLIP-205, the job graph generating side makes sure that the producer and consumer
             // of the cluster partition have the same parallelism and each consumer Task consumes
             // one output partition of the producer.
+            //对于FLIP-205，作业图生成端确保集群分区的生产者和消费者具有相同的并行性，并且每个消费者Task消耗生产者的一个输出分区。
             checkState(
                     executionVertex.getTotalNumberOfParallelSubtasks() == shuffleDescriptors.size(),
                     "The parallelism (%s) of the cache consuming job vertex is "
@@ -272,6 +278,7 @@ public class TaskDeploymentDescriptorFactory {
                                 // For FLIP-205, the JobGraph generating side ensure that the
                                 // cluster partition is produced with only one subpartition.
                                 // Therefore, this index is always 0.
+                                //对于 FLIP-205，JobGraph 生成方确保生成的集群分区仅包含一个子分区。因此，该索引始终为0。
                                 0)
                     });
         }

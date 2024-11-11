@@ -198,6 +198,7 @@ class SlotSharingExecutionSlotAllocator implements ExecutionSlotAllocator {
             Preconditions.checkState(groupsToAssign.isEmpty());
         }
 
+        //从共享槽中分配逻辑槽
         Map<ExecutionVertexID, SlotExecutionVertexAssignment> assignments =
                 allocateLogicalSlotsFromSharedSlots(slots, executionsByGroup);
 
@@ -205,6 +206,8 @@ class SlotSharingExecutionSlotAllocator implements ExecutionSlotAllocator {
         // 'sharedSlots'
         // because if any physical slots have already failed, their shared slots have been removed
         // from the allocator's 'sharedSlots' by failed logical slots.
+        //我们需要将插槽映射传递给 createBulk 方法，而不是使用分配器的“sharedSlots”，
+        //因为如果任何物理插槽已经失败，则它们的共享插槽已被失败的逻辑插槽从分配器的“sharedSlots”中删除。
         SharingPhysicalSlotRequestBulk bulk = createBulk(slots, executionsByGroup);
         bulkChecker.schedulePendingRequestBulkTimeoutCheck(bulk, allocationTimeout);
 

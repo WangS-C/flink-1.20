@@ -635,8 +635,10 @@ public abstract class SchedulerBase implements SchedulerNG, CheckpointScheduling
                 executionGraph::registerJobStatusListener,
                 executionGraph.getStatusTimestamp(JobStatus.INITIALIZING),
                 jobStatusMetricsSettings);
-        //启动所有操作员协调员
+        //启动所有OperatorCoordinators
         operatorCoordinatorHandler.startAllOperatorCoordinators();
+
+        //开始调度内部
         startSchedulingInternal();
     }
 

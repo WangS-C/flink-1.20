@@ -46,5 +46,9 @@ public interface PhysicalSlotRequestBulkChecker {
      * @param timeout timeout after which the bulk should be canceled if it is still not
      *     fulfillable.
      */
+    //开始跟踪具有超时的PhysicalSlotRequestBulk的可实现性。
+    //参数：
+    //bulk – 要跟踪的PhysicalSlotRequestBulk
+    //timeout – 超时后，如果仍然无法履行批量操作，则应取消该批量操作。
     void schedulePendingRequestBulkTimeoutCheck(PhysicalSlotRequestBulk bulk, Time timeout);
 }

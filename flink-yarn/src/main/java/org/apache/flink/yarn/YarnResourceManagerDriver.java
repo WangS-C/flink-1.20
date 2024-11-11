@@ -476,6 +476,7 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
         // update blocklist
         //更新阻止列表
         tryUpdateApplicationBlockList();
+
         AMRMClient.ContainerRequest containerRequest =
                 ContainerRequestReflector.INSTANCE.getContainerRequest(
                         resource, priority, taskManagerNodeLabel);

@@ -65,6 +65,7 @@ public class TieredInternalShuffleMaster {
      * Registers the target job together with the corresponding {@link JobShuffleContext} to this
      * shuffle master.
      */
+    //将目标作业与相应的JobShuffleContext一起注册到此 shuffle master。
     public void registerJob(JobShuffleContext context) {
         tieredStorageMasterClient.registerJob(context.getJobId(), getTierShuffleHandler(context));
     }

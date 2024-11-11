@@ -53,6 +53,10 @@ public interface TaskManagerGateway extends TaskExecutorOperatorEventGateway {
      * @param timeout of the submit operation
      * @return Future acknowledge of the successful operation
      */
+    //向任务管理器提交任务。
+    //参数：
+    //tdd – 描述要提交的任务
+    //timeout 提交操作timeout
     CompletableFuture<Acknowledge> submitTask(TaskDeploymentDescriptor tdd, Time timeout);
 
     /**
