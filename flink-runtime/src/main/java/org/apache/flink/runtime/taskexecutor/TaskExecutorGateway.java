@@ -87,6 +87,11 @@ public interface TaskExecutorGateway
      * @param timeout of the submit operation
      * @return Future acknowledge of the successful operation
      */
+    //向TaskExecutor提交Task 。
+    //参数：
+    //tdd – 描述要提交的任务
+    //jobMasterId – 识别提交JobMaster
+    //timeout- 提交操作timeout
     CompletableFuture<Acknowledge> submitTask(
             TaskDeploymentDescriptor tdd, JobMasterId jobMasterId, @RpcTimeout Time timeout);
 

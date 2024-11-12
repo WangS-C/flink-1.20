@@ -128,13 +128,14 @@ public class TaskDeploymentDescriptorFactory {
                 allocationID,
                 taskRestore,
                 new ArrayList<>(producedPartitions),
-                //创建输入部署描述符
+                //负责创建输入网关部署描述信息
                 createInputGateDeploymentDescriptors(executionVertex));
     }
 
     private List<InputGateDeploymentDescriptor> createInputGateDeploymentDescriptors(
             ExecutionVertex executionVertex) throws IOException, ClusterDatasetCorruptedException {
 
+        //获取ExecutionVertex的上游中间结果集信息
         List<ConsumedPartitionGroup> consumedPartitionGroups =
                 executionVertex.getAllConsumedPartitionGroups();
         List<InputGateDeploymentDescriptor> inputGates =
@@ -145,6 +146,7 @@ public class TaskDeploymentDescriptorFactory {
             // need to request the one matching our sub task index.
             // TODO Refactor after removing the consumers from the intermediate result partitions
 
+            //然后根据本次ExecutionVertex的下标信息获取对应的上游中间结果分区区间，。
             //如果生成的分区注册了多个消费者，我们需要请求与我们的子任务索引匹配的消费者。
             IntermediateResult consumedIntermediateResult =
                     executionVertex
@@ -160,6 +162,7 @@ public class TaskDeploymentDescriptorFactory {
                             .getSubpartitionIndexRange();
 
             inputGates.add(
+                    //创建输入网关部署描述信息
                     new InputGateDeploymentDescriptor(
                             resultId,
                             partitionType,

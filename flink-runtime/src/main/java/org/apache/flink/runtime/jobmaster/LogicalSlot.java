@@ -83,6 +83,11 @@ public interface LogicalSlot {
      * @param payload to be assigned to this slot.
      * @return true if the payload could be assigned, otherwise false
      */
+    //尝试向此插槽分配有效负载。一个人只能分配一个有效负载一次。
+    //参数：
+    //payload – 分配给该插槽。
+    //返回：
+    //如果可以分配有效负载，则为 true，否则为 false
     boolean tryAssignPayload(Payload payload);
 
     /**

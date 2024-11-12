@@ -727,7 +727,9 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
             final JobInformation jobInformation;
             final TaskInformation taskInformation;
             try {
+                //获取Job信息
                 jobInformation = tdd.getJobInformation();
+                //获取Task信息
                 taskInformation = tdd.getTaskInformation();
             } catch (IOException | ClassNotFoundException e) {
                 throw new TaskSubmissionException(
@@ -749,6 +751,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 
             // note that a pre-existing job group can NOT be closed concurrently - this is done by
             // the same TM thread in removeJobMetricsGroup
+            //请注意，预先存在的作业组不能同时关闭 - 这是由removeJobMetricsGroup中的同一TM线程完成的
             TaskMetricGroup taskMetricGroup =
                     jobGroup.addTask(tdd.getExecutionAttemptId(), taskInformation.getTaskName());
 
@@ -803,6 +806,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                                                     jobId, tdd.getExecutionAttemptId()));
 
             // TODO: Pass config value from user program and do overriding here.
+            //从用户程序传递配置值并在此处覆盖。
             final StateChangelogStorage<?> changelogStorage;
             try {
                 changelogStorage =
@@ -842,6 +846,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                             tdd.getExecutionAttemptId(),
                             tdd.getAllocationId(),
                             tdd.getProducedPartitions(),
+                            //Task的输入操作
                             tdd.getInputGates(),
                             memoryManager,
                             sharedResources,

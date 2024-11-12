@@ -286,6 +286,11 @@ public class Execution
      * @param logicalSlot to assign to this execution
      * @return true if the slot could be assigned to the execution, otherwise false
      */
+    //尝试将给定的槽分配给执行。仅当执行处于 SCHEDULED 状态时，分配才有效。如果可以分配资源，则返回 true。
+    //参数：
+    //logicalSlot – 分配给此执行
+    //返回：
+    //如果槽可以分配给执行，则为 true，否则为 false
     public boolean tryAssignResource(final LogicalSlot logicalSlot) {
 
         assertRunningInJobMasterMainThread();
@@ -294,22 +299,28 @@ public class Execution
 
         // only allow to set the assigned resource in state SCHEDULED or CREATED
         // note: we also accept resource assignment when being in state CREATED for testing purposes
+        //只允许将分配的资源设置为 SCHEDULED 或 CREATED 状态
+        //注意：出于测试目的，我们也接受处于 CREATED 状态时的资源分配
         if (state == SCHEDULED || state == CREATED) {
             if (assignedResource == null) {
                 assignedResource = logicalSlot;
+                //尝试向此插槽分配有效负载
                 if (logicalSlot.tryAssignPayload(this)) {
                     // check for concurrent modification (e.g. cancelling call)
+                    //检查并发修改（例如取消呼叫）
                     if ((state == SCHEDULED || state == CREATED)
                             && !taskManagerLocationFuture.isDone()) {
                         taskManagerLocationFuture.complete(logicalSlot.getTaskManagerLocation());
                         assignedAllocationID = logicalSlot.getAllocationId();
                         getVertex()
+                                //记录最新一次Execution运行实例的资源分配地址信息。
                                 .setLatestPriorSlotAllocation(
                                         assignedResource.getTaskManagerLocation(),
                                         logicalSlot.getAllocationId());
                         return true;
                     } else {
                         // free assigned resource and return false
+                        //释放分配的资源并返回 false
                         assignedResource = null;
                         return false;
                     }
@@ -319,10 +330,12 @@ public class Execution
                 }
             } else {
                 // the slot already has another slot assigned
+                //该插槽已分配有另一个插槽
                 return false;
             }
         } else {
             // do not allow resource assignment if we are not in state SCHEDULED
+            //如果我们未处于 SCHEDULED 状态，则不允许资源分配
             return false;
         }
     }
@@ -503,6 +516,9 @@ public class Execution
 
         ProducerDescriptor producerDescriptor = ProducerDescriptor.create(location, attemptId);
 
+        //partitions变量存的是一个ExecutionVertex对应的所有的消费分区。
+        //通俗来讲，假如一个DataStream1并行度是2，被下游N个节点消费，
+        //则DataStream1每个并行度都会有N个IntermediateResultPartition来表示，在Task创建时需设置N个分区链接信息
         Collection<IntermediateResultPartition> partitions =
                 vertex.getProducedPartitions().values();
         Collection<CompletableFuture<ResultPartitionDeploymentDescriptor>> partitionRegistrations =
@@ -513,16 +529,19 @@ public class Execution
             CompletableFuture<? extends ShuffleDescriptor> shuffleDescriptorFuture =
                     vertex.getExecutionGraphAccessor()
                             .getShuffleMaster()
+                            //使用 shuffle 服务异步注册分区及其生产者。
                             .registerPartitionWithProducer(
                                     vertex.getJobId(), partitionDescriptor, producerDescriptor);
 
             CompletableFuture<ResultPartitionDeploymentDescriptor> partitionRegistration =
                     shuffleDescriptorFuture.thenApply(
                             shuffleDescriptor ->
+                                    //构建ResultPartitionDeploymentDescriptor
                                     createResultPartitionDeploymentDescriptor(
                                             partitionDescriptor, partition, shuffleDescriptor));
             partitionRegistrations.add(partitionRegistration);
         }
+
 
         return FutureUtils.combineAll(partitionRegistrations)
                 .thenApply(
@@ -531,6 +550,7 @@ public class Execution
                                     producedPartitions =
                                             CollectionUtil.newLinkedHashMapWithExpectedSize(
                                                     partitions.size());
+                            //收集完所有分区生产链接信息后返回。
                             rpdds.forEach(
                                     rpdd -> producedPartitions.put(rpdd.getPartitionId(), rpdd));
                             return producedPartitions;
@@ -591,6 +611,7 @@ public class Execution
             }
         } else {
             // vertex may have been cancelled, or it was already scheduled
+            //顶点可能已被取消，或者已被安排
             throw new IllegalStateException(
                     "The vertex must be in SCHEDULED state to be deployed. Found state "
                             + previous);
@@ -628,7 +649,7 @@ public class Execution
             final TaskDeploymentDescriptor deployment =
                     vertex.getExecutionGraphAccessor()
                             .getTaskDeploymentDescriptorFactory()
-                            //创建部署描述符
+                            //负责创建一个Task部署描述符
                             .createDeploymentDescriptor(
                                     this,
                                     slot.getAllocationId(),
@@ -650,6 +671,7 @@ public class Execution
             // the main thread and sync back to the main thread once submission is completed.
             //我们在Future执行器中运行提交，以便大型 TDD 的序列化不会阻塞主线程，并在提交完成后同步回主线程。
             CompletableFuture.supplyAsync(
+                            //向任务管理器提交任务
                             () -> taskManagerGateway.submitTask(deployment, rpcTimeout), executor)
                     .thenCompose(Function.identity())
                     .whenCompleteAsync(

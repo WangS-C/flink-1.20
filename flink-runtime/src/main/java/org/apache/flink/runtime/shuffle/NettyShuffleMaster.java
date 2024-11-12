@@ -121,6 +121,7 @@ public class NettyShuffleMaster implements ShuffleMaster<NettyShuffleDescriptor>
         }
 
         NettyShuffleDescriptor shuffleDeploymentDescriptor =
+                //构建NettyShuffleDescriptor
                 new NettyShuffleDescriptor(
                         producerDescriptor.getProducerLocation(),
                         createConnectionInfo(

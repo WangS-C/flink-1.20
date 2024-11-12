@@ -32,6 +32,8 @@ import java.nio.ByteBuffer;
  * incrementally in different parts. Newer fragments of a graph can be attached to existing graphs,
  * thereby extending the current data flow graphs.
  */
+//Flink作业的唯一 (至少在统计上是唯一的) 标识符。Flink中的作业对应于数据流图。
+//作业同时充当会话 ，因为可以在不同部分中增量创建和提交作业。可以将图的较新片段附加到现有图，从而扩展当前数据流图。
 @Public
 public final class JobID extends AbstractID {
 

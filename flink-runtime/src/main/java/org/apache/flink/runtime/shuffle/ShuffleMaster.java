@@ -89,6 +89,12 @@ public interface ShuffleMaster<T extends ShuffleDescriptor> extends AutoCloseabl
      * @return future with the partition shuffle descriptor used for producer/consumer deployment
      *     and their data exchange.
      */
+    //使用 shuffle 服务异步注册分区及其生产者。
+    //返回的 shuffle 描述符是一个内部句柄，用于标识 shuffle 服务内部的分区。描述符应提供足够的信息来从分区读取数据或向分区写入数据。
+    //参数：
+    //jobID – 注册分区的相应作业的作业 ID
+    //partitionDescriptor – 有关分区的一般作业图信息
+    //producerDescriptor – 一般生产者信息（位置、执行 ID、连接信息）
     CompletableFuture<T> registerPartitionWithProducer(
             JobID jobID,
             PartitionDescriptor partitionDescriptor,

@@ -156,6 +156,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
 
     private void waitForAllSlotsAndDeploy(final List<ExecutionDeploymentHandle> deploymentHandles) {
         FutureUtils.assertNoException(
+                //分配所有资源并注册生成的分区
                 assignAllResourcesAndRegisterProducedPartitions(deploymentHandles)
                         //部署全部
                         .handle(deployAll(deploymentHandles)));
@@ -168,7 +169,9 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
             final CompletableFuture<Void> resultFuture =
                     deploymentHandle
                             .getLogicalSlotFuture()
+                            //为Execution分配slot资源
                             .handle(assignResource(deploymentHandle))
+                            //根据Execution的下游消费节点数量，为Execution(Task)设置下游所有消费分区链接信息。
                             .thenCompose(registerProducedPartitions(deploymentHandle))
                             .handle(
                                     (ignore, throwable) -> {
@@ -234,6 +237,8 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
                 throw new CompletionException(maybeWrapWithNoResourceAvailableException(throwable));
             }
 
+            //设置assignedResource成员变量的值，代表Execution被分配slot资源，
+            //最后在ExecutionVertex中记录最新一次Execution运行实例的资源分配地址信息
             if (!execution.tryAssignResource(logicalSlot)) {
                 throw new IllegalStateException(
                         "Could not assign resource "
@@ -278,9 +283,11 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
         return logicalSlot -> {
             // a null logicalSlot means the slot assignment is skipped, in which case
             // the produced partition registration process can be skipped as well
+            //空的逻辑槽意味着槽分配被跳过，在这种情况下，生成的分区注册过程也可以被跳过
             if (logicalSlot != null) {
                 final Execution execution = deploymentHandle.getExecution();
                 final CompletableFuture<Void> partitionRegistrationFuture =
+                        //注册生成的分区
                         execution.registerProducedPartitions(logicalSlot.getTaskManagerLocation());
 
                 return FutureUtils.orTimeout(

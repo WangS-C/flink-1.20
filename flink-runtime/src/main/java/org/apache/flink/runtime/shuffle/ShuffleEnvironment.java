@@ -125,6 +125,10 @@ public interface ShuffleEnvironment<P extends ResultPartitionWriter, G extends I
      * @return context of the shuffle input/output owner used to create partitions or gates
      *     belonging to the owner
      */
+    //创建 shuffle 输入/ 输出所有者的上下文，用于创建属于所有者的分区或门。
+    //该方法只需调用一次，以避免重复的内部指标组注册。
+    //参数：
+    //ownerName – 所有者名称，用于日志 executionAttemptID – 生产者或消费者的执行尝试 ID parentGroup – shuffle 特定指标组的父级
     ShuffleIOOwnerContext createShuffleIOOwnerContext(
             String ownerName, ExecutionAttemptID executionAttemptID, MetricGroup parentGroup);
 
