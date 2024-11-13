@@ -60,6 +60,7 @@ public interface StreamOperator<OUT> extends CheckpointListener, KeyContext, Ser
      *     head operator).
      * @throws java.lang.Exception An exception in this method causes the operator to fail.
      */
+    //在处理任何元素之前立即调用此方法，它应包含运算符的初始化逻辑。
     void open() throws Exception;
 
     /**
@@ -136,6 +137,7 @@ public interface StreamOperator<OUT> extends CheckpointListener, KeyContext, Ser
             throws Exception;
 
     /** Provides a context to initialize all state in the operator. */
+   //提供上下文以初始化运算符中的所有状态。
     void initializeState(StreamTaskStateInitializer streamTaskStateManager) throws Exception;
 
     // ------------------------------------------------------------------------

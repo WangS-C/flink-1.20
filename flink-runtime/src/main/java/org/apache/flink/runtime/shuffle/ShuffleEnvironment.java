@@ -145,6 +145,11 @@ public interface ShuffleEnvironment<P extends ResultPartitionWriter, G extends I
      *     owner
      * @return list of the {@link ResultPartitionWriter ResultPartitionWriters}
      */
+    //ResultPartitionWriters的工厂方法，以生成结果分区。
+    //返回的集合中resultpartitionwriter的顺序应与传递的resultPartitionDeploymentDescriptors的迭代顺序相同。
+    //参数:
+    //ownerContext -与分区创建相关的所有者上下文
+    //resultPartitionDeploymentDescriptors -分区的描述符，由所有者生成
     List<P> createResultPartitionWriters(
             ShuffleIOOwnerContext ownerContext,
             List<ResultPartitionDeploymentDescriptor> resultPartitionDeploymentDescriptors);
@@ -191,6 +196,12 @@ public interface ShuffleEnvironment<P extends ResultPartitionWriter, G extends I
      * @param inputGateDeploymentDescriptors descriptors of the input gates to consume
      * @return list of the {@link InputGate InputGates}
      */
+    //InputGates使用结果分区的工厂方法。
+    //返回的集合中InputGates的顺序应与传递的inputGateDeploymentDescriptors的迭代顺序相同。
+    //参数:
+    //ownerContext - 创建相关的所有者上下文
+    //partitionProducerStateProvider -生产者状态提供程序，用于查询生产者是否准备好消费
+    //inputGateDeploymentDescriptors -要使用的输入的描述符
     List<G> createInputGates(
             ShuffleIOOwnerContext ownerContext,
             PartitionProducerStateProvider partitionProducerStateProvider,

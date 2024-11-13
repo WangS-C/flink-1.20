@@ -143,6 +143,7 @@ public class SingleInputGateFactory {
     }
 
     /** Creates an input gate and all of its input channels. */
+    //创建InputGate及其所有输入通道。
     public SingleInputGate create(
             @Nonnull ShuffleIOOwnerContext owner,
             int gateIndex,
@@ -154,6 +155,8 @@ public class SingleInputGateFactory {
         // assigned to this input gate.
         //
         // For now this function is only supported in the new mode of Hybrid Shuffle.
+        //如果来自同一分区的多个子分区被分配给此InputGate，则此变量描述是否支持让一个输入通道使用多个子分区。
+        //目前仅在混合洗牌的新模式下支持此功能。
         boolean isSharedInputChannelSupported =
                 igdd.getConsumedPartitionType().isHybridResultPartition()
                         && tieredStorageConfiguration != null;
@@ -166,6 +169,7 @@ public class SingleInputGateFactory {
                         igdd.getConsumedPartitionType(),
                         calculateNumChannels(
                                 igdd.getShuffleDescriptors().length,
+                                //流式作业subpartitionIndexRange范围一般都是1
                                 igdd.getConsumedSubpartitionIndexRange().size(),
                                 isSharedInputChannelSupported),
                         tieredStorageConfiguration != null);
@@ -186,6 +190,7 @@ public class SingleInputGateFactory {
 
         ResultSubpartitionIndexSet subpartitionIndexSet =
                 new ResultSubpartitionIndexSet(igdd.getConsumedSubpartitionIndexRange());
+        //开始创建SingleInputGate实例
         SingleInputGate inputGate =
                 new SingleInputGate(
                         owningTaskName,
@@ -205,6 +210,7 @@ public class SingleInputGateFactory {
                         maybeCreateBufferDebloater(
                                 owningTaskName, gateIndex, networkInputGroup.addGroup(gateIndex)));
 
+        //开始创建每个SingleInputGate的InputChannel数组成员。和 分层存储服务
         createInputChannelsAndTieredStorageService(
                 owningTaskName,
                 igdd,
@@ -250,6 +256,7 @@ public class SingleInputGateFactory {
                 inputGateDeploymentDescriptor.getShuffleDescriptors();
 
         // Create the input channels. There is one input channel for each consumed subpartition.
+        //创建输入通道。每个消耗的子分区都有一个输入通道。
         InputChannel[] inputChannels =
                 new InputChannel
                         [calculateNumChannels(
@@ -262,6 +269,9 @@ public class SingleInputGateFactory {
         int channelIdx = 0;
         final List<TieredStorageConsumerSpec> tieredStorageConsumerSpecs = new ArrayList<>();
         List<List<TierShuffleDescriptor>> tierShuffleDescriptors = new ArrayList<>();
+
+        //多数情况下每个算子有多个算子实例，Task会为每个上游算子的每个算子实例创建一个InputChannel通道信息。
+        //一个Task会消费上游算子的多个算子实例，通过InputChannel和每个算子实例产生关联关系。
         for (ShuffleDescriptor descriptor : shuffleDescriptors) {
             TieredStoragePartitionId partitionId =
                     TieredStorageIdMappingUtils.convertId(descriptor.getResultPartitionID());

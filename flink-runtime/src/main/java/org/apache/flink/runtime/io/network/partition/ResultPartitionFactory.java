@@ -148,11 +148,14 @@ public class ResultPartitionFactory {
                 desc.getShuffleDescriptor().getResultPartitionID(),
                 desc.getPartitionType(),
                 desc.getTotalNumberOfPartitions(),
+                //返回下游一个ExecutionJobVertex中有多少个ExecutionVertex实例消费该Task实例的数据
                 desc.getNumberOfSubpartitions(),
                 desc.getMaxParallelism(),
                 desc.isBroadcast(),
                 desc.getShuffleDescriptor(),
-                createBufferPoolFactory(desc.getNumberOfSubpartitions(), desc.getPartitionType()),
+                createBufferPoolFactory(
+                        //代表下游同一个算子有多少个算子实例消费该Task数据。
+                        desc.getNumberOfSubpartitions(), desc.getPartitionType()),
                 desc.isNumberOfPartitionConsumerUndefined());
     }
 
@@ -185,6 +188,7 @@ public class ResultPartitionFactory {
         if (type == ResultPartitionType.PIPELINED
                 || type == ResultPartitionType.PIPELINED_BOUNDED
                 || type == ResultPartitionType.PIPELINED_APPROXIMATE) {
+            //首先创建隶属于该Task的ResultPartition实例，
             final PipelinedResultPartition pipelinedPartition =
                     new PipelinedResultPartition(
                             taskNameWithSubtaskAndId,
@@ -203,6 +207,8 @@ public class ResultPartitionFactory {
                             new PipelinedApproximateSubpartition(
                                     i, configuredNetworkBuffersPerChannel, pipelinedPartition);
                 } else {
+                    //根据numberOfSubpartitions参数，遍历生成ResultSubpartitions数组成员。
+                    //ResultSubpartitions数组是ResultPartition实例的成员变量。
                     subpartitions[i] =
                             new PipelinedSubpartition(
                                     i, configuredNetworkBuffersPerChannel, pipelinedPartition);

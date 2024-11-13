@@ -165,15 +165,20 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         final ClassLoader userCodeClassloader = containingTask.getUserCodeClassLoader();
         final StreamConfig configuration = containingTask.getConfiguration();
 
+        //算子工厂实例
         StreamOperatorFactory<OUT> operatorFactory =
                 configuration.getStreamOperatorFactory(userCodeClassloader);
 
         // we read the chained configs, and the order of record writer registrations by output name
+        //我们读取了链接的configs，以及按输出名称记录编写器注册的顺序
+        //可chain的算子配置集合
         Map<Integer, StreamConfig> chainedConfigs =
                 configuration.getTransitiveChainedTaskConfigsWithSelf(userCodeClassloader);
 
         // create the final output stream writers
         // we iterate through all the out edges from this job vertex and create a stream output
+        //创建最终输出流编写器
+        //我们遍历这个作业顶点的所有out边，并创建一个流输出
         List<NonChainedOutput> outputsInOrder =
                 configuration.getVertexNonChainedOutputs(userCodeClassloader);
         Map<IntermediateDataSetID, RecordWriterOutput<?>> recordWriterOutputs =
@@ -186,8 +191,10 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
                         : null;
 
         // from here on, we need to make sure that the output writers are shut down again on failure
+        // 从这里开始，我们需要确保输出写入器在失败时再次关闭
         boolean success = false;
         try {
+            //创建链输出
             createChainOutputs(
                     outputsInOrder,
                     recordWriterDelegate,
@@ -196,9 +203,11 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
                     recordWriterOutputs);
 
             // we create the chain of operators and grab the collector that leads into the chain
+            //我们创建操作符链，并抓住通向链的收集器
             List<StreamOperatorWrapper<?, ?>> allOpWrappers =
                     new ArrayList<>(chainedConfigs.size());
             this.mainOperatorOutput =
+                    //负责创建整个OperatorChain中的算子以及算子输出。
                     createOutputCollector(
                             containingTask,
                             configuration,
@@ -233,6 +242,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
                                 true);
 
                 // add main operator to end of chain
+                //将主运算符添加到链的末尾
                 allOpWrappers.add(mainOperatorWrapper);
 
                 this.tailOperatorWrapper = allOpWrappers.get(0);
@@ -308,6 +318,8 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      * {@link StreamOperator#close()} which happens <b>heads to tail</b> (see {@link
      * #finishOperators(StreamTaskActionExecutor, StopMode)}).
      */
+    //初始化状态并打开从尾到头的链中的所有运算符，这与StreamOperator. close() 相反，
+    //后者从头到尾发生 (请参见finishOperators(StreamTaskActionExecutor，StopMode)。
     public abstract void initializeStateAndOpenOperators(
             StreamTaskStateInitializer streamTaskStateInitializer) throws Exception;
 
@@ -537,18 +549,21 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
             StreamConfig upStreamConfig,
             Environment taskEnvironment) {
         OutputTag sideOutputTag =
+                //OutputTag，如果不是sideOutput，则返回null
                 streamOutput.getOutputTag(); // OutputTag, return null if not sideOutput
 
         TypeSerializer outSerializer;
 
         if (streamOutput.getOutputTag() != null) {
             // side output
+            //侧输出
             outSerializer =
                     upStreamConfig.getTypeSerializerSideOut(
                             streamOutput.getOutputTag(),
                             taskEnvironment.getUserCodeClassLoader().asClassLoader());
         } else {
             // main output
+            //主输出
             outSerializer =
                     upStreamConfig.getTypeSerializerOut(
                             taskEnvironment.getUserCodeClassLoader().asClassLoader());
@@ -702,6 +717,11 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         return closer.register(chainedSourceOutput);
     }
 
+    //在createOutputCollector(...)中会调用createOperatorChain(...)方法，
+    //而createOperatorChain(...)会递归调用createOutputCollector(...)方法，
+    //目的是以从后往前的形式一个一个构造算子链中的算子实例。
+    //在构造算子实例的过程中，都会设置该算子的output信息，output信息包含下一个算子的引用，
+    //末尾的operator的output就是RecordWriterOutput。
     private <T> WatermarkGaugeExposingOutput<StreamRecord<T>> createOutputCollector(
             StreamTask<?, ?> containingTask,
             StreamConfig operatorConfig,
@@ -714,6 +734,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         List<OutputWithChainingCheck<StreamRecord<T>>> allOutputs = new ArrayList<>(4);
 
         // create collectors for the network outputs
+        //为网络输出创建收集器
         for (NonChainedOutput streamOutput :
                 operatorConfig.getOperatorNonChainedOutputs(userCodeClassloader)) {
             @SuppressWarnings("unchecked")
@@ -724,6 +745,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         }
 
         // Create collectors for the chained outputs
+        //为链式输出创建收集器
         for (StreamEdge outputEdge : operatorConfig.getChainedOutputs(userCodeClassloader)) {
             int outputId = outputEdge.getTargetId();
             StreamConfig chainedOpConfig = chainedConfigs.get(outputId);
@@ -745,6 +767,8 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
             // If the operator has multiple downstream chained operators, only one of them should
             // increment the recordsOutCounter for this operator. Set shouldAddMetric to false
             // so that we would skip adding the counter to other downstream operators.
+            //如果运算符具有多个下游链接的运算符，则其中只有一个应递增此运算符的recordsOutCounter。
+            //将shouldAddMetric设置为false，以便我们跳过将计数器添加到其他下游运算符。
             shouldAddMetric = false;
         }
 
@@ -753,6 +777,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         if (allOutputs.size() == 1) {
             result = allOutputs.get(0);
             // only if this is a single RecordWriterOutput, reuse its numRecordOut for task.
+            //仅当这是单个RecordWriterOutput时，才对任务重用其numRecordOut。
             if (result instanceof RecordWriterOutput) {
                 Counter numRecordsOutCounter = createNumRecordsOutCounter(containingTask);
                 ((RecordWriterOutput<T>) result).setNumRecordsOut(numRecordsOutCounter);
@@ -760,6 +785,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         } else {
             // send to N outputs. Note that this includes the special case
             // of sending to zero outputs
+            //发送到N个输出。请注意，这包括发送到零输出的特殊情况
             @SuppressWarnings({"unchecked"})
             OutputWithChainingCheck<StreamRecord<T>>[] allOutputsArray =
                     new OutputWithChainingCheck[allOutputs.size()];
@@ -770,6 +796,8 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
             // This is the inverse of creating the normal ChainingOutput.
             // If the chaining output does not copy we need to copy in the broadcast output,
             // otherwise multi-chaining would not work correctly.
+            //这与创建正常的ChainingOutput相反。如果链接输出不复制，
+            //我们需要在广播输出中复制，否则多链接将无法正常工作。
             Counter numRecordsOutForTask = createNumRecordsOutCounter(containingTask);
             if (containingTask.getExecutionConfig().isObjectReuseEnabled()) {
                 result =
@@ -787,6 +815,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         if (shouldAddMetric) {
             // Create a CountingOutput to increment the recordsOutCounter for this operator
             // if we have not added the counter to any downstream chained operator.
+            //如果我们尚未将计数器添加到任何下游链接运算符，则创建CountingOutput以递增此运算符的recordsOutCounter。
             Counter recordsOutCounter =
                     getOperatorRecordsOutCounter(containingTask, operatorConfig);
             if (recordsOutCounter != null) {
@@ -808,6 +837,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      * Recursively create chain of operators that starts from the given {@param operatorConfig}.
      * Operators are created tail to head and wrapped into an {@link WatermarkGaugeExposingOutput}.
      */
+    //递归地创建从给定的 @ param operatorConfig开始的运算符链。运算符是尾对头创建的，并包装到WatermarkGaugeExposingOutput中。
     private <IN, OUT> WatermarkGaugeExposingOutput<StreamRecord<IN>> createOperatorChain(
             StreamTask<OUT, ?> containingTask,
             StreamConfig prevOperatorConfig,
@@ -821,6 +851,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
             boolean shouldAddMetricForPrevOperator) {
         // create the output that the operator writes to first. this may recursively create more
         // operators
+        //创建运算符首先写入的输出。这可能会递归地创建更多的运算符
         WatermarkGaugeExposingOutput<StreamRecord<OUT>> chainedOperatorOutput =
                 createOutputCollector(
                         containingTask,
@@ -855,6 +886,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      * Create and return a single operator from the given {@param operatorConfig} that will be
      * producing records to the {@param output}.
      */
+    //从给定的 @ param operatorConfig创建并返回单个运算符，该运算符将生成记录到 @ param输出
     private <OUT, OP extends StreamOperator<OUT>> OP createOperator(
             StreamTask<OUT, ?> containingTask,
             StreamConfig operatorConfig,
@@ -864,6 +896,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
             boolean isHead) {
 
         // now create the operator and give it the output collector to write its output to
+        //现在创建运算符并为其提供输出收集器以将其输出写入
         Tuple2<OP, Optional<ProcessingTimeService>> chainedOperatorAndTimeService =
                 StreamOperatorFactoryUtil.createOperator(
                         operatorConfig.getStreamOperatorFactory(userCodeClassloader),

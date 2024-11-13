@@ -235,6 +235,7 @@ public class NettyShuffleEnvironment
                     partitionIndex < resultPartitions.length;
                     partitionIndex++) {
                 resultPartitions[partitionIndex] =
+                        //ResultPartition列表长度即下游有多少个算子(注意，是不同算子的实例，不是同一个算子的不同算子实例)消费该Task的数据。
                         resultPartitionFactory.create(
                                 ownerContext.getOwnerName(),
                                 partitionIndex,
@@ -253,6 +254,7 @@ public class NettyShuffleEnvironment
     public List<SingleInputGate> createInputGates(
             ShuffleIOOwnerContext ownerContext,
             PartitionProducerStateProvider partitionProducerStateProvider,
+            //InputGateDeploymentDescriptor个数代表该Task消费上游多少个算子数据
             List<InputGateDeploymentDescriptor> inputGateDeploymentDescriptors) {
         synchronized (lock) {
             Preconditions.checkState(
@@ -268,7 +270,9 @@ public class NettyShuffleEnvironment
             for (int gateIndex = 0; gateIndex < inputGates.length; gateIndex++) {
                 final InputGateDeploymentDescriptor igdd =
                         inputGateDeploymentDescriptors.get(gateIndex);
+                //SingleInputGate实例包含一个重要的成员变量BufferPoolFactory，它负责生成InputGate的数据Buffer空间。
                 SingleInputGate inputGate =
+                        //遍历InputGateDeploymentDescriptor个数开始创建一个个InputGate实例信息。
                         singleInputGateFactory.create(
                                 ownerContext,
                                 gateIndex,

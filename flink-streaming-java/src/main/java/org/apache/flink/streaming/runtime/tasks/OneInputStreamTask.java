@@ -94,6 +94,7 @@ public class OneInputStreamTask<IN, OUT> extends StreamTask<OUT, OneInputStreamO
         super(env, timeProvider);
     }
 
+    //主要目的是创建StreamInputProcessor实例，即核心数据处理器。
     @Override
     public void init() throws Exception {
         StreamConfig configuration = getConfiguration();

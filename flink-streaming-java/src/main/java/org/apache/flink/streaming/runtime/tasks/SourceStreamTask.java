@@ -116,10 +116,14 @@ public class SourceStreamTask<
         getEnvironment().getMetricGroup().getIOMetricGroup().setEnableBusyTime(false);
     }
 
+    //SourceStreamTask子类的init()方法没有太多实质性的操作，
+    //主要是判断SourceFunction是不是ExternallyInducedSource类型，
+    //是的话为SourceFunction设置checkpoint相关的东西等。
     @Override
     protected void init() {
         // we check if the source is actually inducing the checkpoints, rather
         // than the trigger
+        //我们检查源是否实际上是诱导检查点，而不是触发器
         SourceFunction<?> source = mainOperator.getUserFunction();
         if (source instanceof ExternallyInducedSource) {
             externallyInducedCheckpoints = true;
@@ -135,6 +139,8 @@ public class SourceStreamTask<
                             // between the trigger
                             // TODO -   message from the master, and the source's trigger
                             // notification
+                            //我们需要看看如何得出这些。我们可能不应该源的触发消息中对此进行编码，
+                            // 而是在此任务中，在来自主机的触发消息和源的触发通知之间进行握手
                             final CheckpointOptions checkpointOptions =
                                     CheckpointOptions.forConfig(
                                             CheckpointType.CHECKPOINT,

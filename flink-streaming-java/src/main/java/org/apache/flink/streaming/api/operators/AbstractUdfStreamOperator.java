@@ -99,6 +99,7 @@ public abstract class AbstractUdfStreamOperator<OUT, F extends Function>
     @Override
     public void open() throws Exception {
         super.open();
+        //调用UDF函数中open()方法。
         FunctionUtils.openFunction(userFunction, DefaultOpenContext.INSTANCE);
     }
 

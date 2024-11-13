@@ -103,7 +103,11 @@ public class RegularOperatorChain<OUT, OP extends StreamOperator<OUT>>
             StreamTaskStateInitializer streamTaskStateInitializer) throws Exception {
         for (StreamOperatorWrapper<?, ?> operatorWrapper : getAllOperators(true)) {
             StreamOperator<?> operator = operatorWrapper.getStreamOperator();
+            //提供上下文以初始化运算符中的所有状态。
+            //主要负责初始化Operator成员变量operatorStateBackend、keyedStateBackend以及keyedStateStore等。
             operator.initializeState(streamTaskStateInitializer);
+            //在处理任何元素之前立即调用此方法，它应包含运算符的初始化逻辑。
+            //调用每个Operator的open()方法，继而调用UDF函数中open()方法。
             operator.open();
         }
     }

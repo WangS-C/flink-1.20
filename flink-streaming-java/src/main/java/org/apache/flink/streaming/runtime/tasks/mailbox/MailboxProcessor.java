@@ -211,6 +211,8 @@ public class MailboxProcessor implements Closeable {
      * suspended at any time by calling {@link #suspend()}. For resuming the loop this method should
      * be called again.
      */
+    //运行邮箱处理循环。这是主要工作完成的地方。
+    //这个循环可以通过调用suspend() 在任何时候暂停。为了恢复循环，应该再次调用此方法。
     public void runMailboxLoop() throws Exception {
         suspended = !mailboxLoopRunning;
 
@@ -226,8 +228,10 @@ public class MailboxProcessor implements Closeable {
 
         while (isNextLoopPossible()) {
             // The blocking `processMail` call will not return until default action is available.
+            //阻塞的 “processmail' 调用将不会返回，直到默认操作可用。
             processMail(localMailbox, false);
             if (isNextLoopPossible()) {
+                //根据需要在默认操作中获取锁定
                 mailboxDefaultAction.runDefaultAction(
                         mailboxController); // lock is acquired inside default action as needed
             }

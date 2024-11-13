@@ -221,6 +221,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
 
         stateHandler = new StreamOperatorStateHandler(context, getExecutionConfig(), cancelables);
         timeServiceManager = context.internalTimerServiceManager();
+        //初始化操作员状态
         stateHandler.initializeOperatorState(this);
 
         if (useSplittableTimers()

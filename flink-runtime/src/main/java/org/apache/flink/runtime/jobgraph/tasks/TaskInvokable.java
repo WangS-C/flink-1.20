@@ -71,6 +71,8 @@ public interface TaskInvokable {
      * cancellation); then all resources should be cleaned up by calling {@link #cleanUp(Throwable)}
      * ()} after the method returns.
      */
+    //可以在invoke() 之前调用此方法，以恢复上一个有效状态的可调用对象 (如果有)。
+    //如果由于某种原因 (例如任务取消) 在此方法之后未调用invoke(); 则应在方法返回后通过调用cleanUp(Throwable)} 来清理所有资源。
     void restore() throws Exception;
 
     /**

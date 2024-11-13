@@ -138,6 +138,7 @@ public class InputGateDeploymentDescriptor implements Serializable {
     }
 
     /** Return the index range of the consumed subpartitions. */
+   //返回所消费的子分区的索引范围。
     public IndexRange getConsumedSubpartitionIndexRange() {
         return consumedSubpartitionIndexRange;
     }

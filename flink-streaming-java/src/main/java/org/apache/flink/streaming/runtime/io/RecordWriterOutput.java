@@ -83,6 +83,7 @@ public class RecordWriterOutput<OUT>
         this.outputTag = outputTag;
         // generic hack: cast the writer to generic Object type so we can use it
         // with multiplexed records and watermarks
+        //generic hack: 将writer转换为通用对象类型，以便我们可以将其与多路复用记录和水印一起使用
         this.recordWriter =
                 (RecordWriter<SerializationDelegate<StreamElement>>) (RecordWriter<?>) recordWriter;
 

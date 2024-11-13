@@ -257,6 +257,10 @@ public class Task
     //作业特定执行配置的序列化版本 (请参阅ExecutionConfig )。
     private final SerializedValue<ExecutionConfig> serializedExecutionConfig;
 
+    //ResultPartitionWriter面向的是Buffer，在数据传输层次中处于最低层，
+    //其子类实现中包含一个BufferPool组件，提供Buffer资源。
+    //子类实现中包含一个数组结构ResultSubpartition[] subpartitions的子分区组件，
+    //用来承接上层RecordWriter对象分发下来的数据。
     private final ResultPartitionWriter[] partitionWriters;
 
     private final IndexedInputGate[] inputGates;
@@ -463,6 +467,8 @@ public class Task
         //Task的输出操作
         final ResultPartitionWriter[] resultPartitionWriters =
                 shuffleEnvironment
+                        //负责创建partitionWriters成员变量，
+                        //由入参可知包含Task提交过程中创建的ResultPartitionDeploymentDescriptor实例信息，即Task的输出信息。
                         .createResultPartitionWriters(
                                 taskShuffleContext, resultPartitionDeploymentDescriptors)
                         .toArray(new ResultPartitionWriter[] {});
@@ -472,6 +478,7 @@ public class Task
         // consumed intermediate result partitions
         final IndexedInputGate[] gates =
                 shuffleEnvironment
+                        //inputGates的生成入口，入参包含Task提交过程中创建的InputGateDeploymentDescriptor实例信息即Task的输入信
                         .createInputGates(taskShuffleContext, this, inputGateDeploymentDescriptors)
                         .toArray(new IndexedInputGate[0]);
 
@@ -718,6 +725,7 @@ public class Task
 
             LOG.debug("Registering task at network: {}.", this);
 
+            //主要作用是设置ResultPartition和InputGate的BufferPool信息。
             setupPartitionsAndGates(partitionWriters, inputGates);
 
             for (ResultPartitionWriter partitionWriter : partitionWriters) {
@@ -798,6 +806,7 @@ public class Task
             try {
                 // now load and instantiate the task's invokable code
                 invokable =
+                        //此处反射创建的invokable实例就是StreamTask实例。
                         loadAndInstantiateInvokable(
                                 userCodeClassLoader.asClassLoader(), nameOfInvokableClass, env);
             } finally {
@@ -812,6 +821,7 @@ public class Task
             // by the time we switched to running.
             this.invokable = invokable;
 
+            //恢复和调用
             restoreAndInvoke(invokable);
 
             // make sure, we enter the catch block if the task leaves the invoke() method due
@@ -978,6 +988,7 @@ public class Task
         try {
             // switch to the INITIALIZING state, if that fails, we have been canceled/failed in the
             // meantime
+            //切换到初始化状态，如果失败，我们已被取消失败在此期间
             if (!transitionState(ExecutionState.DEPLOYING, ExecutionState.INITIALIZING)) {
                 throw new CancelTaskException();
             }
@@ -986,8 +997,10 @@ public class Task
                     new TaskExecutionState(executionId, ExecutionState.INITIALIZING));
 
             // make sure the user code classloader is accessible thread-locally
+            //确保用户代码classloader是线程本地可访问的
             executingThread.setContextClassLoader(userCodeClassLoader.asClassLoader());
 
+            //调用restore
             runWithSystemExitMonitoring(finalInvokable::restore);
 
             if (!transitionState(ExecutionState.INITIALIZING, ExecutionState.RUNNING)) {
@@ -995,9 +1008,11 @@ public class Task
             }
 
             // notify everyone that we switched to running
+            //通知大家我们已切换到RUNNING
             taskManagerActions.updateTaskExecutionState(
                     new TaskExecutionState(executionId, ExecutionState.RUNNING));
 
+            //调用invoke
             runWithSystemExitMonitoring(finalInvokable::invoke);
         } catch (Throwable throwable) {
             try {
@@ -1035,6 +1050,7 @@ public class Task
 
         // InputGates must be initialized after the partitions, since during InputGate#setup
         // we are requesting partitions
+        //InputGates必须在分区之后初始化，因为在InputGatesetup期间，我们正在请求分区
         for (InputGate gate : inputGates) {
             gate.setup();
         }
@@ -1663,6 +1679,13 @@ public class Task
      * @throws Throwable Forwards all exceptions that happen during initialization of the task. Also
      *     throws an exception if the task class misses the necessary constructor.
      */
+    //实例化给定的任务invokable类，将给定的环境 (可能还有初始任务状态) 传递给任务的构造函数。
+    //该方法将首先尝试通过接受环境和TaskStateSnapshot的构造函数来实例化任务。
+    //如果不存在这样的构造函数，并且没有初始状态，则该方法将回退到仅接受环境的无状态便利构造函数。
+    //参数:
+    //classLoader -用于加载类的类加载器。
+    //className -要加载的类的名称。
+    //environment -任务环境。
     private static TaskInvokable loadAndInstantiateInvokable(
             ClassLoader classLoader, String className, Environment environment) throws Throwable {
 
@@ -1677,6 +1700,7 @@ public class Task
         Constructor<? extends TaskInvokable> statelessCtor;
 
         try {
+            //获取只包含Environment入参类型的StreamTask构造函数
             statelessCtor = invokableClass.getConstructor(Environment.class);
         } catch (NoSuchMethodException ee) {
             throw new FlinkException("Task misses proper constructor", ee);
@@ -1685,6 +1709,7 @@ public class Task
         // instantiate the class
         try {
             //noinspection ConstantConditions  --> cannot happen
+            //新建StreamTask实例。
             return statelessCtor.newInstance(environment);
         } catch (InvocationTargetException e) {
             // directly forward exceptions from the eager initialization
