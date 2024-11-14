@@ -1045,6 +1045,7 @@ public class Task
             ResultPartitionWriter[] producedPartitions, InputGate[] inputGates) throws IOException {
 
         for (ResultPartitionWriter partition : producedPartitions) {
+            //方法中会创建LocalBufferPool
             partition.setup();
         }
 

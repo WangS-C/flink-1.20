@@ -82,6 +82,8 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
     private final int receiverExclusiveBuffersPerChannel;
 
     /** All buffers of this subpartition. Access to the buffers is synchronized on this object. */
+    //此子分区的所有缓冲区。在此对象上同步对缓冲区的访问。
+    //用于缓存写入的数据，等待下游Task消费buffers里的数据。
     final PrioritizedDeque<BufferConsumerWithPartialRecordLength> buffers =
             new PrioritizedDeque<>();
 
@@ -90,6 +92,8 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
     private int buffersInBacklog;
 
     /** The read view to consume this subpartition. */
+    //要使用此子分区的读取视图
+    //读视图，该结果子分区数据消费行为的封装。
     PipelinedSubpartitionView readView;
 
     /** Flag indicating whether the subpartition has been finished. */
@@ -181,6 +185,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
             }
 
             // Add the bufferConsumer and update the stats
+            //添加bufferConsumer并更新统计信息
             if (addBuffer(bufferConsumer, partialRecordLength)) {
                 prioritySequenceNumber = sequenceNumber;
             }
@@ -194,6 +199,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
 
         notifyPriorityEvent(prioritySequenceNumber);
         if (notifyDataAvailable) {
+            //通知可用数据
             notifyDataAvailable();
         }
 
@@ -209,6 +215,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
                 == bufferConsumer.getDataType()) {
             processTimeoutableCheckpointBarrier(bufferConsumer);
         }
+        //调用add
         buffers.add(new BufferConsumerWithPartialRecordLength(bufferConsumer, partialRecordLength));
         return false;
     }

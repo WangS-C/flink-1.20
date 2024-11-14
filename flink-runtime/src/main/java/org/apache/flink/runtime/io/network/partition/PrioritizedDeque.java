@@ -83,6 +83,7 @@ public final class PrioritizedDeque<T> implements Iterable<T> {
      *
      * @param element the element to add
      */
+    //将非优先级元素添加到此deque，该元素将最后轮询。
     public void add(T element) {
         deque.add(element);
     }

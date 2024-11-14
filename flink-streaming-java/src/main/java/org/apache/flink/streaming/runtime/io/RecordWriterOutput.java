@@ -50,6 +50,7 @@ import java.io.UncheckedIOException;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** Implementation of {@link Output} that sends data using a {@link RecordWriter}. */
+//使用RecordWriter发送数据的输出的实现。
 @Internal
 public class RecordWriterOutput<OUT>
         implements WatermarkGaugeExposingOutput<StreamRecord<OUT>>,
@@ -58,6 +59,7 @@ public class RecordWriterOutput<OUT>
 
     private RecordWriter<SerializationDelegate<StreamElement>> recordWriter;
 
+    //负责序列化Record元素数据
     private SerializationDelegate<StreamElement> serializationDelegate;
 
     private final boolean supportsUnalignedCheckpoints;
@@ -70,6 +72,7 @@ public class RecordWriterOutput<OUT>
 
     // Uses a dummy counter here to avoid checking the existence of numRecordsOut on the
     // per-record path.
+    //在此处使用虚拟计数器以避免检查每个记录路径上是否存在numRecordsOut。
     private Counter numRecordsOut = new SimpleCounter();
 
     @SuppressWarnings("unchecked")
@@ -99,6 +102,7 @@ public class RecordWriterOutput<OUT>
 
     @Override
     public void collect(StreamRecord<OUT> record) {
+        //收集并检查是否被锁住
         if (collectAndCheckIfChained(record)) {
             numRecordsOut.inc();
         }
@@ -115,9 +119,11 @@ public class RecordWriterOutput<OUT>
     public boolean collectAndCheckIfChained(StreamRecord<OUT> record) {
         if (this.outputTag != null) {
             // we are not responsible for emitting to the main output.
+            //我们不负责发射到主输出。
             return false;
         }
 
+        //推送到record writer
         pushToRecordWriter(record);
         return true;
     }
@@ -138,6 +144,7 @@ public class RecordWriterOutput<OUT>
         serializationDelegate.setInstance(record);
 
         try {
+            //借助recordWriter将带有序列化操作的serializationDelegate分发到某一个子分区中。
             recordWriter.emit(serializationDelegate);
         } catch (IOException e) {
             throw new UncheckedIOException(e.getMessage(), e);

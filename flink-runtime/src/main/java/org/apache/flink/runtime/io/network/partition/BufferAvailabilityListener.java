@@ -29,6 +29,7 @@ public interface BufferAvailabilityListener {
      *
      * @param view the {@link ResultSubpartitionView} containing available data.
      */
+    //每当可能有可用的新数据时调用。
     void notifyDataAvailable(ResultSubpartitionView view);
 
     /**

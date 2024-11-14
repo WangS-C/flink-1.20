@@ -75,21 +75,36 @@ import static org.apache.flink.util.Preconditions.checkState;
  *
  * <h2>State management</h2>
  */
+//由单个任务生成的数据的结果分区。
+//这个类是一个逻辑的IntermediateResultPartition的运行时部分。本质上，结果分区是缓冲区实例的集合。缓冲区被组织在一个或多个ResultSubpartition实例中或在联合结构中，该联合结构根据消耗任务的数量和数据分布模式进一步划分数据。
+//使用结果分区的任务必须请求其子分区之一。请求发生在远程 (请参见RemoteInputChannel) 或本地 (请参见LocalInputChannel)
+//生命周期
+//每个结果分区的生命周期有三个 (可能重叠) 阶段:
+//生产:
+//消耗:
+//释放:
+//缓冲区管理
+//状态管理
 public abstract class ResultPartition implements ResultPartitionWriter {
 
     protected static final Logger LOG = LoggerFactory.getLogger(ResultPartition.class);
 
     private final String owningTaskName;
 
+    //算子实例Task对应的结果分区下标
     private final int partitionIndex;
 
     protected final ResultPartitionID partitionId;
 
     /** Type of this partition. Defines the concrete subpartition implementation to use. */
+    //此分区的类型。定义要使用的具体subpartition实现
+    //结果分区类型。Flink流式应用类型一般是PIPELINED、PIPELINED_BOUNDED，
+    //PIPELINED_BOUNDED代表数据写入速度有限制，当流数据出现背压时，任务不会在自己的Buffer里缓存大量的数据。
     protected final ResultPartitionType partitionType;
 
     protected final ResultPartitionManager partitionManager;
 
+    //结果分区包含的结果子分区个数。
     protected final int numSubpartitions;
 
     private final int numTargetKeyGroups;
@@ -98,12 +113,15 @@ public abstract class ResultPartition implements ResultPartitionWriter {
 
     private final AtomicBoolean isReleased = new AtomicBoolean();
 
+    //结果分区包含的缓冲池，用来存储分配到子分区的数据，类型是LocalBuffPool。
+    //ResultPartition写数据时，会向bufferPool申请buffer并写入数据。
     protected BufferPool bufferPool;
 
     private boolean isFinished;
 
     private volatile Throwable cause;
 
+    //缓冲池工厂类，用来创建bufferPool，类型是NetworkBufferPool。
     private final SupplierWithException<BufferPool, IOException> bufferPoolFactory;
 
     /** Used to compress buffer to reduce IO. */
@@ -149,12 +167,17 @@ public abstract class ResultPartition implements ResultPartitionWriter {
      * <p>The pool is registered with the partition *after* it as been constructed in order to
      * conform to the life-cycle of task registrations in the {@link TaskExecutor}.
      */
+    //向此结果分区注册缓冲池。
+    //每个结果分区都有一个池，该池由其所有子分区共享。
+    //为了符合TaskExecutor中任务注册的生命周期，池在构建后 * 在分区中注册。
     @Override
     public void setup() throws IOException {
         checkState(
                 this.bufferPool == null,
                 "Bug in result partition setup logic: Already registered buffer pool.");
 
+        //创建bufferPool
+        //调用的是org.apache.flink.runtime.io.network.partition.ResultPartitionFactory.createBufferPoolFactory
         this.bufferPool = checkNotNull(bufferPoolFactory.get());
         setupInternal();
         partitionManager.registerResultPartition(this);

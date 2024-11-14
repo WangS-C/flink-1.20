@@ -46,6 +46,7 @@ import java.util.concurrent.CompletableFuture;
 public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvider {
 
     /** Setup partition, potentially heavy-weight, blocking operation comparing to just creation. */
+    //设置分区，潜在的重量级，阻塞操作相比，只是创建。
     void setup() throws IOException;
 
     ResultPartitionID getPartitionId();
@@ -58,6 +59,7 @@ public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvid
     void setMaxOverdraftBuffersPerGate(int maxOverdraftBuffersPerGate);
 
     /** Writes the given serialized record to the target subpartition. */
+    //将给定的序列化记录写入目标子分区。
     void emitRecord(ByteBuffer record, int targetSubpartition) throws IOException;
 
     /**

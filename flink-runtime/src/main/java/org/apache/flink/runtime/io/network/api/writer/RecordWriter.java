@@ -49,6 +49,8 @@ import static org.apache.flink.util.Preconditions.checkArgument;
  *
  * @param <T> the type of the record that can be emitted with this record writer
  */
+//一个抽象的面向记录的运行时结果编写器。
+//RecordWriter包装运行时的ResultPartitionWriter ，并负责子分区选择和将记录序列化为字节。
 public abstract class RecordWriter<T extends IOReadableWritable> implements AvailabilityProvider {
 
     /** Default name for the output flush thread, if no name with a task reference is given. */
@@ -57,10 +59,13 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
 
     private static final Logger LOG = LoggerFactory.getLogger(RecordWriter.class);
 
+    //结果分区，每一个算子实例Task都包含一个结果分区，结果分区的数量即是算子的并行度。
     protected final ResultPartitionWriter targetPartition;
 
+    //结果子分区个数，对应下游有多少个算子实例Task消费该Task实例的数据。
     protected final int numberOfSubpartitions;
 
+    //数据输出视图，包含一个byte数组，负责序列化StreamRecord数据元素并顺序写入byte数组中，最后封装出一个ByteBuffer内存区域。
     protected final DataOutputSerializer serializer;
 
     protected final Random rng = new XORShiftRandom();
@@ -68,6 +73,8 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
     protected final boolean flushAlways;
 
     /** The thread that periodically flushes the output, to give an upper latency bound. */
+    //定时刷新器，是一个单独的线程实现。
+    //当上游数据产出较慢时，该线程负责以固定的时间间隔将已有的buffer数据发送到下游，避免下游算子等待过长时间。
     @Nullable private final OutputFlusher outputFlusher;
 
     /**
@@ -105,7 +112,10 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
     public void emit(T record, int targetSubpartition) throws IOException {
         checkErroneous();
 
-        targetPartition.emitRecord(serializeRecord(serializer, record), targetSubpartition);
+        //将给定的序列化记录写入目标子分区。
+        targetPartition.emitRecord(
+                //先将StreamRecord数据元素序列化写入到ByteBuffer
+                serializeRecord(serializer, record), targetSubpartition);
 
         if (flushAlways) {
             targetPartition.flush(targetSubpartition);
@@ -146,12 +156,15 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
     public static ByteBuffer serializeRecord(
             DataOutputSerializer serializer, IOReadableWritable record) throws IOException {
         // the initial capacity should be no less than 4 bytes
+        //初始容量应不少于4字节
         serializer.setPositionUnsafe(4);
 
         // write data
+        //写入数据
         record.write(serializer);
 
         // write length
+        //写入长度
         serializer.writeIntUnsafe(serializer.length() - 4, 0);
 
         return serializer.wrapAsByteBuffer();
@@ -187,6 +200,7 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
     }
 
     /** This is used to send regular records. */
+    //这用于发送常规记录。
     public abstract void emit(T record) throws IOException;
 
     /** This is used to send LatencyMarks to a random target subpartition. */

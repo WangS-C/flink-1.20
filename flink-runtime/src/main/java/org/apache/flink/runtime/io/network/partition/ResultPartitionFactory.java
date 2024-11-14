@@ -153,6 +153,8 @@ public class ResultPartitionFactory {
                 desc.getMaxParallelism(),
                 desc.isBroadcast(),
                 desc.getShuffleDescriptor(),
+
+                //创建BufferPool工厂
                 createBufferPoolFactory(
                         //代表下游同一个算子有多少个算子实例消费该Task数据。
                         desc.getNumberOfSubpartitions(), desc.getPartitionType()),
@@ -385,6 +387,9 @@ public class ResultPartitionFactory {
      * <p>2. Increases one more buffer for every output LocalBufferPool to avoid performance
      * regression if processing input is based on at-least one buffer available on output side.
      */
+   //出于两个考虑，最小池大小应为numberOfSubpartitions 1:
+    //1. StreamTask只能在输出侧至少有一个可用缓冲区的情况下处理输入，因此如果最小池大小恰好等于子分区的数量，则可能会导致卡住问题，因为每个子分区都可能维护部分未填充的缓冲区。
+    //2.为每个输出LocalBufferPool增加一个缓冲区，以避免性能回归，如果处理输入是基于至少一个缓冲区可用在输出侧
     @VisibleForTesting
     SupplierWithException<BufferPool, IOException> createBufferPoolFactory(
             int numberOfSubpartitions, ResultPartitionType type) {

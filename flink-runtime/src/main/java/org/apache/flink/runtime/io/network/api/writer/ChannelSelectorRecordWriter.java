@@ -34,9 +34,12 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  *
  * @param <T> the type of the record that can be emitted with this record writer
  */
+//常规的面向记录的运行时结果编写器。
+//ChannelSelectorRecordWriter扩展RecordWriter并将记录发送到ChannelSelector为常规emit(IOReadableWritable) 选择的通道。
 public final class ChannelSelectorRecordWriter<T extends IOReadableWritable>
         extends RecordWriter<T> {
 
+    //用来决定一个StreamRecord数据元素被分发到哪个结果子分区中。
     private final ChannelSelector<T> channelSelector;
 
     ChannelSelectorRecordWriter(

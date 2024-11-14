@@ -49,18 +49,25 @@ import static org.apache.flink.util.Preconditions.checkState;
  * <p>To avoid confusion: On the read side, all subpartitions return buffers (and backlog) to be
  * transported through the network.
  */
+//将缓冲区直接写入ResultSubpartition s的ResultPartition。
+//这与将记录写入到联合结构的实现形成对比，在写入阶段完成之后，子分区从联合结构中绘制数据，例如基于排序的分区。
+//为了避免混淆: 在读取端，所有子分区都返回要通过网络传输的缓冲区 (和积压)。
 public abstract class BufferWritingResultPartition extends ResultPartition {
 
     /** The subpartitions of this partition. At least one. */
+    //此分区的子分区。至少一个
+    //结果子分区数组
     protected final ResultSubpartition[] subpartitions;
 
     /**
      * For non-broadcast mode, each subpartition maintains a separate BufferBuilder which might be
      * null.
      */
+    //对于非广播模式，每个子分区都维护一个单独的BufferBuilder，该BufferBuilder可能为null。
     private final BufferBuilder[] unicastBufferBuilders;
 
     /** For broadcast mode, a single BufferBuilder is shared by all subpartitions. */
+    //对于广播模式，单个BufferBuilder由所有子分区共享。
     private BufferBuilder broadcastBufferBuilder;
 
     private TimerGauge hardBackPressuredTimeMsPerSecond = new TimerGauge();
@@ -149,14 +156,20 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
         }
     }
 
+    //方法实现中会先从LocalBufferPool资源池中获取Buffer资源并将ByteBuffer数据写入。
+    //BufferBuilder底层用MemorySegment代表Buffer资源信息。
+    //如果ByteBuffer数据过大，一个BufferBuilder被写满后还有剩余数据，
+    //则将该BufferBuilder记为finish状态，继续申请新BufferBuilder实例，直到把剩余数据写完。
     @Override
     public void emitRecord(ByteBuffer record, int targetSubpartition) throws IOException {
         totalWrittenBytes += record.remaining();
 
+        //分配新的BufferBuilder实例并加入结果子分区buffers队列，最后将ByteBuffer数据写入到BufferBuilder实例中。
         BufferBuilder buffer = appendUnicastDataForNewRecord(record, targetSubpartition);
 
         while (record.hasRemaining()) {
             // full buffer, partial record
+            //缓冲区已满，部分记录
             finishUnicastBufferBuilder(targetSubpartition);
             buffer = appendUnicastDataForRecordContinuation(record, targetSubpartition);
         }
@@ -292,7 +305,9 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
         BufferBuilder buffer = unicastBufferBuilders[targetSubpartition];
 
         if (buffer == null) {
+            //请求新的
             buffer = requestNewUnicastBufferBuilder(targetSubpartition);
+            //将数据Buffer存放到PipelinedSubpartition的buffers队列中。
             addToSubpartition(buffer, targetSubpartition, 0, record.remaining());
         }
 
@@ -331,6 +346,7 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
             int minDesirableBufferSize)
             throws IOException {
         int desirableBufferSize =
+                //添加给定的缓冲区
                 subpartitions[targetSubpartition].add(
                         buffer.createBufferConsumerFromBeginning(), partialRecordLength);
 
@@ -417,6 +433,7 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
             throws IOException {
         checkInProduceState();
         ensureUnicastMode();
+        //从LocalBufferPool中申请新的BufferBuilder资源。
         final BufferBuilder bufferBuilder = requestNewBufferBuilderFromPool(targetSubpartition);
         unicastBufferBuilders[targetSubpartition] = bufferBuilder;
 
@@ -434,6 +451,7 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
 
     private BufferBuilder requestNewBufferBuilderFromPool(int targetSubpartition)
             throws IOException {
+        //请求一个BufferBuilder实例
         BufferBuilder bufferBuilder = bufferPool.requestBufferBuilder(targetSubpartition);
         if (bufferBuilder != null) {
             return bufferBuilder;

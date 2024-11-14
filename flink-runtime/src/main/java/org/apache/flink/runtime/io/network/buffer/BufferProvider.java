@@ -54,6 +54,7 @@ public interface BufferProvider extends AvailabilityProvider {
      * @param targetChannel to which the request will be accounted to.
      * @return {@code null} if no buffer is available or the buffer provider has been destroyed.
      */
+    //返回一个BufferBuilder实例从缓冲区提供程序。
     @Nullable
     BufferBuilder requestBufferBuilder(int targetChannel);
 

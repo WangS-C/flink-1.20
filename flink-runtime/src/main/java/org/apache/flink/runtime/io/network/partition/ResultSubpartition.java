@@ -29,6 +29,7 @@ import java.io.IOException;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** A single subpartition of a {@link ResultPartition} instance. */
+//ResultPartition实例的单个子分区。
 public abstract class ResultSubpartition {
 
     // The error code when adding a buffer fails.
@@ -92,6 +93,14 @@ public abstract class ResultSubpartition {
      *     the add operation fails.
      * @throws IOException thrown in case of errors while adding the buffer
      */
+    //添加给定的缓冲区。
+    //请求可以同步执行，也可以异步执行，具体取决于实现方式。
+    //重要提示: 添加之前添加的新BufferConsumer必须处于已完成状态。
+    //由于性能原因，这仅在数据读取期间实施。
+    //可以在前一个缓冲区消费者仍然打开时添加优先级事件，在这种情况下，打开的缓冲区消费者被超越。
+    //参数:
+    //bufferConsumer -要添加的缓冲区 (将所有权转移给此编写器)
+    //partialRecordLength -要跳过的字节长度，以便从基础 @ cite MemorySegment的位置索引0开始完整记录。
     public abstract int add(BufferConsumer bufferConsumer, int partialRecordLength)
             throws IOException;
 

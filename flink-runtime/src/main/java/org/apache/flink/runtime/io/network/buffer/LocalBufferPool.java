@@ -68,15 +68,30 @@ import static org.apache.flink.util.concurrent.FutureUtils.assertNoException;
  * {@link NetworkBufferPool} as long as it hasn't reached {@link #maxNumberOfMemorySegments} or one
  * subpartition reached the quota.
  */
+//用于管理多个缓冲区实例从网络缓冲池。
+//缓冲区请求被调解到网络缓冲池，以通过限制每个本地缓冲池的缓冲区数量来确保网络堆栈的无死锁操作。
+//它还实现了缓冲区回收的默认机制，确保每个缓冲区最终都返回到网络缓冲池。
+//此池的大小可以在运行时动态更改 (setNumBuffers(int)。
+//然后，它将延迟地将所需数量的缓冲区返回给网络缓冲池以匹配其新尺寸。
+//只有在以下情况下才能请求新缓冲区numberOfRequestedMemorySegments < currentPoolSize maxOverdraftBuffersPerGate。
+//换句话说，所有超过currentPoolSize的缓冲区都将被动态视为透支缓冲区。
+//可用性定义为在随后的requestBuffer()/requestBufferBuilder()和一个非阻塞requestBufferBuilderBlocking(int)。特别是，
+//至少有一个availableMemorySegments。
+//未达到任何子分区maxBuffersPerChannel。
+//为了确保这种契约，实现急切地从网络缓冲池只要它还没有到达maxNumberOfMemorySegments或一个子分区达到配额。
 public class LocalBufferPool implements BufferPool {
     private static final Logger LOG = LoggerFactory.getLogger(LocalBufferPool.class);
 
     private static final int UNKNOWN_CHANNEL = -1;
 
     /** Global network buffer pool to get buffers from. */
+    //全局网络缓存池，一个TaskManager只有一个NetworkBufferPool。
+    //LocalBufferPool中的Buffer资源来源于NetworkBufferPool。
     private final NetworkBufferPool networkBufferPool;
 
     /** The minimum number of required segments for this pool. */
+    //此池所需的最小段数。
+    //当前LocalBufferPool最少能申请的Buffer资源。
     private final int numberOfRequiredMemorySegments;
 
     /**
@@ -89,6 +104,12 @@ public class LocalBufferPool implements BufferPool {
      * org.apache.flink.runtime.io.network.partition.consumer.BufferManager#bufferQueue} via the
      * {@link #registeredListeners} callback.
      */
+    //当前可用的内存段。这些是已从网络缓冲池请求的段，当前未作为缓冲区实例分发。
+    //当心: 特别注意此锁与进入此类之前获取的锁之间的交互，以及在调用此类内部的外部代码期间获取的锁，
+    // 例如通过registeredListeners回调org.apache.flink.runtime.io.net work.partition.consumer.BufferManager # bufferQueue
+
+    //LocalBufferPool中当前可用的Buffer资源集合，从NetworkBufferPool获取但还没缓存数据的Buffer。
+    //Buffer的底层存储是MemorySegment。
     private final ArrayDeque<MemorySegment> availableMemorySegments = new ArrayDeque<>();
 
     /**
@@ -98,6 +119,9 @@ public class LocalBufferPool implements BufferPool {
     private final ArrayDeque<BufferListener> registeredListeners = new ArrayDeque<>();
 
     /** Maximum number of network buffers to allocate. */
+    //要分配的最大网络缓冲区数
+
+    //能从NetworkBufferPool申请的最大Buffer资源数量。
     private final int maxNumberOfMemorySegments;
 
     /** The current size of this pool. */
@@ -109,6 +133,9 @@ public class LocalBufferPool implements BufferPool {
      * somehow referenced through this pool (e.g. wrapped in Buffer instances or as available
      * segments).
      */
+    //已从网络缓冲池请求并通过该池以某种方式引用的所有内存段的数量 (例如，包装在缓冲区实例中或作为可用段)。
+
+    //当前为止从NetworkBufferPool申请的Buffer资源。
     @GuardedBy("availableMemorySegments")
     private int numberOfRequestedMemorySegments;
 
@@ -331,7 +358,9 @@ public class LocalBufferPool implements BufferPool {
 
     @Override
     public BufferBuilder requestBufferBuilder() {
-        return toBufferBuilder(requestMemorySegment(UNKNOWN_CHANNEL), UNKNOWN_CHANNEL);
+        return toBufferBuilder(
+                //从LocalBufferPool可用队列里获取MemorySegment资源。
+                requestMemorySegment(UNKNOWN_CHANNEL), UNKNOWN_CHANNEL);
     }
 
     @Override
@@ -370,6 +399,7 @@ public class LocalBufferPool implements BufferPool {
         if (targetChannel == UNKNOWN_CHANNEL) {
             return new BufferBuilder(memorySegment, this);
         } else {
+            //创建BufferBuilder
             return new BufferBuilder(memorySegment, subpartitionBufferRecyclers[targetChannel]);
         }
     }
@@ -400,6 +430,7 @@ public class LocalBufferPool implements BufferPool {
             } else if (isRequestedSizeReached()) {
                 // Only when the buffer request reaches the upper limit(i.e. current pool size),
                 // requests an overdraft buffer.
+                //仅当缓冲区请求达到上限时 (即当前池大小)，请求透支缓冲区。
                 segment = requestOverdraftMemorySegmentFromGlobal();
             }
 

@@ -46,6 +46,14 @@ public interface BufferPoolFactory {
      * @param maxBuffersPerChannel maximum number of buffers to use for each channel
      * @param maxOverdraftBuffersPerGate maximum number of overdraft buffers to use for each gate
      */
+    //尝试创建具有所有者的缓冲池，该缓冲池保证至少提供所需数量的缓冲区。
+    //缓冲池具有动态大小，至少包含numRequiredBuffers缓冲区。
+    //参数:
+    //numRequiredBuffers -此池 中网络缓冲区的最小数量
+    //maxUsedBuffers -此池提供的网络缓冲区的最大数量
+    //numSubpartitions -此池 子分区的数量
+    //maxBuffersPerChannel -每个通道使用的缓冲区的最大数量
+    //maxoverdraftbuffergate -透支的最大数量用于每个门的缓冲区
     BufferPool createBufferPool(
             int numRequiredBuffers,
             int maxUsedBuffers,
