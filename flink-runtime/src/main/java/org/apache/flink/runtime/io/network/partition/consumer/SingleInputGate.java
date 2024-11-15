@@ -125,6 +125,13 @@ import static org.apache.flink.util.Preconditions.checkState;
  * in two partitions (Partition 1 and 2). Each of these partitions is further partitioned into two
  * subpartitions -- one for each parallel reduce subtask.
  */
+//输入门消耗单个产生的中间结果的一个或多个分区。
+//每个中间结果在其产生的并行子任务上被分区; 这些分区中的每一个进一步被分区成一个或多个子分区。
+//作为示例，考虑map-reduce程序，其中map运算符产生数据并且reduce运算符消耗所产生的数据。
+//+-----+              +---------------------+              +--------+ | Map | = produce => | Intermediate Result | <= consume = | Reduce | +-----+              +---------------------+              +--------+
+//当并行部署这样的程序时，中间结果将在其产生的并行子任务上被分区; 这些分区中的每一个进一步被分区成一个或多个子分区。
+//                           Intermediate result               +-----------------------------------------+               |                      +----------------+ |              +-----------------------+ +-------+     | +-------------+  +=> | Subpartition 1 | | <=======+=== | Input Gate | Reduce 1 | | Map 1 | ==> | | Partition 1 | =|   +----------------+ |         |    +-----------------------+ +-------+     | +-------------+  +=> | Subpartition 2 | | <==+    |               |                      +----------------+ |    |    | Subpartition request               |                                         |    |    |               |                      +----------------+ |    |    | +-------+     | +-------------+  +=> | Subpartition 1 | | <==+====+ | Map 2 | ==> | | Partition 2 | =|   +----------------+ |    |         +-----------------------+ +-------+     | +-------------+  +=> | Subpartition 2 | | <==+======== | Input Gate | Reduce 2 |               |                      +----------------+ |              +-----------------------+               +-----------------------------------------+
+//在上面的示例中，两个映射子任务并行地产生中间结果，从而产生两个分区 (分区1和分区2)。这些分区中的每一个都进一步划分为两个子分区-每个并行reduce子任务一个
 public class SingleInputGate extends IndexedInputGate {
 
     private static final Logger LOG = LoggerFactory.getLogger(SingleInputGate.class);
@@ -135,6 +142,7 @@ public class SingleInputGate extends IndexedInputGate {
     /** The name of the owning task, for logging purposes. */
     private final String owningTaskName;
 
+    //代表当前Task消费的上游Task的下标，大部分情况下一个算子只有一个上游输入，如果有多个上游输入，gateIndex变量标识哪个上游输入。
     private final int gateIndex;
 
     /**
@@ -142,22 +150,28 @@ public class SingleInputGate extends IndexedInputGate {
      * intermediate result specified by this ID. This ID also identifies the input gate at the
      * consuming task.
      */
+    //代表当前Task消费的上游算子的中间结果集。
     private final IntermediateDataSetID consumedResultId;
 
     /** The type of the partition the input gate is consuming. */
+    //代表当前InputGate的消费分区类型，Flink流式应用一般都是PIPELINED_BOUNDED模式，采用有限个buffer缓存来支持上下游同时生产和消费数据。
     private final ResultPartitionType consumedPartitionType;
 
     /** The number of input channels (equivalent to the number of consumed partitions). */
+    //代表有多少个上游结果子分区输入。
     private final int numberOfInputChannels;
 
     /** Input channels. We store this in a map for runtime updates of single channels. */
+    //代表上游结果子分区输入明细。
     private final Map<IntermediateResultPartitionID, Map<InputChannelInfo, InputChannel>>
             inputChannels;
 
+    //代表上游结果子分区输入明细。
     @GuardedBy("requestLock")
     private final InputChannel[] channels;
 
     /** Channels, which notified this input gate about available data. */
+    //当前可读取数据的InputChannel。
     private final PrioritizedDeque<InputChannel> inputChannelsWithData = new PrioritizedDeque<>();
 
     /**
@@ -183,6 +197,7 @@ public class SingleInputGate extends IndexedInputGate {
      * Buffer pool for incoming buffers. Incoming data from remote channels is copied to buffers
      * from this pool.
      */
+    //代表SingleInputGate的本地buffer池，用来缓存读取到的数据。
     private BufferPool bufferPool;
 
     private boolean hasReceivedAllEndOfPartitionEvents;
@@ -828,6 +843,7 @@ public class SingleInputGate extends IndexedInputGate {
         if (closeFuture.isDone()) {
             throw new CancelTaskException("Input gate is already closed.");
         }
+        //获取可用的InputChannel、数据Buffer等信息。
         Optional<InputWithData<InputChannel, Buffer>> next = waitAndGetNextData(blocking);
         if (!next.isPresent()) {
             throughputCalculator.pauseMeasurement();
@@ -851,12 +867,14 @@ public class SingleInputGate extends IndexedInputGate {
             throws IOException, InterruptedException {
         while (true) {
             synchronized (inputChannelsWithData) {
+                //获取当前可读取数据的InChannel信息
                 Optional<InputChannel> inputChannelOpt = getChannel(blocking);
                 if (!inputChannelOpt.isPresent()) {
                     return Optional.empty();
                 }
 
                 final InputChannel inputChannel = inputChannelOpt.get();
+                //读取恢复或正常缓冲区。
                 Optional<Buffer> buffer = readRecoveredOrNormalBuffer(inputChannel);
                 if (!buffer.isPresent()) {
                     checkUnavailability();
@@ -908,6 +926,7 @@ public class SingleInputGate extends IndexedInputGate {
             throws IOException, InterruptedException {
         // Firstly, read the buffers from the recovered channel
         if (inputChannel instanceof RecoveredInputChannel && !inputChannel.isReleased()) {
+            //从可读取数据InputChannel中开始获取数据。
             Optional<Buffer> buffer = readBufferFromInputChannel(inputChannel);
             if (!((RecoveredInputChannel) inputChannel).getStateConsumedFuture().isDone()) {
                 return buffer;

@@ -53,6 +53,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.util.Preconditions.checkState;
 
 /** An input channel, which requests a local subpartition. */
+//一个输入通道，它请求一个本地子分区。
+//LocalInputChannel类型意味着上下游Task在同一个机器节点上
 public class LocalInputChannel extends InputChannel implements BufferAvailabilityListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalInputChannel.class);
@@ -62,12 +64,14 @@ public class LocalInputChannel extends InputChannel implements BufferAvailabilit
     private final Object requestLock = new Object();
 
     /** The local partition manager. */
+    //收集管理结果分区
     private final ResultPartitionManager partitionManager;
 
     /** Task event dispatcher for backwards events. */
     private final TaskEventPublisher taskEventPublisher;
 
     /** The consumed subpartition. */
+    //结果子分区视图，封装了ResultSubpartition中读取数据、释放资源等行为
     @Nullable private volatile ResultSubpartitionView subpartitionView;
 
     private volatile boolean isReleased;
@@ -226,6 +230,7 @@ public class LocalInputChannel extends InputChannel implements BufferAvailabilit
         return subpartitionView.peekNextBufferSubpartitionId();
     }
 
+    //定义了获取Buffer数据的过程
     @Override
     public Optional<BufferAndAvailability> getNextBuffer() throws IOException {
         checkError();
@@ -239,6 +244,7 @@ public class LocalInputChannel extends InputChannel implements BufferAvailabilit
             // they happen in that order (1 - 2 - 3 - 4), flush notification can re-enqueue
             // LocalInputChannel after (or
             // during) it was released during reading the EndOfPartitionEvent (2).
+            //在写入EndOfPartitionEvent (1) 和刷新 (3) 发送方端的本地通道与读取EndOfPartitionEvent (2) 和处理刷新通知 (4) 之间可能存在竞争条件。当它们按顺序发生时 (1-2-3-4)，刷新通知可以在读取EndOfPartitionEvent (2) 期间释放LocalInputChannel之后 (或期间) 重新排队。
             if (isReleased) {
                 return Optional.empty();
             }
@@ -252,6 +258,7 @@ public class LocalInputChannel extends InputChannel implements BufferAvailabilit
             subpartitionView = checkAndWaitForSubpartitionView();
         }
 
+        //获取下一个缓冲区
         BufferAndBacklog next = subpartitionView.getNextBuffer();
         // ignore the empty buffer directly
         while (next != null && next.buffer().readableBytes() == 0) {

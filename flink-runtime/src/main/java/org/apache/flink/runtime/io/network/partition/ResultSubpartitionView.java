@@ -40,6 +40,9 @@ public interface ResultSubpartitionView {
      * <p><strong>Important</strong>: The consumer has to make sure that each buffer instance will
      * eventually be recycled with {@link Buffer#recycleBuffer()} after it has been consumed.
      */
+    //返回此队列迭代器的下一个缓冲区实例。
+    //如果当前没有可用的实例，它将返回null。例如，当流水线队列生产者比消费者慢或溢出的队列需要读入更多数据时，可能会发生这种情况。
+    //重要: 使用者必须确保每个缓冲区实例在使用后最终都将使用buffer. recycleBuffer() 进行回收。
     @Nullable
     BufferAndBacklog getNextBuffer() throws IOException;
 

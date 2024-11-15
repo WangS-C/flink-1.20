@@ -97,6 +97,7 @@ public abstract class AbstractStreamTaskNetworkInput<
 
         while (true) {
             // get the stream element from the deserializer
+            //从反序列化程序获取流元素
             if (currentRecordDeserializer != null) {
                 RecordDeserializer.DeserializationResult result;
                 try {
@@ -111,6 +112,7 @@ public abstract class AbstractStreamTaskNetworkInput<
 
                 if (result.isFullRecord()) {
                     final boolean breakBatchEmitting =
+                            //借助output入参将数据传递到具体算子的UDF函数中执行
                             processElement(deserializationDelegate.getInstance(), output);
                     if (canEmitBatchOfRecords.check() && !breakBatchEmitting) {
                         continue;
@@ -119,11 +121,13 @@ public abstract class AbstractStreamTaskNetworkInput<
                 }
             }
 
+            //数据读取操作在checkpointedInputGate.pollNext()方法中实现。
             Optional<BufferOrEvent> bufferOrEvent = checkpointedInputGate.pollNext();
             if (bufferOrEvent.isPresent()) {
                 // return to the mailbox after receiving a checkpoint barrier to avoid processing of
                 // data after the barrier before checkpoint is performed for unaligned checkpoint
                 // mode
+                //收到检查点屏障后返回mailbox，避免在未对齐检查点模式下执行检查点之前处理屏障后的数据
                 if (bufferOrEvent.get().isBuffer()) {
                     processBuffer(bufferOrEvent.get());
                 } else {

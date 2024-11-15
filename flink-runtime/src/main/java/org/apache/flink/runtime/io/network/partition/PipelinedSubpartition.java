@@ -473,6 +473,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
             }
 
             while (!buffers.isEmpty()) {
+                //获取buffers队列的数据
                 BufferConsumerWithPartialRecordLength bufferConsumerWithPartialRecordLength =
                         buffers.peek();
                 BufferConsumer bufferConsumer =

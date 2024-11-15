@@ -72,6 +72,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.util.Preconditions.checkState;
 
 /** An input channel, which requests a remote partition queue. */
+//一个输入通道，它请求一个远程分区队列。
 public class RemoteInputChannel extends InputChannel {
     private static final Logger LOG = LoggerFactory.getLogger(RemoteInputChannel.class);
 
@@ -84,12 +85,14 @@ public class RemoteInputChannel extends InputChannel {
     private final ConnectionID connectionId;
 
     /** The connection manager to use connect to the remote partition provider. */
+    //与其他节点的通信连接管理组件。
     private final ConnectionManager connectionManager;
 
     /**
      * The received buffers. Received buffers are enqueued by the network I/O thread and the queue
      * is consumed by the receiving task thread.
      */
+    //当前从上游接收到的Buffer队列，后续会被算子消费处理。
     private final PrioritizedDeque<SequenceBuffer> receivedBuffers = new PrioritizedDeque<>();
 
     /**
@@ -99,12 +102,14 @@ public class RemoteInputChannel extends InputChannel {
     private final AtomicBoolean isReleased = new AtomicBoolean();
 
     /** Client to establish a (possibly shared) TCP connection and request the partition. */
+    //和上游Task的连接客户端，Flink是用Netty通信框架实现节点之间的数据通信过程。
     private volatile PartitionRequestClient partitionRequestClient;
 
     /** The next expected sequence number for the next buffer. */
     private int expectedSequenceNumber = 0;
 
     /** The initial number of exclusive buffers assigned to this channel. */
+    //初始信用凭证，代表该InputChannel独有的初始Buffer数量。
     private final int initialCredit;
 
     /** The milliseconds timeout for partition request listener in result partition manager. */
@@ -113,6 +118,7 @@ public class RemoteInputChannel extends InputChannel {
     /** The number of available buffers that have not been announced to the producer yet. */
     private final AtomicInteger unannouncedCredit = new AtomicInteger(0);
 
+    //Buffer管理器。
     private final BufferManager bufferManager;
 
     @GuardedBy("receivedBuffers")
@@ -260,6 +266,9 @@ public class RemoteInputChannel extends InputChannel {
         final DataType nextDataType;
 
         synchronized (receivedBuffers) {
+            //以同步的方式从receivedBuffers队列里获取一个Buffer数据并返回
+            //而receivedBuffers队列Buffer数据添加动作是在Netty通信过程中发生的。
+            //通过CreditBasedPartitionRequestClientHandler处理器解析获取的数据并添加到receivedBuffers队列。
             next = receivedBuffers.poll();
 
             if (next != null) {

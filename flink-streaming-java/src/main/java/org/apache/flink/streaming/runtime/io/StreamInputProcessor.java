@@ -40,6 +40,7 @@ public interface StreamInputProcessor extends AvailabilityProvider, Closeable {
      *     there are no more records available at the moment and the caller should check finished
      *     state and/or {@link #getAvailableFuture()}.
      */
+    //在两个或更多输入处理器的情况下，此方法必须调用InputSelectable. nextSelection() 来选择从下一个消耗哪个输入。
     DataInputStatus processInput() throws Exception;
 
     CompletableFuture<Void> prepareSnapshot(

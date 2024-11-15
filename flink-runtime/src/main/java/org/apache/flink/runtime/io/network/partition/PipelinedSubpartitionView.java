@@ -47,6 +47,7 @@ public class PipelinedSubpartitionView implements ResultSubpartitionView {
     @Nullable
     @Override
     public BufferAndBacklog getNextBuffer() {
+        //轮询缓冲区
         return parent.pollBuffer();
     }
 

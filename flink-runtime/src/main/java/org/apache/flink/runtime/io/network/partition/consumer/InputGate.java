@@ -117,6 +117,8 @@ public abstract class InputGate
      * @return {@code Optional.empty()} if there is no data to return or if {@link #isFinished()}
      *     returns true.
      */
+    //轮询BufferOrEvent。
+    //注意: 应该保证前一个返回的缓冲区在轮询下一个之前已经被回收。
     public abstract Optional<BufferOrEvent> pollNext() throws IOException, InterruptedException;
 
     public abstract void sendTaskEvent(TaskEvent event) throws IOException;

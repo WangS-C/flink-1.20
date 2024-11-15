@@ -40,6 +40,8 @@ public interface PushingAsyncDataInput<T> extends AvailabilityProvider {
      *
      * <p>This method should be non blocking.
      */
+    //将元素从当前数据输入推送到输出，并返回输入状态以指示当前输入中是否有更多可用数据。
+    //此方法应该是非阻塞的。
     DataInputStatus emitNext(DataOutput<T> output) throws Exception;
 
     /**

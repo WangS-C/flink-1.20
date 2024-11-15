@@ -662,6 +662,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
      */
     //此方法实现任务的默认操作 (例如，处理来自输入的一个事件)。实现应该 (通常) 是非阻塞的。
     protected void processInput(MailboxDefaultAction.Controller controller) throws Exception {
+        //过程输入
         DataInputStatus status = inputProcessor.processInput();
         switch (status) {
             case MORE_AVAILABLE:
