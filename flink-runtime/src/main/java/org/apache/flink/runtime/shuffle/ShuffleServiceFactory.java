@@ -49,6 +49,9 @@ public interface ShuffleServiceFactory<
      * @param shuffleEnvironmentContext local context
      * @return local shuffle service environment implementation
      */
+    //工厂方法创建特定的本地ShuffleEnvironment实现。
+    //参数:
+    //shuffleEnvironmentContext -本地上下文
     ShuffleEnvironment<P, G> createShuffleEnvironment(
             ShuffleEnvironmentContext shuffleEnvironmentContext);
 }

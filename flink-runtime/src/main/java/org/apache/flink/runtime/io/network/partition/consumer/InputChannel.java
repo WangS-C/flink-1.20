@@ -170,6 +170,13 @@ public abstract class InputChannel {
      * regardless of whether the channel was empty before. That ensures that the parent InputGate
      * will always be notified about the exception.
      */
+    //通知拥有的SingleInputGate此通道变为非空。
+    //这保证仅在将缓冲区添加到先前空的输入通道时才被调用。
+    // 空的概念在原子上与inputchannel. bufferandavailability. modreavailability. modreavailability.
+    // moreavailability. modreavailability. modreavailability. modreavailability. modreavailability.
+    // modreavailability. modavailability. modiable () 时 () 标志一致，
+    // 当轮询从这个通道轮询这个通道时，从这个通道轮询的概念是
+    //注意: 输入通道观察到异常时，无论通道之前是否为空，都会调用此方法。这确保了父InputGate将始终收到有关异常的通知。
     protected void notifyChannelNonEmpty() {
         inputGate.notifyChannelNonEmpty(this);
     }
@@ -188,6 +195,7 @@ public abstract class InputChannel {
      * Requests the subpartitions specified by {@link #partitionId} and {@link
      * #consumedSubpartitionIndexSet}.
      */
+    //请求指定的子分区partitionId和consumedSubpartitionIndexSet。
     abstract void requestSubpartitions() throws IOException, InterruptedException;
 
     /**

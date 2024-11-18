@@ -51,6 +51,13 @@ public interface NetworkSequenceViewReader {
      * @param subpartitionIndexSet the sub partition indexes
      * @throws IOException the thrown exception
      */
+    //当netty服务器接收到下游任务的分区请求并且上游任务已经注册了其分区时，它将立即处理分区请求，
+    // 否则它将在ResultPartitionManager中为给定的ResultPartitionID创建一个PartitionRequestListener ，
+    // 并在上游任务注册其分区时通知侦听器。
+    //参数:
+    //partitionProvider -结果分区提供程序
+    // resultPartitionId -结果分区id
+    // subpartitionIndexSet -子分区索引
     void requestSubpartitionViewOrRegisterListener(
             ResultPartitionProvider partitionProvider,
             ResultPartitionID resultPartitionId,

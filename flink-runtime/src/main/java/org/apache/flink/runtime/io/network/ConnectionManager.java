@@ -32,9 +32,11 @@ public interface ConnectionManager {
      * @return a port to connect to the task executor for shuffle data exchange, -1 if only local
      *     connection is possible.
      */
+    //启动内部相关组件以进行网络连接和通信
     int start() throws IOException;
 
     /** Creates a {@link PartitionRequestClient} instance for the given {@link ConnectionID}. */
+    //为给定的ConnectionID创建PartitionRequestClient实例。
     PartitionRequestClient createPartitionRequestClient(ConnectionID connectionId)
             throws IOException, InterruptedException;
 

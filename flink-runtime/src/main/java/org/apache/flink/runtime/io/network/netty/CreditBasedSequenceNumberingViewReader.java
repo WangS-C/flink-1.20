@@ -107,7 +107,9 @@ class CreditBasedSequenceNumberingViewReader
             // The partition provider will create subpartitionView if resultPartition is
             // registered, otherwise it will register a listener of partition request to the result
             // partition manager.
+            //如果注册了resultPartition，则分区提供程序将创建subpartitionView，否则它将向结果分区管理器注册分区请求的侦听器。
             Optional<ResultSubpartitionView> subpartitionViewOptional =
+                    //创建子分区视图或注册侦听器
                     partitionProvider.createSubpartitionViewOrRegisterListener(
                             resultPartitionId,
                             subpartitionIndexSet,
@@ -125,6 +127,7 @@ class CreditBasedSequenceNumberingViewReader
             }
         }
 
+        //ResultSubpartitionView实例创建完成后会开始数据的发送操作。
         notifyDataAvailable(subpartitionView);
         requestQueue.notifyReaderCreated(this);
     }
@@ -253,9 +256,12 @@ class CreditBasedSequenceNumberingViewReader
     @Nullable
     @Override
     public BufferAndAvailability getNextBuffer() throws IOException {
+        //通过PipelinedSubpartition实例获取数据
         BufferAndBacklog next = subpartitionView.getNextBuffer();
         if (next != null) {
-            if (next.buffer().isBuffer() && --numCreditsAvailable < 0) {
+            if (next.buffer().isBuffer() &&
+            //服务端信用值会减去1判断是否大于0，标识NettyClient端是否有可用Buffer来接收服务端发送的数据。
+                    --numCreditsAvailable < 0) {
                 throw new IllegalStateException("no credit available");
             }
 
@@ -292,6 +298,7 @@ class CreditBasedSequenceNumberingViewReader
 
     @Override
     public void notifyDataAvailable(ResultSubpartitionView view) {
+        //通知读取器非空
         requestQueue.notifyReaderNonEmpty(this);
     }
 

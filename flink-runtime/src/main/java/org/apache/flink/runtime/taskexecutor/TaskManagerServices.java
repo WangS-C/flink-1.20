@@ -322,6 +322,15 @@ public class TaskManagerServices {
      * @return task manager components
      * @throws Exception
      */
+    //创建并返回任务管理器服务。
+    //参数:
+    //taskManagerServicesConfiguration -任务管理器配置
+    //permanentBlobService -服务 使用的permanentBlobService
+    //taskManagerMetricGroup -任务管理器
+    //ioExecutor的度量组-异步IO操作的执行器
+    //scheduledExecutor -rpc服务 中的计划执行器
+    //fataerrorerrorhandhandler -处理程序
+    //workingDirectory -进程的工作目录
     public static TaskManagerServices fromConfiguration(
             TaskManagerServicesConfiguration taskManagerServicesConfiguration,
             PermanentBlobService permanentBlobService,
@@ -341,6 +350,7 @@ public class TaskManagerServices {
         final IOManager ioManager =
                 new IOManagerAsync(taskManagerServicesConfiguration.getTmpDirPaths(), ioExecutor);
 
+        //创建NettyShuffleEnvironment组件的入口，
         final ShuffleEnvironment<?, ?> shuffleEnvironment =
                 createShuffleEnvironment(
                         taskManagerServicesConfiguration,
@@ -348,6 +358,8 @@ public class TaskManagerServices {
                         taskManagerMetricGroup,
                         ioExecutor,
                         scheduledExecutor);
+
+        //在NettyShuffleEnvironment组件创建完成后马上调用start()方法开始Netty客户端、服务端初始化过程
         final int listeningDataPort = shuffleEnvironment.start();
 
         LOG.info(
@@ -507,6 +519,7 @@ public class TaskManagerServices {
                         ioExecutor,
                         scheduledExecutor);
 
+        //获取ShuffleEnvironment上下文信息，生成NettyShuffleServiceFactory实例对象，通过该工厂类生成NettyShuffleEnvironment类型的ShuffleEnvironment实例。
         return ShuffleServiceLoader.loadShuffleServiceFactory(
                         taskManagerServicesConfiguration.getConfiguration())
                 .createShuffleEnvironment(shuffleEnvironmentContext);

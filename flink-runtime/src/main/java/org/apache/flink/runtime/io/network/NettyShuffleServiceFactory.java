@@ -125,8 +125,11 @@ public class NettyShuffleServiceFactory
             int numberOfSlots,
             String[] tmpDirPaths) {
         NettyConfig nettyConfig = config.nettyConfig();
+        //在创建NettyShuffleEnvironment实例时会先生成Netty类型的连接管理器ConnectionManager，即NettyConnectionManager类型。
         ConnectionManager connectionManager =
                 nettyConfig != null
+                        //在NettyConnectionManager构造函数中会构建TaskManager的Netty服务端、Netty客户端、
+                        //PartitionRequestClient实例和Netty客户端服务端有关的ChannelHandler信息。
                         ? new NettyConnectionManager(
                                 resultPartitionManager,
                                 taskEventPublisher,

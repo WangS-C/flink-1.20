@@ -110,6 +110,7 @@ public interface ShuffleEnvironment<P extends ResultPartitionWriter, G extends I
      * @return a port to connect for the shuffle data exchange, -1 if only local connection is
      *     possible.
      */
+    //在使用shuffle服务环境之前启动内部相关服务。
     int start() throws IOException;
 
     /**

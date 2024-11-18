@@ -79,6 +79,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * memory and disk files. The network environment contains the data structures that keep track of
  * all intermediate results and shuffle data exchanges.
  */
+//基于netty网络通信、本地内存和磁盘文件的ShuffleEnvironment的实现网络环境包含跟踪所有中间结果和混洗数据交换的数据结构。
 public class NettyShuffleEnvironment
         implements ShuffleEnvironment<ResultPartition, SingleInputGate> {
 

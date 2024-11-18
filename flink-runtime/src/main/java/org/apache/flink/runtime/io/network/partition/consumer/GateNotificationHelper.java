@@ -54,7 +54,9 @@ class GateNotificationHelper implements AutoCloseable {
     /**
      * Must be called under lock to ensure integrity of availabilityHelper and allow notification.
      */
+    //必须在锁定下调用，以确保availabilityHelper的完整性并允许通知。
     public void notifyDataAvailable() {
+        //唤醒inputChannelsWithData对象上阻塞的线程，让InputGate可以消费RemoteInputChannel中接收的数据。
         availabilityMonitor.notifyAll();
         toNotify = inputGate.availabilityHelper.getUnavailableToResetAvailable();
     }

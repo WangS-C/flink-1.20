@@ -365,6 +365,7 @@ public class SingleInputGate extends IndexedInputGate {
                 }
 
                 convertRecoveredInputChannels();
+                //调用internalRequestPartitions
                 internalRequestPartitions();
             }
 
@@ -408,6 +409,7 @@ public class SingleInputGate extends IndexedInputGate {
     private void internalRequestPartitions() {
         for (InputChannel inputChannel : inputChannels()) {
             try {
+                //请求子分区
                 inputChannel.requestSubpartitions();
             } catch (Throwable t) {
                 inputChannel.setError(t);
@@ -1180,6 +1182,7 @@ public class SingleInputGate extends IndexedInputGate {
                             tieredStorageConsumerSpec.getPartitionId(),
                             tieredStorageConsumerSpec.getInputChannelId());
         } else {
+            //RemoteInputChannel会将自己重新入队到InputGate.inputChannelsWithData队列中。
             queueChannel(checkNotNull(channel), null, false);
         }
     }
@@ -1224,6 +1227,7 @@ public class SingleInputGate extends IndexedInputGate {
 
     private void queueChannel(
             InputChannel channel, @Nullable Integer prioritySequenceNumber, boolean forcePriority) {
+        //创建GateNotificationHelper
         try (GateNotificationHelper notification =
                 new GateNotificationHelper(this, inputChannelsWithData)) {
             synchronized (inputChannelsWithData) {
@@ -1240,6 +1244,7 @@ public class SingleInputGate extends IndexedInputGate {
                     return;
                 }
 
+                //添加到通道中
                 if (!queueChannelUnsafe(channel, priority)) {
                     return;
                 }
@@ -1248,6 +1253,7 @@ public class SingleInputGate extends IndexedInputGate {
                     notification.notifyPriority();
                 }
                 if (inputChannelsWithData.size() == 1) {
+                    //通知可用数据
                     notification.notifyDataAvailable();
                 }
             }
@@ -1270,6 +1276,7 @@ public class SingleInputGate extends IndexedInputGate {
      * @return true iff it has been enqueued/prioritized = some change to {@link
      *     #inputChannelsWithData} happened
      */
+    //如果尚未排队并且未接收到EndOfPartition，则将通道排队，这可能会提高优先级。
     private boolean queueChannelUnsafe(InputChannel channel, boolean priority) {
         assert Thread.holdsLock(inputChannelsWithData);
         if (channelsWithEndOfPartitionEvents.get(channel.getChannelIndex())) {
@@ -1284,6 +1291,7 @@ public class SingleInputGate extends IndexedInputGate {
             return false;
         }
 
+        //添加
         inputChannelsWithData.add(channel, priority, alreadyEnqueued);
         if (!alreadyEnqueued) {
             enqueuedInputChannelsWithData.set(channel.getChannelIndex());

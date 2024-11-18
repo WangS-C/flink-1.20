@@ -200,6 +200,7 @@ public class RemoteInputChannel extends InputChannel {
                     channelStatePersister);
             // Create a client and request the partition
             try {
+                //创建客户端并请求分区
                 partitionRequestClient =
                         connectionManager.createPartitionRequestClient(connectionId);
             } catch (IOException e) {
@@ -208,6 +209,7 @@ public class RemoteInputChannel extends InputChannel {
                 throw new PartitionConnectionException(partitionId, e);
             }
 
+            //请求子分区
             partitionRequestClient.requestSubpartition(
                     partitionId, consumedSubpartitionIndexSet, this, 0);
         }
@@ -380,9 +382,11 @@ public class RemoteInputChannel extends InputChannel {
     /**
      * Enqueue this input channel in the pipeline for notifying the producer of unannounced credit.
      */
+    //将此输入通道排队在管道中，以向生产者通知未通知的信用。
     private void notifyCreditAvailable() throws IOException {
         checkPartitionRequestQueueInitialized();
 
+        //通知可用的信用
         partitionRequestClient.notifyCreditAvailable(this);
     }
 
@@ -433,9 +437,11 @@ public class RemoteInputChannel extends InputChannel {
      * The unannounced credit is increased by the given amount and might notify increased credit to
      * the producer.
      */
+    //未通知的信用增加了给定的金额，并可能通知增加的信用给生产者。
     @Override
     public void notifyBufferAvailable(int numAvailableBuffers) throws IOException {
         if (numAvailableBuffers > 0 && unannouncedCredit.getAndAdd(numAvailableBuffers) == 0) {
+            //通知可用的信用
             notifyCreditAvailable();
         }
     }
@@ -564,14 +570,25 @@ public class RemoteInputChannel extends InputChannel {
      *
      * @param backlog The number of unsent buffers in the producer's sub partition.
      */
+    //从生产者的缓冲区响应接收积压工作。
+    // 如果可用缓冲区的数量小于backlog initialCredit，它将从缓冲区管理器请求浮动缓冲区，然后将未宣布的信用通知给生产者。
     public void onSenderBacklog(int backlog) throws IOException {
-        notifyBufferAvailable(bufferManager.requestFloatingBuffers(backlog + initialCredit));
+        //RemoteInputChannel需要的空闲Buffer数=上游积压的Buffer数据量+初始信用值，可知客户端需要的Buffer数略大于上游Task生产者当前产生的Buffer数。
+
+        //requestFloatingBuffers申请到的浮动Buffer数作为信用值发送给上游Task服务端，让服务端判断还能发送多少Buffer数据。
+        notifyBufferAvailable(bufferManager
+                //申请浮动的Buffer。
+                //如果RemoteInputChannel没有足够的空闲Buffer数则会向LocalBufferPool申请浮动的Buffer。
+                // 申请到多少浮动Buffer就增加多少信用值，如果申请不到Buffer就将当前BufferManager加入到LocalBufferPool监听队列中，
+                // 等LocalBufferPool有可用的Buffer时触发BufferManager的Buffer申请操作。
+                .requestFloatingBuffers(backlog + initialCredit));
     }
 
     /**
      * Handles the input buffer. This method is taking over the ownership of the buffer and is fully
      * responsible for cleaning it up both on the happy path and in case of an error.
      */
+    //处理输入缓冲区。此方法接管缓冲区的所有权，并完全负责在快乐路径和错误情况下清理缓冲区。
     public void onBuffer(Buffer buffer, int sequenceNumber, int backlog, int subpartitionId)
             throws IOException {
         boolean recycleBuffer = true;
@@ -613,6 +630,7 @@ public class RemoteInputChannel extends InputChannel {
                     firstPriorityEvent = addPriorityBuffer(sequenceBuffer);
                     recycleBuffer = false;
                 } else {
+                    //将接收到的Buffer数据存放在RemoteInputChannel.receivedBuffers队列中。
                     receivedBuffers.add(sequenceBuffer);
                     recycleBuffer = false;
                     if (dataType.requiresAnnouncement()) {
@@ -636,11 +654,16 @@ public class RemoteInputChannel extends InputChannel {
             if (firstPriorityEvent) {
                 notifyPriorityEvent(sequenceNumber);
             }
+            //如果receivedBuffers队列之前处于空闲状态，
+            //则存放数据Buffer之后RemoteInputChannel会将自己重新入队到InputGate.inputChannelsWithData队列中，
+            // 让InputGate可以消费RemoteInputChannel中接收的数据。
             if (wasEmpty) {
                 notifyChannelNonEmpty();
             }
 
             if (backlog >= 0) {
+                //从生产者的缓冲区响应接收积压工作
+                //反馈当前Task客户端最新的信用值，期望上游Task发送多少数据Buffer
                 onSenderBacklog(backlog);
             }
         } finally {

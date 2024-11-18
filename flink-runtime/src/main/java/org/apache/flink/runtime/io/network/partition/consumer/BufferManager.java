@@ -161,17 +161,20 @@ public class BufferManager implements BufferListener, BufferRecycler {
      * returns the actual requested amount. If the required amount is not fully satisfied, it will
      * register as a listener.
      */
+    //根据给定的所需数量从缓冲池请求浮动缓冲区，并返回实际请求的数量。如果未完全满足所需的量，则它将注册为侦听器。
     int requestFloatingBuffers(int numRequired) {
         int numRequestedBuffers = 0;
         synchronized (bufferQueue) {
             // Similar to notifyBufferAvailable(), make sure that we never add a buffer after
             // channel
             // released all buffers via releaseAllResources().
+            //与notifyBufferAvailable() 类似，确保在通过releaseAllResources() 释放所有缓冲区后，我们永远不会添加缓冲区。
             if (inputChannel.isReleased()) {
                 return numRequestedBuffers;
             }
 
             numRequiredBuffers = numRequired;
+            //请求缓冲区
             numRequestedBuffers = tryRequestBuffers();
         }
         return numRequestedBuffers;
@@ -181,14 +184,20 @@ public class BufferManager implements BufferListener, BufferRecycler {
         assert Thread.holdsLock(bufferQueue);
 
         int numRequestedBuffers = 0;
+        //申请Buffer
         while (bufferQueue.getAvailableBufferSize() < numRequiredBuffers
                 && !isWaitingForFloatingBuffers) {
             BufferPool bufferPool = inputChannel.inputGate.getBufferPool();
             Buffer buffer = bufferPool.requestBuffer();
             if (buffer != null) {
+                //申请到多少浮动Buffer就增加多少信用值
                 bufferQueue.addFloatingBuffer(buffer);
                 numRequestedBuffers++;
-            } else if (bufferPool.addBufferListener(this)) {
+            } else if (bufferPool
+                    //添加缓冲区侦听器
+                    //如果申请不到Buffer就将当前BufferManager加入到LocalBufferPool监听队列中，
+                    // 等LocalBufferPool有可用的Buffer时触发BufferManager的Buffer申请操作。
+                    .addBufferListener(this)) {
                 isWaitingForFloatingBuffers = true;
                 break;
             }

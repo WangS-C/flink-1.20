@@ -69,8 +69,10 @@ class NettyServer {
     }
 
     int init(final NettyProtocol protocol, NettyBufferPool nettyBufferPool) throws IOException {
+        //开始NettyServer初始化工作
         return init(
                 nettyBufferPool,
+                //准备ChannelHandler流水线装配信息
                 sslHandlerFactory -> new ServerChannelInitializer(protocol, sslHandlerFactory));
     }
 
@@ -82,6 +84,7 @@ class NettyServer {
 
         final long start = System.nanoTime();
 
+        //新建bootstrap
         bootstrap = new ServerBootstrap();
 
         // --------------------------------------------------------------------
@@ -99,6 +102,7 @@ class NettyServer {
 
             case AUTO:
                 if (Epoll.isAvailable()) {
+                    //初始化
                     initEpollBootstrap();
                     LOG.info("Transport type 'auto': using EPOLL.");
                 } else {
@@ -112,6 +116,7 @@ class NettyServer {
         // --------------------------------------------------------------------
 
         // Pooled allocators for Netty's ByteBuf instances
+        //设置Netty的ByteBuf实例的池分配器
         bootstrap.option(ChannelOption.ALLOCATOR, nettyBufferPool);
         bootstrap.childOption(ChannelOption.ALLOCATOR, nettyBufferPool);
 
@@ -120,6 +125,7 @@ class NettyServer {
         }
 
         // Receive and send buffer size
+        //设置接收和发送缓冲区大小
         int receiveAndSendBufferSize = config.getSendAndReceiveBufferSize();
         if (receiveAndSendBufferSize > 0) {
             bootstrap.childOption(ChannelOption.SO_SNDBUF, receiveAndSendBufferSize);
@@ -138,6 +144,7 @@ class NettyServer {
         // Child channel pipeline for accepted connections
         // --------------------------------------------------------------------
 
+        //已接受连接的子通道管道
         bootstrap.childHandler(channelInitializer.apply(sslHandlerFactory));
 
         // --------------------------------------------------------------------
@@ -154,6 +161,7 @@ class NettyServer {
             Integer port = portsIterator.next();
             LOG.debug("Trying to bind Netty server to port: {}", port);
 
+            //绑定TaskManager节点端口
             bootstrap.localAddress(config.getServerAddress(), port);
             try {
                 bindFuture = bootstrap.bind().syncUninterruptibly();
@@ -228,9 +236,11 @@ class NettyServer {
     private void initEpollBootstrap() {
         // Add the server port number to the name in order to distinguish
         // multiple servers running on the same host.
+        //将服务器端口号添加到名称中，以便区分在同一主机上运行的多个服务器。
         String name =
                 NettyConfig.SERVER_THREAD_GROUP_NAME + " (" + config.getServerPortRange() + ")";
 
+        //设置EventLoopGroup线程组信息，设置通道类型等。
         EpollEventLoopGroup epollGroup =
                 new EpollEventLoopGroup(config.getServerNumThreads(), getNamedThreadFactory(name));
         bootstrap.group(epollGroup).channel(EpollServerSocketChannel.class);

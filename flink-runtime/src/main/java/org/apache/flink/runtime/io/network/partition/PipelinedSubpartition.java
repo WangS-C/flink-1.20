@@ -495,6 +495,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
 
                 if (bufferConsumer.isFinished()) {
                     requireNonNull(buffers.poll()).getBufferConsumer().close();
+                    //从自己的buffers队列里获取数据后会将自己的buffersInBacklog变量减1，代表结果子分区数据积压数减1。
                     decreaseBuffersInBacklogUnsafe(bufferConsumer.isBuffer());
                 }
 
@@ -590,6 +591,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
                     getSubPartitionIndex(),
                     parent.getPartitionId());
 
+            //创建PipelinedSubpartitionView类型的读取视图
             readView = new PipelinedSubpartitionView(this, availabilityListener);
         }
 
@@ -729,6 +731,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
      * Increases the number of non-event buffers by one after adding a non-event buffer into this
      * subpartition.
      */
+    //将非事件缓冲区添加到此子分区后，将非事件缓冲区的数量增加1。
     @GuardedBy("buffers")
     private void increaseBuffersInBacklog(BufferConsumer buffer) {
         assert Thread.holdsLock(buffers);

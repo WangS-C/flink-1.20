@@ -106,6 +106,8 @@ public class NettyPartitionRequestClient implements PartitionRequestClient {
      * <p>The request goes to the remote producer, for which this partition request client instance
      * has been created.
      */
+    //请求远程中间结果分区队列。
+    //该请求将转到远程生产者，该生产者已为其创建了此分区请求客户端实例。
     @Override
     public void requestSubpartition(
             final ResultPartitionID partitionId,
@@ -129,6 +131,8 @@ public class NettyPartitionRequestClient implements PartitionRequestClient {
                         partitionId,
                         subpartitionIndexSet,
                         inputChannel.getInputChannelId(),
+                        //获得初始信用
+                        //信用值即为客户端用于接收数据的空闲Buffer数
                         inputChannel.getInitialCredit());
 
         final ChannelFutureListener listener =
@@ -156,6 +160,7 @@ public class NettyPartitionRequestClient implements PartitionRequestClient {
                 };
 
         if (delayMs == 0) {
+            //PartitionRequest实例创建完成后，客户端通过writeAndFlush方法将消息实例发送到服务端。
             ChannelFuture f = tcpChannel.writeAndFlush(request);
             f.addListener(listener);
         } else {

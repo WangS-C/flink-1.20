@@ -152,6 +152,7 @@ public class ResultPartitionManager implements ResultPartitionProvider {
                 LOG.debug("Requesting subpartitions {} of {}.", subpartitionIndexSet, partition);
 
                 subpartitionView =
+                        //创建子分区视图
                         partition.createSubpartitionView(
                                 subpartitionIndexSet, availabilityListener);
             }

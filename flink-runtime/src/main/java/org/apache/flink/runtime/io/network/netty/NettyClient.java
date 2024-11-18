@@ -75,6 +75,7 @@ class NettyClient {
 
         final long start = System.nanoTime();
 
+        //新建一个bootstrap引导实例
         bootstrap = new Bootstrap();
 
         // --------------------------------------------------------------------
@@ -92,6 +93,7 @@ class NettyClient {
 
             case AUTO:
                 if (Epoll.isAvailable()) {
+                    //初始化
                     initEpollBootstrap();
                     LOG.info("Transport type 'auto': using EPOLL.");
                 } else {
@@ -103,19 +105,22 @@ class NettyClient {
         // --------------------------------------------------------------------
         // Configuration
         // --------------------------------------------------------------------
-
+        //设置通道参数。
         bootstrap.option(ChannelOption.TCP_NODELAY, true);
         bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
 
         // Timeout for new connections
+        //设置新连接超时
         bootstrap.option(
                 ChannelOption.CONNECT_TIMEOUT_MILLIS,
                 config.getClientConnectTimeoutSeconds() * 1000);
 
         // Pooled allocator for Netty's ByteBuf instances
+        //设置Netty的ByteBuf实例的池分配器
         bootstrap.option(ChannelOption.ALLOCATOR, nettyBufferPool);
 
         // Receive and send buffer size
+        //设置接收和发送缓冲区大小
         int receiveAndSendBufferSize = config.getSendAndReceiveBufferSize();
         if (receiveAndSendBufferSize > 0) {
             bootstrap.option(ChannelOption.SO_SNDBUF, receiveAndSendBufferSize);
@@ -190,9 +195,11 @@ class NettyClient {
     private void initEpollBootstrap() {
         // Add the server port number to the name in order to distinguish
         // multiple clients running on the same host.
+        //将服务器端口号添加到名称中，以便区分在同一主机上运行的多个客户端。
         String name =
                 NettyConfig.CLIENT_THREAD_GROUP_NAME + " (" + config.getServerPortRange() + ")";
 
+        //设置bootstrap引导类实例的EventLoopGroup线程组信息，设置通道类型。
         EpollEventLoopGroup epollGroup =
                 new EpollEventLoopGroup(
                         config.getClientNumThreads(), NettyServer.getNamedThreadFactory(name));
@@ -224,6 +231,7 @@ class NettyClient {
                     public void initChannel(SocketChannel channel) throws Exception {
 
                         // SSL handler should be added first in the pipeline
+                        //应首先在管道中添加SSL处理程序
                         if (clientSSLFactory != null) {
                             SslHandler sslHandler =
                                     clientSSLFactory.createNettySSLHandler(

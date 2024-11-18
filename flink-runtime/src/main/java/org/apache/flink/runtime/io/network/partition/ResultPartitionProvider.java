@@ -42,6 +42,12 @@ public interface ResultPartitionProvider {
      * @return the result subpartition view
      * @throws IOException the thrown exception
      */
+    //如果上游任务的分区已注册，则立即返回结果子分区输入视图，否则注册侦听器并返回空。
+    //参数:
+    //partitionId -结果分区id
+    //indexSet -索引集
+    //availabilityListener -缓冲区可用性侦听器
+    //partitionRequestListener -分区请求侦听器
     Optional<ResultSubpartitionView> createSubpartitionViewOrRegisterListener(
             ResultPartitionID partitionId,
             ResultSubpartitionIndexSet indexSet,

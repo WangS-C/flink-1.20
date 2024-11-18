@@ -69,6 +69,7 @@ class PartitionRequestServerHandler extends SimpleChannelInboundHandler<NettyMes
         super.channelUnregistered(ctx);
     }
 
+    //实现数据响应操作
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, NettyMessage msg) throws Exception {
         try {
@@ -77,6 +78,7 @@ class PartitionRequestServerHandler extends SimpleChannelInboundHandler<NettyMes
             // ----------------------------------------------------------------
             // Intermediate result partition requests
             // ----------------------------------------------------------------
+            //中间结果分区请求
             if (msgClazz == PartitionRequest.class) {
                 PartitionRequest request = (PartitionRequest) msg;
 
@@ -84,9 +86,13 @@ class PartitionRequestServerHandler extends SimpleChannelInboundHandler<NettyMes
 
                 NetworkSequenceViewReader reader;
                 reader =
+                        //会为每一个PartitionRequest创建一个CreditBasedSequenceNumberingViewReader类型的reader，
+                        //每个reader都有一个初始信用值凭证，初始值大小等于RemoteInputChannel独占Buffer数。
                         new CreditBasedSequenceNumberingViewReader(
                                 request.receiverId, request.credit, outboundQueue);
 
+                //reader创建后接着会创建一个PipelinedSubpartitionView类型的ResultSubpartitionView实例，
+                //reader通过ResultSubpartitionView实例来从对应的ResultSubpartition读取数据。
                 reader.requestSubpartitionViewOrRegisterListener(
                         partitionProvider, request.partitionId, request.queueIndexSet);
 
@@ -110,8 +116,10 @@ class PartitionRequestServerHandler extends SimpleChannelInboundHandler<NettyMes
             } else if (msgClazz == CloseRequest.class) {
                 outboundQueue.close();
             } else if (msgClazz == AddCredit.class) {
+                //接收credit信用值，
                 AddCredit request = (AddCredit) msg;
 
+                //增加相应的reader信用值并将该reader添加到可用reader队列中使这个reader可以继续轮询读取ResultSubPartition的数据
                 outboundQueue.addCreditOrResumeConsumption(
                         request.receiverId, reader -> reader.addCredit(request.credit));
             } else if (msgClazz == ResumeConsumption.class) {

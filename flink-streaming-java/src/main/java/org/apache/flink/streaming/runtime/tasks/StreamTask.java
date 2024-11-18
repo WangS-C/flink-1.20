@@ -922,6 +922,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
                     .thenRun(
                             () ->
                                     mainMailboxExecutor.execute(
+                                            //请求数据操作。
                                             inputGate::requestPartitions,
                                             "Input gate request partitions"));
         }

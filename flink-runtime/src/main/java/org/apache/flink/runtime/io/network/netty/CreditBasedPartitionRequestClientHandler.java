@@ -185,6 +185,7 @@ class CreditBasedPartitionRequestClientHandler extends ChannelInboundHandlerAdap
         }
     }
 
+    //Task客户端接收数据的入口
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
@@ -271,6 +272,8 @@ class CreditBasedPartitionRequestClientHandler extends ChannelInboundHandlerAdap
         }
     }
 
+    //Handler接收到消息数据后会先进行解码操作，然后获取对应的RemoteInputChannel并判断处于可用状态，
+    //最后将接收到的Buffer数据存放在RemoteInputChannel.receivedBuffers队列中。
     private void decodeMsg(Object msg) {
         final Class<?> msgClazz = msg.getClass();
 
@@ -288,6 +291,7 @@ class CreditBasedPartitionRequestClientHandler extends ChannelInboundHandlerAdap
             }
 
             try {
+                //将接收到的Buffer数据存放在RemoteInputChannel.receivedBuffers队列中。
                 decodeBufferOrEvent(inputChannel, bufferOrEvent);
             } catch (Throwable t) {
                 inputChannel.onError(t);
@@ -358,6 +362,7 @@ class CreditBasedPartitionRequestClientHandler extends ChannelInboundHandlerAdap
         if (bufferOrEvent.isBuffer() && bufferOrEvent.bufferSize == 0) {
             inputChannel.onEmptyBuffer(bufferOrEvent.sequenceNumber, bufferOrEvent.backlog);
         } else if (bufferOrEvent.getBuffer() != null) {
+            //处理输入缓冲区
             inputChannel.onBuffer(
                     bufferOrEvent.getBuffer(),
                     bufferOrEvent.sequenceNumber,

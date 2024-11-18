@@ -75,9 +75,11 @@ class PartitionRequestClientFactory {
      * Atomically establishes a TCP connection to the given remote address and creates a {@link
      * NettyPartitionRequestClient} instance for this connection.
      */
+    //以原子方式建立到给定远程地址的TCP连接，并为该连接创建NettyPartitionRequestClient实例
     NettyPartitionRequestClient createPartitionRequestClient(ConnectionID connectionId)
             throws IOException, InterruptedException {
         // We map the input ConnectionID to a new value to restrict the number of tcp connections
+        //我们将输入ConnectionID映射到一个新值，以限制tcp连接的数量
         connectionId =
                 new ConnectionID(
                         connectionId.getResourceID(),
@@ -94,6 +96,7 @@ class PartitionRequestClientFactory {
 
             if (clientFuture == null) {
                 try {
+                    //重试连接
                     client = connectWithRetries(connectionId);
                 } catch (Throwable e) {
                     newClientFuture.completeExceptionally(
@@ -133,6 +136,8 @@ class PartitionRequestClientFactory {
         int tried = 0;
         while (true) {
             try {
+                //)负责完成客户端Handler流水线的设置，设置的Handler包含消息编码器、
+                //解码器及CreditBasedPartitionRequestClientHandler基于信用值的分区请求客户端处理器。
                 return connect(connectionId);
             } catch (RemoteTransportException e) {
                 tried++;
@@ -156,8 +161,14 @@ class PartitionRequestClientFactory {
             // It's important to use `sync` here because it waits for this future until it is
             // done, and rethrows the cause of the failure if this future failed. `await` only
             // waits for this future to be completed, without throwing the error.
+            //在这里使用 'sync' 很重要，因为它等待这个future，直到它完成，如果这个future失败，重新引发失败的原因。
+            //“等待” 只等待这个future完成，而不抛出错误。
+
+            //)负责完成客户端Handler流水线的设置，设置的Handler包含消息编码器、
+            //解码器及CreditBasedPartitionRequestClientHandler基于信用值的分区请求客户端处理器。
             Channel channel = nettyClient.connect(connectionId.getAddress()).sync().channel();
             NetworkClientHandler clientHandler = channel.pipeline().get(NetworkClientHandler.class);
+            //客户端Handler流水线设置完成后，生成NettyPartitionRequestClient实例，由此实例开始请求分区数据。
             return new NettyPartitionRequestClient(channel, clientHandler, connectionId, this);
         } catch (InterruptedException e) {
             throw e;

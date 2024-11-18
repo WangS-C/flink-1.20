@@ -36,6 +36,12 @@ public interface PartitionRequestClient {
      * @param inputChannel The remote input channel for requesting the sub partition.
      * @param delayMs The request is scheduled within a delay time.
      */
+    //请求一定范围的远程子分区。
+    //参数:
+    //partitionId -要请求的结果分区的标识符。
+    //subpartitionIndexSet -请求的结果分区中的子分区索引范围。
+    //inputChannel -用于请求子分区的远程输入通道。
+    //delayMs -在延迟时间内安排请求。
     void requestSubpartition(
             ResultPartitionID partitionId,
             ResultSubpartitionIndexSet subpartitionIndexSet,
