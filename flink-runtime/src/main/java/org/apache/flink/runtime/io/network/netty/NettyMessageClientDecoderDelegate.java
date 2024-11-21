@@ -105,6 +105,7 @@ public class NettyMessageClientDecoderDelegate extends ChannelInboundHandlerAdap
         try {
             while (data.isReadable()) {
                 if (currentDecoder != null) {
+                    //解码数据 放入LocalBufferPool中
                     NettyMessageDecoder.DecodingResult result = currentDecoder.onChannelRead(data);
                     if (!result.isFinished()) {
                         break;

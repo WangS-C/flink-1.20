@@ -418,6 +418,10 @@ public abstract class NettyMessage {
          *     later. The data buffer will be null if the target channel has been released or the
          *     buffer size is 0.
          */
+        //解析消息头部分，并使用空数据缓冲区组成新的BufferResponse。稍后将填充数据缓冲区。
+        //参数:
+        //messageHeader -序列化的消息头。
+        //bufferAllocator -网络缓冲区的分配器。
         static BufferResponse readFrom(
                 ByteBuf messageHeader, NetworkBufferAllocator bufferAllocator) {
             InputChannelID receiverId = InputChannelID.fromByteBuf(messageHeader);
@@ -430,6 +434,7 @@ public abstract class NettyMessage {
 
             Buffer dataBuffer;
             if (dataType.isBuffer()) {
+                //分配Buffer  这时候是直接从池中取得  在数据响应的时候就已经申请下来了
                 dataBuffer = bufferAllocator.allocatePooledNetworkBuffer(receiverId);
                 if (dataBuffer != null) {
                     dataBuffer.setDataType(dataType);

@@ -139,6 +139,7 @@ public class LocalBufferPool implements BufferPool {
     @GuardedBy("availableMemorySegments")
     private int numberOfRequestedMemorySegments;
 
+    //taskmanager.network.memory.max-buffers-per-channel 默认10
     private final int maxBuffersPerChannel;
 
     @GuardedBy("availableMemorySegments")
@@ -149,6 +150,7 @@ public class LocalBufferPool implements BufferPool {
     @GuardedBy("availableMemorySegments")
     private int unavailableSubpartitionsCount = 0;
 
+    //taskmanager.network.memory.max-overdraft-buffers-per-gate   默认5
     private int maxOverdraftBuffersPerGate;
 
     @GuardedBy("availableMemorySegments")

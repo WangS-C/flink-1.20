@@ -195,6 +195,7 @@ class ChannelStateChunkReader {
         int length = serializer.readLength(source);
         while (length > 0) {
             RecoveredChannelStateHandler.BufferWithContext<Context> bufferWithContext =
+                    //读
                     stateHandler.getBuffer(channelInfo);
             try (Closeable ignored =
                     NetworkActionsLogger.measureIO(

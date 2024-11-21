@@ -903,6 +903,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
         channelIOExecutor.execute(
                 () -> {
                     try {
+                        //读取输入数据
                         reader.readInputData(inputGates);
                     } catch (Exception e) {
                         asyncExceptionHandler.handleAsyncException(
