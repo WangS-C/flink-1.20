@@ -474,12 +474,16 @@ public class YarnResourceManagerDriver extends AbstractResourceManagerDriver<Yar
 
     private void addContainerRequest(Resource resource, Priority priority) {
         // update blocklist
-        //更新阻止列表
+        //更新黑名单
         tryUpdateApplicationBlockList();
 
         AMRMClient.ContainerRequest containerRequest =
                 ContainerRequestReflector.INSTANCE.getContainerRequest(
                         resource, priority, taskManagerNodeLabel);
+
+        //通过客户端添加容器请求
+        //分配好container资源后，会回调
+        //org.apache.flink.yarn.YarnResourceManagerDriver.YarnContainerEventHandler.onContainersAllocated
         resourceManagerClient.addContainerRequest(containerRequest);
     }
 

@@ -53,6 +53,7 @@ import static org.apache.flink.util.Preconditions.checkArgument;
  * A nonEmptyReader of partition queues, which listens for channel writability changed events before
  * writing and flushing {@link Buffer} instances.
  */
+//分区队列的nonEmptyReader，它在写入和刷新缓冲区实例之前侦听通道可写性更改事件。
 class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(PartitionRequestQueue.class);
@@ -61,9 +62,11 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
             new WriteAndFlushNextMessageIfPossibleListener();
 
     /** The readers which are already enqueued available for transferring data. */
+    //已入队的读取器可用于传输数据。
     private final ArrayDeque<NetworkSequenceViewReader> availableReaders = new ArrayDeque<>();
 
     /** All the readers created for the consumers' partition requests. */
+    //为消费者的分区请求创建的所有读视图
     private final ConcurrentMap<InputChannelID, NetworkSequenceViewReader> allReaders =
             new ConcurrentHashMap<>();
 
@@ -80,6 +83,7 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
         super.channelRegistered(ctx);
     }
 
+    //通知读取器非空
     void notifyReaderNonEmpty(final NetworkSequenceViewReader reader) {
         // The notification might come from the same thread. For the initial writes this
         // might happen before the reader has set its reference to the view, because
@@ -194,6 +198,7 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
         obtainReader(receiverId).acknowledgeAllRecordsProcessed();
     }
 
+    //通知新缓冲区大小
     void notifyNewBufferSize(InputChannelID receiverId, int newBufferSize) {
         if (fatalError) {
             return;
@@ -203,6 +208,8 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
         // downstream task could calculate buffer size even using the data from one channel but it
         // sends new buffer size into all upstream even if they don't ready yet. In this case, just
         // ignore the new buffer size.
+        //可以在创建读取器之前接收新的缓冲区大小，因为下游任务即使使用来自一个通道的数据也可以计算缓冲区大小，
+        // 但是它将新的缓冲区大小发送到所有上游，即使它们还没有准备好。在这种情况下，只需忽略新的缓冲区大小。
         NetworkSequenceViewReader reader = allReaders.get(receiverId);
         if (reader != null) {
             reader.notifyNewBufferSize(newBufferSize);
@@ -240,6 +247,7 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
      * Announces remaining backlog to the consumer after the available data notification or data
      * consumption resumption.
      */
+    //在可用数据通知或数据消费恢复后，向消费者通告剩余积压。
     private void announceBacklog(NetworkSequenceViewReader reader, int backlog) {
         checkArgument(backlog > 0, "Backlog must be positive.");
 
@@ -303,11 +311,13 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
         }
     }
 
+    //通道可写性已更改
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
         writeAndFlushNextMessageIfPossible(ctx.channel());
     }
 
+    //如果可能，写入并刷新下一条消息
     private void writeAndFlushNextMessageIfPossible(final Channel channel) throws IOException {
         if (fatalError || !channel.isWritable()) {
             return;
@@ -325,6 +335,7 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
 
                 // No queue with available data. We allow this here, because
                 // of the write callbacks that are executed after each write.
+                //没有包含可用数据的队列。我们在这里允许这样做，因为在每次写入之后执行写入回调。
                 if (reader == null) {
                     return;
                 }
@@ -454,6 +465,7 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
     // This listener is called after an element of the current nonEmptyReader has been
     // flushed. If successful, the listener triggers further processing of the
     // queues.
+    //在刷新当前nonEmptyReader的元素后调用此侦听器。如果成功，则监听器触发队列的进一步处理。
     private class WriteAndFlushNextMessageIfPossibleListener implements ChannelFutureListener {
 
         @Override

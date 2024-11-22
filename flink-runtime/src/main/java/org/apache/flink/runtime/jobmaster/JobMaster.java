@@ -1231,7 +1231,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     private void startScheduling() {
-        //开始安排
+        //开始调度
         schedulerNG.startScheduling();
     }
 

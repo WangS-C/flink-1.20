@@ -119,7 +119,7 @@ class SlotSharingExecutionSlotAllocator implements ExecutionSlotAllocator {
                         .map(ExecutionAttemptID::getExecutionVertexId)
                         .collect(Collectors.toList());
 
-        //为顶点分配槽
+        //为顶点分配slot
         return allocateSlotsForVertices(vertexIds).stream()
                 .collect(
                         Collectors.toMap(

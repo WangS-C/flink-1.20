@@ -505,6 +505,11 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
                 // 1. all data of a buffer builder has been read and after that the buffer builder
                 // is finished
                 // 2. in approximate recovery mode, a partial record takes a whole buffer builder
+                //如果我们有一个空的已完成缓冲区，并且独占信用为0，
+                //我们只是返回空缓冲区，以便下游任务可以释放为此空缓冲区分配的信用，
+                // 目前在两种主要情况下会发生这种情况:
+                // 1.buffer builder的所有数据已被读取，之后buffer builder完成
+                // 2.在近似恢复模式下，部分记录将占用整个buffer builder
                 if (receiverExclusiveBuffersPerChannel == 0 && bufferConsumer.isFinished()) {
                     break;
                 }
@@ -512,6 +517,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
                 if (buffer.readableBytes() > 0) {
                     break;
                 }
+                //释放此缓冲区一次，即，如果引用计数达到0 ，则减少引用计数并回收缓冲区。
                 buffer.recycleBuffer();
                 buffer = null;
                 if (!bufferConsumer.isFinished()) {
@@ -533,6 +539,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
             // It will be reported for reading either on flush or when the number of buffers in the
             // queue
             // will be 2 or more.
+            //不要将缓冲区上最后剩余的缓冲区报告为可读取 (假设它未完成)。在刷新时或当队列中的缓冲区数量为2或更多时，将报告读取。
             NetworkActionsLogger.traceOutput(
                     "PipelinedSubpartition#pollBuffer",
                     buffer,
@@ -675,6 +682,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
     @Override
     public int unsynchronizedGetNumberOfQueuedBuffers() {
         // since we do not synchronize, the size may actually be lower than 0!
+        //由于我们不同步，因此大小实际上可能低于0!
         return Math.max(buffers.size(), 0);
     }
 
@@ -687,6 +695,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
             }
             // if there is more than 1 buffer, we already notified the reader
             // (at the latest when adding the second buffer)
+            //如果有超过1个缓冲区，我们已经通知读者 (最迟在添加第二个缓冲区时)
             boolean isDataAvailableInUnfinishedBuffer =
                     buffers.size() == 1 && buffers.peek().getBufferConsumer().isDataAvailable();
             notifyDataAvailable = !isBlocked && isDataAvailableInUnfinishedBuffer;

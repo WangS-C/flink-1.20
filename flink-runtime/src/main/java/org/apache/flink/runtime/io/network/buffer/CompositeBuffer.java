@@ -35,6 +35,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  * An implementation of {@link Buffer} which contains multiple partial buffers for network data
  * communication.
  */
+//包含多个用于网络数据通信的部分缓冲区的实现。
 public class CompositeBuffer implements Buffer {
 
     private final DataType dataType;

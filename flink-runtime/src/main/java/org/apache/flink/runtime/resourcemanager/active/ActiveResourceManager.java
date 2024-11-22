@@ -350,7 +350,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
                         declaredWorkerNumber);
 
                 // release unwanted workers.
-                //释放不需要的工人。
+                //释放不需要的workers。
                 int remainingReleasingWorkerNumber =
                         releaseUnWantedResources(
                                 resourceDeclaration.getUnwantedWorkers(),
@@ -358,7 +358,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
 
                 if (remainingReleasingWorkerNumber > 0) {
                     // release not allocated workers
-                    //释放未分配的工人
+                    //释放未分配的workers
                     remainingReleasingWorkerNumber =
                             releaseUnallocatedWorkers(
                                     workerResourceSpec, remainingReleasingWorkerNumber);
@@ -366,7 +366,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
 
                 if (remainingReleasingWorkerNumber > 0) {
                     // release starting workers
-                    // 释放起始工人
+                    // 释放  开始 workers
                     remainingReleasingWorkerNumber =
                             releaseAllocatedWorkers(
                                     currentAttemptUnregisteredWorkers,
@@ -376,7 +376,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
 
                 if (remainingReleasingWorkerNumber > 0) {
                     // release registered workers
-                    //释放注册工人
+                    //释放注册 workers
                     remainingReleasingWorkerNumber =
                             releaseAllocatedWorkers(
                                     workerNodeMap.keySet(),
@@ -402,7 +402,7 @@ public class ActiveResourceManager<WorkerType extends ResourceIDRetrievable>
                             totalWorkerCounter.getNum(workerResourceSpec),
                             declaredWorkerNumber);
                     for (int i = 0; i < requestWorkerNumber; i++) {
-                        //请求新工人
+                        //请求新的 workers
                         requestNewWorker(workerResourceSpec);
                     }
                 } else {

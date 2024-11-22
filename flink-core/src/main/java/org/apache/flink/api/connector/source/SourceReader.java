@@ -70,6 +70,10 @@ public interface SourceReader<T, SplitT extends SourceSplit>
      *
      * @return The InputStatus of the SourceReader after the method invocation.
      */
+    //将下一个可用记录轮询到ReaderOutput中。
+    //实现必须确保此方法是非阻塞的。
+    //尽管实现可以将多个记录发出到给定的ReaderOutput中，但建议不要这样做。
+    // 相反，发出一个记录到ReaderOutput并返回InputStatus. MORE_AVAILABLE ，以使调用方线程知道有更多可用记录。
     InputStatus pollNext(ReaderOutput<T> output) throws Exception;
 
     /**

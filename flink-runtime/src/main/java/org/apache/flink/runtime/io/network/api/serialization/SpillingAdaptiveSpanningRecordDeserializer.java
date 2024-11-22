@@ -70,6 +70,7 @@ public class SpillingAdaptiveSpanningRecordDeserializer<T extends IOReadableWrit
         int numBytes = buffer.getSize();
 
         // check if some spanning record deserialization is pending
+        //检查某些跨越记录反序列化是否挂起
         if (spanningWrapper.getNumGatheredBytes() > 0) {
             spanningWrapper.addNextChunkFromMemorySegment(segment, offset, numBytes);
         } else {

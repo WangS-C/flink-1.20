@@ -186,7 +186,7 @@ public class PipelinedRegionSchedulingStrategy implements SchedulingStrategy {
                         //是源区域
                         .filter(this::isSourceRegion)
                         .collect(Collectors.toSet());
-        //也许安排区域
+        //根据条件调度区域
         maybeScheduleRegions(sourceRegions);
     }
 
@@ -228,10 +228,11 @@ public class PipelinedRegionSchedulingStrategy implements SchedulingStrategy {
         final Set<SchedulingPipelinedRegion> regionsToSchedule = new HashSet<>();
         Set<SchedulingPipelinedRegion> nextRegions = regions;
         while (!nextRegions.isEmpty()) {
+            //添加可调度区域并获取下一个区域
             nextRegions = addSchedulableAndGetNextRegions(nextRegions, regionsToSchedule);
         }
         // schedule regions in topological order.
-        //按拓扑顺序安排区域。
+        //按拓扑顺序调度区域。
         SchedulingStrategyUtils.sortPipelinedRegionsInTopologicalOrder(
                         schedulingTopology, regionsToSchedule)
                 //调度Region

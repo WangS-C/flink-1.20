@@ -856,6 +856,7 @@ public class SingleInputGate extends IndexedInputGate {
 
         InputWithData<InputChannel, Buffer> inputWithData = next.get();
         final BufferOrEvent bufferOrEvent =
+                //转换为缓冲区或事件 里面会释放缓冲区
                 transformToBufferOrEvent(
                         inputWithData.data,
                         inputWithData.moreAvailable,
@@ -1045,8 +1046,10 @@ public class SingleInputGate extends IndexedInputGate {
             boolean morePriorityEvents)
             throws IOException, InterruptedException {
         if (buffer.isBuffer()) {
+            //变换缓冲区
             return transformBuffer(buffer, moreAvailable, currentChannel, morePriorityEvents);
         } else {
+            //变换事件
             return transformEvent(buffer, moreAvailable, currentChannel, morePriorityEvents);
         }
     }
@@ -1057,6 +1060,7 @@ public class SingleInputGate extends IndexedInputGate {
             InputChannel currentChannel,
             boolean morePriorityEvents) {
         return new BufferOrEvent(
+                //如果需要，解压缩缓冲区
                 decompressBufferIfNeeded(buffer),
                 currentChannel.getChannelInfo(),
                 moreAvailable,
@@ -1073,6 +1077,7 @@ public class SingleInputGate extends IndexedInputGate {
         try {
             event = EventSerializer.fromBuffer(buffer, getClass().getClassLoader());
         } finally {
+            //释放此缓冲区一次，即，如果引用计数达到0 ，则减少引用计数并回收缓冲区。
             buffer.recycleBuffer();
         }
 
@@ -1124,6 +1129,7 @@ public class SingleInputGate extends IndexedInputGate {
                 checkNotNull(bufferDecompressor, "Buffer decompressor not set.");
                 return bufferDecompressor.decompressToIntermediateBuffer(buffer);
             } finally {
+                //释放此缓冲区一次，即，如果引用计数达到0 ，则减少引用计数并回收缓冲区。
                 buffer.recycleBuffer();
             }
         }

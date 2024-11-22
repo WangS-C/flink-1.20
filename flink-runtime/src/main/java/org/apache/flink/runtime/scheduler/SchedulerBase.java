@@ -626,7 +626,7 @@ public abstract class SchedulerBase implements SchedulerNG, CheckpointScheduling
     @Override
     public final void startScheduling() {
         mainThreadExecutor.assertRunningInMainThread();
-        //登记工作指标
+        //注册作业指标
         registerJobMetrics(
                 jobManagerJobMetricGroup,
                 executionGraph,

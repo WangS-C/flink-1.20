@@ -644,6 +644,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                         resourceID,
                         taskManagerServicesConfiguration.getSystemResourceMetricsProbingInterval());
 
+        //创建了ExecutorService
         final ExecutorService ioExecutor =
                 Executors.newFixedThreadPool(
                         taskManagerServicesConfiguration.getNumIoThreads(),
@@ -673,6 +674,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
         String metricQueryServiceAddress = metricRegistry.getMetricQueryServiceGatewayRpcAddress();
 
+        //构建函数中创建了JobManager心跳管理器和ResourceManager心跳管理器
         return new TaskExecutor(
                 rpcService,
                 taskManagerConfiguration,

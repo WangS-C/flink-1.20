@@ -111,6 +111,7 @@ public interface NetworkSequenceViewReader {
      *
      * @return A boolean flag indicating whether the reader is available together with the backlog.
      */
+    //检查此读取器是否可用，并同时返回积压工作。
     ResultSubpartitionView.AvailabilityWithBacklog getAvailabilityAndBacklog();
 
     boolean isRegisteredAsAvailable();

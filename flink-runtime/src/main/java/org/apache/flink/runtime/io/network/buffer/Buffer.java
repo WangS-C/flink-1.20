@@ -107,6 +107,7 @@ public interface Buffer {
      *
      * @see #retainBuffer()
      */
+    //释放此缓冲区一次，即，如果引用计数达到0 ，则减少引用计数并回收缓冲区。
     void recycleBuffer();
 
     /**
@@ -122,6 +123,7 @@ public interface Buffer {
      * @return <tt>this</tt> instance (for chained calls)
      * @see #recycleBuffer()
      */
+    //保留此缓冲区以供进一步使用，将引用计数器增加1。
     Buffer retainBuffer();
 
     /**
@@ -145,6 +147,8 @@ public interface Buffer {
      * @param length the length of the slice
      * @return a read-only sliced buffer
      */
+    //返回此缓冲区的只读切片。
+    //不共享读取器和写入器索引以及标记。引用计数器是共享的，但切片不会自动保留。
     Buffer readOnlySlice(int index, int length);
 
     /**
