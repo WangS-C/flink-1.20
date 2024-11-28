@@ -436,6 +436,7 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
 
     private void releaseAllResources() throws IOException {
         // note: this is only ever executed by one thread: the Netty IO thread!
+        //注意：这仅由一个线程执行：Netty IO 线程！
         for (NetworkSequenceViewReader reader : allReaders.values()) {
             releaseViewReader(reader);
         }
