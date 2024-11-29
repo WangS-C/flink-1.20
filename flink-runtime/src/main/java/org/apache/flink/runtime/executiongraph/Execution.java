@@ -448,6 +448,7 @@ public class Execution
         assertRunningInJobMasterMainThread();
 
         return FutureUtils.thenApplyAsyncIfNotDone(
+                //注册生产者分区
                 registerProducedPartitions(vertex, location, attemptId),
                 vertex.getExecutionGraphAccessor().getJobMasterMainThreadExecutor(),
                 producedPartitionsCache -> {

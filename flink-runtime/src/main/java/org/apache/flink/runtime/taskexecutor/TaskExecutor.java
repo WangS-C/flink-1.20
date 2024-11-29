@@ -887,6 +887,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
             }
 
             if (taskAdded) {
+                //启动任务线程
                 task.startTaskThread();
 
                 setupResultPartitionBookkeeping(

@@ -162,6 +162,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
                         .handle(deployAll(deploymentHandles)));
     }
 
+    //为每一个Execution分配资源和注册生产分区。
     private CompletableFuture<Void> assignAllResourcesAndRegisterProducedPartitions(
             final List<ExecutionDeploymentHandle> deploymentHandles) {
         final List<CompletableFuture<Void>> resultFutures = new ArrayList<>();
@@ -210,6 +211,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
         }
     }
 
+    //负责为Execution分配slot资源。
     private BiFunction<LogicalSlot, Throwable, LogicalSlot> assignResource(
             final ExecutionDeploymentHandle deploymentHandle) {
 
@@ -233,6 +235,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
             // throw exception only if the execution version is not outdated.
             // this ensures that canceling a pending slot request does not fail
             // a task which is about to cancel.
+            //仅当执行版本未过时时才引发异常。这确保取消挂起的时隙请求不会使将要取消的任务失败。
             if (throwable != null) {
                 throw new CompletionException(maybeWrapWithNoResourceAvailableException(throwable));
             }
@@ -252,6 +255,9 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
             // problems to reserve multiple slots for one execution vertex. Besides that, slot
             // reservation is for local recovery and therefore is only needed by streaming jobs, in
             // which case an execution vertex will have one only current execution.
+            //我们只保留执行顶点的最新执行。
+            //因为它可能会导致为一个执行顶点保留多个插槽的问题。
+            //除此之外，槽预留用于本地恢复，因此仅流作业需要，在这种情况下，执行顶点将只有一个当前执行。
             allocationReservationFunc.accept(
                     execution.getAttemptId().getExecutionVertexId(), logicalSlot.getAllocationId());
 
@@ -277,6 +283,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
         }
     }
 
+    //根据Execution的下游消费节点数量，为Execution(Task)设置下游所有消费分区链接信息。
     private Function<LogicalSlot, CompletableFuture<Void>> registerProducedPartitions(
             final ExecutionDeploymentHandle deploymentHandle) {
 
@@ -287,7 +294,7 @@ public class DefaultExecutionDeployer implements ExecutionDeployer {
             if (logicalSlot != null) {
                 final Execution execution = deploymentHandle.getExecution();
                 final CompletableFuture<Void> partitionRegistrationFuture =
-                        //注册生成的分区
+                        //注册生生产者分区
                         execution.registerProducedPartitions(logicalSlot.getTaskManagerLocation());
 
                 return FutureUtils.orTimeout(
