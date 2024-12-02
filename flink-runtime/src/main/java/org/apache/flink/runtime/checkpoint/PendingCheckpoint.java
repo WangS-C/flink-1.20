@@ -241,14 +241,17 @@ public class PendingCheckpoint implements Checkpoint {
                 && areMasterStatesFullyAcknowledged();
     }
 
+    //主状态是否得到充分认可
     boolean areMasterStatesFullyAcknowledged() {
         return notYetAcknowledgedMasterStates.isEmpty() && !disposed;
     }
 
+    //协调员是否得到充分认可
     boolean areCoordinatorsFullyAcknowledged() {
         return notYetAcknowledgedOperatorCoordinators.isEmpty() && !disposed;
     }
 
+    //任务是否得到充分认可
     boolean areTasksFullyAcknowledged() {
         return notYetAcknowledgedTasks.isEmpty() && !disposed;
     }
@@ -282,6 +285,7 @@ public class PendingCheckpoint implements Checkpoint {
      *
      * @return true, if the handle was set, false, if the checkpoint is already disposed;
      */
+    //将取消程序的句柄设置为此挂起的检查点。如果已设置句柄，则此方法将失败并出现异常。
     public boolean setCancellerHandle(ScheduledFuture<?> cancellerHandle) {
         synchronized (lock) {
             if (this.cancellerHandle == null) {
@@ -336,7 +340,9 @@ public class PendingCheckpoint implements Checkpoint {
 
                 try (CheckpointMetadataOutputStream out =
                         targetLocation.createMetadataOutputStream()) {
+                    //存储检查点元数据
                     Checkpoints.storeCheckpointMetadata(savepoint, out);
+                    //关闭并最终确定检查点
                     finalizedLocation = out.closeAndFinalizeCheckpoint();
                 }
 
@@ -353,6 +359,7 @@ public class PendingCheckpoint implements Checkpoint {
                                 toCompletedCheckpointStats(finalizedLocation));
 
                 // mark this pending checkpoint as disposed, but do NOT drop the state
+                //将此检查点标记为已处理，但不删除状态
                 dispose(false, checkpointsCleaner, postCleanup, executor);
 
                 return completed;
@@ -381,6 +388,7 @@ public class PendingCheckpoint implements Checkpoint {
      * @param metrics Checkpoint metrics for the stats
      * @return TaskAcknowledgeResult of the operation
      */
+    //确认具有给定执行尝试id和给定子任务状态的任务
     public TaskAcknowledgeResult acknowledgeTask(
             ExecutionAttemptID executionAttemptId,
             TaskStateSnapshot operatorSubtaskStates,
@@ -391,6 +399,7 @@ public class PendingCheckpoint implements Checkpoint {
                 return TaskAcknowledgeResult.DISCARDED;
             }
 
+            //从尚未确认的任务里删除
             final ExecutionVertex vertex = notYetAcknowledgedTasks.remove(executionAttemptId);
 
             if (vertex == null) {
@@ -409,6 +418,7 @@ public class PendingCheckpoint implements Checkpoint {
             } else {
                 List<OperatorIDPair> operatorIDs = vertex.getJobVertex().getOperatorIDs();
                 for (OperatorIDPair operatorID : operatorIDs) {
+                    //负责将Task上报的元数据信息添加到PendingCheckpoint.operatorStates成员中。
                     updateOperatorState(vertex, operatorSubtaskStates, operatorID);
                 }
 
@@ -417,10 +427,12 @@ public class PendingCheckpoint implements Checkpoint {
                 }
             }
 
+            //已确认的任务+1
             ++numAcknowledgedTasks;
 
             // publish the checkpoint statistics
             // to prevent null-pointers from concurrent modification, copy reference onto stack
+            //发布检查点统计信息以防止并发修改空指针，将引用复制到堆栈上
             if (pendingCheckpointStats != null) {
                 // Do this in millis because the web frontend works with them
                 long alignmentDurationMillis = metrics.getAlignmentDurationNanos() / 1_000_000;
@@ -498,6 +510,7 @@ public class PendingCheckpoint implements Checkpoint {
             OperatorState operatorState = operatorStates.get(operatorId);
 
             // sanity check for better error reporting
+            //健全检查以获得更好的错误报告
             if (!notYetAcknowledgedOperatorCoordinators.remove(operatorId)) {
                 return operatorState != null && operatorState.getCoordinatorState() != null
                         ? TaskAcknowledgeResult.DUPLICATE
@@ -527,6 +540,7 @@ public class PendingCheckpoint implements Checkpoint {
      * @param identifier The identifier of the master state
      * @param state The state to acknowledge
      */
+    //向挂起检查点确认主状态 (在检查点协调器上生成的状态)。
     public void acknowledgeMasterState(String identifier, @Nullable MasterState state) {
 
         synchronized (lock) {

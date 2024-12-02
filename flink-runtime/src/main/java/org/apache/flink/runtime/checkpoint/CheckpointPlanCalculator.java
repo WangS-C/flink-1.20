@@ -31,5 +31,6 @@ public interface CheckpointPlanCalculator {
      *
      * @return The result plan.
      */
+    //计算下一个检查点的计划
     CompletableFuture<CheckpointPlan> calculateCheckpointPlan();
 }

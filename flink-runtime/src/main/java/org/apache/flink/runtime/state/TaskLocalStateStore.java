@@ -43,6 +43,7 @@ public interface TaskLocalStateStore {
      * @param checkpointId id for the checkpoint that created the local state that will be stored.
      * @param localState the local state to store.
      */
+    //存储给定检查点id的本地状态。
     void storeLocalState(@Nonnegative long checkpointId, @Nullable TaskStateSnapshot localState);
 
     /**

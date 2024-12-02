@@ -40,6 +40,9 @@ import java.util.concurrent.Executor;
  * all produce just byte[] as the result. We have to change that once we allow then to create
  * external resources that actually need to be cleaned up.
  */
+//与获取OperatorCoordinator的检查点相关的所有逻辑。
+//注意: 这个类有一个简化的错误处理逻辑。如果多个协调器检查点之一失败，则不会为其他并发检查点触发清除。
+//这是好的，因为他们都只产生字节 [] 作为结果。我们必须改变，一旦我们允许，然后创建实际需要清理的外部资源。
 final class OperatorCoordinatorCheckpoints {
 
     public static CompletableFuture<CoordinatorSnapshot> triggerCoordinatorCheckpoint(
@@ -67,6 +70,7 @@ final class OperatorCoordinatorCheckpoints {
 
         for (final OperatorCoordinatorCheckpointContext coordinator : coordinators) {
             final CompletableFuture<CoordinatorSnapshot> checkpointFuture =
+                    //触发协调器检查点
                     triggerCoordinatorCheckpoint(coordinator, checkpointId);
             individualSnapshots.add(checkpointFuture);
         }
@@ -81,11 +85,13 @@ final class OperatorCoordinatorCheckpoints {
             throws Exception {
 
         final CompletableFuture<AllCoordinatorSnapshots> snapshots =
+                //触发所有协调器检查点
                 triggerAllCoordinatorCheckpoints(coordinators, checkpoint.getCheckpointID());
 
         return snapshots.thenAcceptAsync(
                 (allSnapshots) -> {
                     try {
+                        //确认所有协调员
                         acknowledgeAllCoordinators(checkpoint, allSnapshots.snapshots);
                     } catch (Exception e) {
                         throw new CompletionException(e);
@@ -102,6 +108,7 @@ final class OperatorCoordinatorCheckpoints {
                     throws CompletionException {
 
         try {
+            //触发并确认所有协调器检查点
             return triggerAndAcknowledgeAllCoordinatorCheckpoints(
                     coordinators, checkpoint, acknowledgeExecutor);
         } catch (Exception e) {
@@ -116,6 +123,7 @@ final class OperatorCoordinatorCheckpoints {
             throws CheckpointException {
         for (final CoordinatorSnapshot snapshot : snapshots) {
             final PendingCheckpoint.TaskAcknowledgeResult result =
+                    //确认协调员状态
                     checkpoint.acknowledgeCoordinatorState(snapshot.coordinator, snapshot.state);
 
             if (result != PendingCheckpoint.TaskAcknowledgeResult.SUCCESS) {

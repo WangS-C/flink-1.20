@@ -43,6 +43,7 @@ public abstract class Clock implements RelativeClock {
     public abstract long absoluteTimeMillis();
 
     /** Gets the current relative time, in milliseconds. */
+    //获取当前相对时间，以毫秒为单位。
     public abstract long relativeTimeMillis();
 
     /** Gets the current relative time, in nanoseconds. */

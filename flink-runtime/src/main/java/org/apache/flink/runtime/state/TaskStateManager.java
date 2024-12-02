@@ -62,6 +62,7 @@ public interface TaskStateManager extends CheckpointListener, AutoCloseable {
      * @param acknowledgedState the reported states to acknowledge to the job manager.
      * @param localState the reported states for local recovery.
      */
+    //报告在所属任务中运行的操作员实例的状态快照。
     void reportTaskStateSnapshots(
             @Nonnull CheckpointMetaData checkpointMetaData,
             @Nonnull CheckpointMetrics checkpointMetrics,

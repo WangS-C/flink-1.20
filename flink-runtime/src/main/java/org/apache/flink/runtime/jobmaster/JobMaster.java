@@ -596,6 +596,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     // TODO: This method needs a leader session ID
+    //此方法需要一个领导者会话ID
     @Override
     public void acknowledgeCheckpoint(
             final JobID jobID,

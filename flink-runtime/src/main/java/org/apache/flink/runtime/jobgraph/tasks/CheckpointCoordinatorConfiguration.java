@@ -31,28 +31,40 @@ import java.util.Objects;
  * interval, the checkpoint timeout, the pause between checkpoints, the maximum number of concurrent
  * checkpoints and settings for externalized checkpoints.
  */
+//CheckpointCoordinator的配置设置。
+//这包括检查点间隔、检查点超时、检查点之间的暂停、并发检查点的最大数量以及外部化检查点的设置。
 public class CheckpointCoordinatorConfiguration implements Serializable {
 
+    //最短检查点时间
     public static final long MINIMAL_CHECKPOINT_TIME = 10;
 
     // interval of max value means disable periodic checkpoint
+    //最大值间隔表示禁用周期性检查点
     public static final long DISABLED_CHECKPOINT_INTERVAL = Long.MAX_VALUE;
 
     private static final long serialVersionUID = 2L;
 
+    //检查点间隔
     private final long checkpointInterval;
 
+    //积压期间的检查点间隔
     private final long checkpointIntervalDuringBacklog;
 
+    //检查点超时
     private final long checkpointTimeout;
 
+    //检查点之间的最小暂停时间
     private final long minPauseBetweenCheckpoints;
 
+    //最大并发检查点数
     private final int maxConcurrentCheckpoints;
 
+    //可容忍的检查点故障数
     private final int tolerableCheckpointFailureNumber;
 
     /** Settings for what to do with checkpoints when a job finishes. */
+    //设置作业完成后如何处理检查点。
+    //检查点保留策略
     private final CheckpointRetentionPolicy checkpointRetentionPolicy;
 
     /**
@@ -61,14 +73,20 @@ public class CheckpointCoordinatorConfiguration implements Serializable {
      * the checkpointing mode is only relevant for the stream tasks, but we expose it here to
      * forward it to the web runtime UI.
      */
+    //指示是否已配置恰好一次检查点模式的标志。
+    //如果为false ，则至少配置了一次模式。这不是必需的属性，因为检查点模式仅与流任务相关，
+    //但我们在此处公开它以将其转发到 Web 运行时 UI。
     private final boolean isExactlyOnce;
 
+    //是否启用未对齐检查点
     private final boolean isUnalignedCheckpointsEnabled;
 
+    //对齐检查点超时
     private final long alignedCheckpointTimeout;
 
     private final long checkpointIdOfIgnoredInFlightData;
 
+    //任务完成后启用检查点
     private final boolean enableCheckpointsAfterTasksFinish;
 
     /** @deprecated use {@link #builder()}. */

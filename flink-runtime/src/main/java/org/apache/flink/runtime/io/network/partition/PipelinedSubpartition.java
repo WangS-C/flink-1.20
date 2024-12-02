@@ -323,11 +323,13 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
         int prioritySequenceNumber = DEFAULT_PRIORITY_SEQUENCE_NUMBER;
         synchronized (buffers) {
             // The checkpoint barrier has sent to downstream, so nothing to do.
+            //检查点屏障已发送到下游，所以没有什么可做的。
             if (!isChannelStateFutureAvailable(checkpointId)) {
                 return;
             }
 
             // 1. find inflightBuffers and timeout the aligned barrier to unaligned barrier
+            //查找inflightBuffers并将对齐的屏障超时到未对齐的屏障
             List<Buffer> inflightBuffers = new ArrayList<>();
             try {
                 if (findInflightBuffersAndMakeBarrierToPriority(checkpointId, inflightBuffers)) {
@@ -340,11 +342,13 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
             }
 
             // 2. complete the channelStateFuture
+            //2.完成channelstateweuture
             completeChannelStateFuture(inflightBuffers, null);
         }
 
         // 3. notify downstream read barrier, it must be called outside the buffers_lock to avoid
         // the deadlock.
+        //3.通知下游读屏障，它必须在buffers_lock之外调用以避免死锁。
         notifyPriorityEvent(prioritySequenceNumber);
     }
 
@@ -361,6 +365,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
     private boolean findInflightBuffersAndMakeBarrierToPriority(
             long checkpointId, List<Buffer> inflightBuffers) throws IOException {
         // 1. record the buffers before barrier as inflightBuffers
+        //1.将屏障前的缓冲区记录为inflightBuffers
         final int numPriorityElements = buffers.getNumPriorityElements();
         final Iterator<BufferConsumerWithPartialRecordLength> iterator = buffers.iterator();
         Iterators.advance(iterator, numPriorityElements);
@@ -375,6 +380,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
                     == bufferConsumer.getDataType()) {
                 barrier = parseAndCheckTimeoutableCheckpointBarrier(bufferConsumer);
                 // It may be an aborted barrier
+                //它可能是一个中止的障碍
                 if (barrier.getId() != checkpointId) {
                     continue;
                 }
@@ -388,6 +394,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
         }
 
         // 2. Make the barrier to be priority
+        //2.使屏障优先
         checkNotNull(
                 element, "The checkpoint barrier=%d don't find in %s.", checkpointId, toString());
         makeBarrierToPriority(element, barrier);

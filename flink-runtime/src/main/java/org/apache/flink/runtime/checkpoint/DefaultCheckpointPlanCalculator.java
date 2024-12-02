@@ -95,13 +95,17 @@ public class DefaultCheckpointPlanCalculator implements CheckpointPlanCalculator
                                     CheckpointFailureReason.NOT_ALL_REQUIRED_TASKS_RUNNING);
                         }
 
+                        //检查所有启动的任务
                         checkAllTasksInitiated();
 
                         CheckpointPlan result =
                                 context.hasFinishedTasks()
+                                        //任务完成后计算
                                         ? calculateAfterTasksFinished()
+                                        //所有任务运行时进行计算
                                         : calculateWithAllTasksRunning();
 
+                        //检查任务已启动
                         checkTasksStarted(result.getTasksToWaitFor());
 
                         return result;
@@ -139,6 +143,7 @@ public class DefaultCheckpointPlanCalculator implements CheckpointPlanCalculator
      *
      * @throws CheckpointException if some tasks to trigger have not turned into RUNNING yet.
      */
+    //检查要触发的所有任务是否已处于运行状态。应该从JobMaster主线程执行器调用此方法。
     private void checkTasksStarted(List<Execution> toTrigger) throws CheckpointException {
         for (Execution execution : toTrigger) {
             if (execution.getState() != ExecutionState.RUNNING) {
@@ -158,12 +163,14 @@ public class DefaultCheckpointPlanCalculator implements CheckpointPlanCalculator
      *
      * @return The plan of this checkpoint.
      */
+    //计算所有任务都在运行时的检查点计划。它将简单地将所有源任务标记为需要触发，并将所有任务标记为需要等待和提交。
     private CheckpointPlan calculateWithAllTasksRunning() {
         List<Execution> executionsToTrigger =
                 sourceTasks.stream()
                         .map(ExecutionVertex::getCurrentExecutionAttempt)
                         .collect(Collectors.toList());
 
+        //创建要等待的任务
         List<Execution> tasksToWaitFor = createTaskToWaitFor(allTasks);
 
         return new DefaultCheckpointPlan(
@@ -181,16 +188,26 @@ public class DefaultCheckpointPlanCalculator implements CheckpointPlanCalculator
      *
      * @return The plan of this checkpoint.
      */
+    //某些任务完成后计算检查点计划。我们迭代作业图以查找仍在运行但没有先例运行任务的任务。
     private CheckpointPlan calculateAfterTasksFinished() {
         // First collect the task running status into BitSet so that we could
         // do JobVertex level judgement for some vertices and avoid time-consuming
         // access to volatile isFinished flag of Execution.
+        //首先将任务运行状态收集到BitSet中，以便我们可以对某些顶点进行JobVertex级别的判断，
+        //避免耗时访问Execution的易失性isFinished标志。
+
+        //收集任务运行状态
         Map<JobVertexID, BitSet> taskRunningStatusByVertex = collectTaskRunningStatus();
 
+        //触发的任务
         List<Execution> tasksToTrigger = new ArrayList<>();
+        //等待的任务
         List<Execution> tasksToWaitFor = new ArrayList<>();
+        //提交的任务
         List<ExecutionVertex> tasksToCommitTo = new ArrayList<>();
+        //完成的任务
         List<Execution> finishedTasks = new ArrayList<>();
+        //完全完成的作业顶点
         List<ExecutionJobVertex> fullyFinishedJobVertex = new ArrayList<>();
 
         for (ExecutionJobVertex jobVertex : jobVerticesInTopologyOrder) {
@@ -210,6 +227,7 @@ public class DefaultCheckpointPlanCalculator implements CheckpointPlanCalculator
 
             // this is an optimization: we determine at the JobVertex level if some tasks can even
             // be eligible for being in the "triggerTo" set.
+            //这是一种优化: 我们在JobVertex级别确定某些任务是否有资格进入 “triggerTo” 集。
             boolean someTasksMustBeTriggered =
                     someTasksMustBeTriggered(taskRunningStatusByVertex, prevJobEdges);
 
@@ -272,6 +290,12 @@ public class DefaultCheckpointPlanCalculator implements CheckpointPlanCalculator
      * @param upstreamRunningTasks The running tasks of the upstream vertex.
      * @return Whether every task of the current vertex is connected to some active predecessors.
      */
+    //每个任务都必须有活动的上游任务，如果
+    //ALL_TO_ALL连接和一些前置任务仍在运行。
+    //POINTWISE连接和所有前置任务仍在运行。
+    //参数:
+    //distribution-上游顶点和当前顶点之间的分布模式。
+    //upstreamRunningTasks-上游顶点正在运行的任务。
     private boolean hasActiveUpstreamVertex(
             DistributionPattern distribution, BitSet upstreamRunningTasks) {
         return (distribution == DistributionPattern.ALL_TO_ALL
@@ -314,6 +338,7 @@ public class DefaultCheckpointPlanCalculator implements CheckpointPlanCalculator
      * @return The task running status for each job vertex.
      */
     @VisibleForTesting
+    //收集每个作业顶点的任务运行状态。
     Map<JobVertexID, BitSet> collectTaskRunningStatus() {
         Map<JobVertexID, BitSet> runningStatusByVertex = new HashMap<>();
 

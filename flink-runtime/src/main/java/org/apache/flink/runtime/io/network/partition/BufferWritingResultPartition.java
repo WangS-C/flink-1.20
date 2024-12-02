@@ -214,6 +214,7 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
             for (ResultSubpartition subpartition : subpartitions) {
                 // Retain the buffer so that it can be recycled by each subpartition of
                 // targetPartition
+                //保留缓冲区，以便可以由targetPartition的每个子分区回收
                 subpartition.add(eventBufferConsumer.copy(), 0);
             }
         }

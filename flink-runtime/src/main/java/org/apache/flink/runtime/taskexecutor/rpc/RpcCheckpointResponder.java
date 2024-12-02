@@ -47,6 +47,7 @@ public class RpcCheckpointResponder implements CheckpointResponder {
             long checkpointId,
             CheckpointMetrics checkpointMetrics,
             TaskStateSnapshot subtaskState) {
+        //确认检查点
         checkpointCoordinatorGateway.acknowledgeCheckpoint(
                 jobID,
                 executionAttemptID,

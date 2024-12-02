@@ -31,5 +31,6 @@ public interface JobStatusListener {
      * @param newJobStatus The status the job switched to.
      * @param timestamp The timestamp when the status transition occurred.
      */
+    //每当作业状态发生变化时都会调用此方法。
     void jobStatusChanges(JobID jobId, JobStatus newJobStatus, long timestamp);
 }

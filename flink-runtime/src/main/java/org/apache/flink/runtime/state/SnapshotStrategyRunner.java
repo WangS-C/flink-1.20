@@ -77,6 +77,7 @@ public final class SnapshotStrategyRunner<T extends StateObject, SR extends Snap
         SR snapshotResources = snapshotStrategy.syncPrepareResources(checkpointId);
         logCompletedInternal(LOG_SYNC_COMPLETED_TEMPLATE, streamFactory, startTime);
         SnapshotStrategy.SnapshotResultSupplier<T> asyncSnapshot =
+                //异步快照
                 snapshotStrategy.asyncSnapshot(
                         snapshotResources,
                         checkpointId,

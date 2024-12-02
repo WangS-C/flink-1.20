@@ -72,9 +72,11 @@ public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvid
     void broadcastRecord(ByteBuffer record) throws IOException;
 
     /** Writes the given {@link AbstractEvent} to all subpartitions. */
+    //将给定的AbstractEvent写入所有子分区。
     void broadcastEvent(AbstractEvent event, boolean isPriorityEvent) throws IOException;
 
     /** Timeout the aligned barrier to unaligned barrier. */
+    //将对齐的屏障超时到未对齐的屏障。
     void alignedBarrierTimeout(long checkpointId) throws IOException;
 
     /** Abort the checkpoint. */

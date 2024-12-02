@@ -189,7 +189,9 @@ public class RegularOperatorChain<OUT, OP extends StreamOperator<OUT>>
             ChannelStateWriter.ChannelStateWriteResult channelStateWriteResult,
             CheckpointStreamFactory storage)
             throws Exception {
-        for (StreamOperatorWrapper<?, ?> operatorWrapper : getAllOperators(true)) {
+        for (StreamOperatorWrapper<?, ?> operatorWrapper :
+        //获取所有运算符
+                getAllOperators(true)) {
             if (!operatorWrapper.isClosed()) {
                 operatorSnapshotsInProgress.put(
                         operatorWrapper.getStreamOperator().getOperatorID(),
@@ -202,6 +204,7 @@ public class RegularOperatorChain<OUT, OP extends StreamOperator<OUT>>
                                 storage));
             }
         }
+        //发送确认检查点事件
         sendAcknowledgeCheckpointEvent(checkpointMetaData.getCheckpointId());
     }
 
@@ -214,6 +217,7 @@ public class RegularOperatorChain<OUT, OP extends StreamOperator<OUT>>
             CheckpointStreamFactory storage)
             throws Exception {
         OperatorSnapshotFutures snapshotInProgress =
+                //检查点流运算符
                 checkpointStreamOperator(
                         op, checkpointMetaData, checkpointOptions, storage, isRunning);
         snapshotChannelStates(op, channelStateWriteResult, snapshotInProgress);

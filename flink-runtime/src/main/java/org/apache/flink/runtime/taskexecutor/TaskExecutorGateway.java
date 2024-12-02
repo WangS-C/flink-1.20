@@ -146,6 +146,7 @@ public interface TaskExecutorGateway
      * @param checkpointOptions for performing the checkpoint
      * @return Future acknowledge if the checkpoint has been successfully triggered
      */
+    //触发给定任务的检查点。检查点由检查点ID和检查点时间戳标识
     CompletableFuture<Acknowledge> triggerCheckpoint(
             ExecutionAttemptID executionAttemptID,
             long checkpointID,

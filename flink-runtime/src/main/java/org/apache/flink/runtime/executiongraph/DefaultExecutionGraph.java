@@ -549,6 +549,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
                         checkpointStatsTracker);
 
         // register the master hooks on the checkpoint coordinator
+        //在检查点协调器上注册主钩子
         for (MasterTriggerRestoreHook<?> hook : masterHooks) {
             if (!checkpointCoordinator.addMasterHook(hook)) {
                 LOG.warn(
@@ -561,9 +562,11 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
             // the periodic checkpoint scheduler is activated and deactivated as a result of
             // job status and topology changes (running & all edges non-blocking -> on, all
             // other states -> off)
+            //定期检查点调度程序由于作业状态和拓扑更改而被激活和停用（运行和所有边缘非阻塞 -> 开启，所有其他状态 -> 关闭）
             boolean allTasksOutputNonBlocking =
                     tasks.values().stream()
                             .noneMatch(vertex -> vertex.getJobVertex().isAnyOutputBlocking());
+            //注册作业状态监听器
             registerJobStatusListener(
                     checkpointCoordinator.createActivatorDeactivator(allTasksOutputNonBlocking));
         }
@@ -999,6 +1002,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
 
     @Override
     public void transitionToRunning() {
+        //Job状态切换至RUNNING
         if (!transitionState(JobStatus.CREATED, JobStatus.RUNNING)) {
             throw new IllegalStateException(
                     "Job may only be scheduled from state " + JobStatus.CREATED);
@@ -1201,6 +1205,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
                     error);
 
             stateTimestamps[newState.ordinal()] = System.currentTimeMillis();
+            //通知工作状态变化
             notifyJobStatusChange(newState);
             notifyJobStatusHooks(newState, error);
             return true;
@@ -1641,6 +1646,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
         if (jobStatusListeners.size() > 0) {
             final long timestamp = System.currentTimeMillis();
 
+            //CheckpointCoordinatorDeActivator初始化后也注册到了此监听器中
             for (JobStatusListener listener : jobStatusListeners) {
                 try {
                     listener.jobStatusChanges(getJobID(), newState, timestamp);

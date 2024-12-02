@@ -226,6 +226,7 @@ class ChannelStateCheckpointWriter {
                 continue;
             }
             // Some subtasks did not receive all buffers
+            //某些子任务未收到所有缓冲区
             return;
         }
 

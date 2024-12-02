@@ -44,6 +44,7 @@ import java.util.function.Supplier;
 public interface SubtaskCheckpointCoordinator extends Closeable {
 
     /** Initialize new checkpoint. */
+    //初始化新检查点。
     void initInputsCheckpoint(long id, CheckpointOptions checkpointOptions)
             throws CheckpointException;
 
@@ -56,6 +57,7 @@ public interface SubtaskCheckpointCoordinator extends Closeable {
             throws IOException;
 
     /** Must be called after {@link #initInputsCheckpoint(long, CheckpointOptions)}. */
+    //必须在initInputsCheckpoint(long，CheckpointOptions) 之后调用。
     void checkpointState(
             CheckpointMetaData checkpointMetaData,
             CheckpointOptions checkpointOptions,

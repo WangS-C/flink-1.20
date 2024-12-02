@@ -147,6 +147,17 @@ public interface OperatorCoordinator extends CheckpointListener, AutoCloseable {
      * @throws Exception Any exception thrown by this method results in a full job failure and
      *     recovery.
      */
+    //获取协调器的检查点。检查点由给定的ID标识。
+    //要确认检查点并在其中存储状态，给定的CompletableFuture必须与国家完成。
+    //要中止或不确认检查点，给定的CompletableFuture必须例外地完成。
+    //在任何情况下，给定的CompletableFuture必须以某种方式完成，否则检查点将无法进行。
+    //Exactly-once语义
+    //语义定义如下:
+    //检查点未来完成的时间点被认为是协调器的检查点发生的时间点。
+    //OperatorCoordinator实现必须具有对事件的发送和检查点未来的完成进行严格排序的方法
+    //(例如，同一个线程执行这两个操作，或者这两个操作都由互斥体保护)。
+    //在检查点未来完成之前发送的每个事件在检查点之前被考虑。
+    //在检查点未来完成之后发送的每个事件被认为是在检查点之后。
     void checkpointCoordinator(long checkpointId, CompletableFuture<byte[]> resultFuture)
             throws Exception;
 

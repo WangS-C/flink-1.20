@@ -394,6 +394,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      * Returns an {@link Iterable} which traverses all operators in forward or reverse topological
      * order.
      */
+    //返回以正向或反向拓扑顺序遍历所有运算符的Iterable。
     protected Iterable<StreamOperatorWrapper<?, ?>> getAllOperators(boolean reverse) {
         return reverse
                 ? new StreamOperatorWrapper.ReadIterator(tailOperatorWrapper, true)

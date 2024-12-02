@@ -108,11 +108,14 @@ class CheckpointRequestDecider {
      *
      * @return request that should be executed
      */
+    //提交新的检查点请求并决定是否可以执行该请求或其他请求。
     Optional<CheckpointTriggerRequest> chooseRequestToExecute(
             CheckpointTriggerRequest newRequest, boolean isTriggering, long lastCompletionMs) {
         if (queuedRequests.size() >= maxQueuedRequests && !queuedRequests.last().isPeriodic) {
             // there are only non-periodic (ie user-submitted) requests enqueued - retain them and
             // drop the new one
+            //只有非周期性（即用户提交的）请求排队
+            //保留它们并删除新请求
             newRequest.completeExceptionally(new CheckpointException(TOO_MANY_CHECKPOINT_REQUESTS));
             return Optional.empty();
         } else {
@@ -149,6 +152,7 @@ class CheckpointRequestDecider {
      *
      * @return request that should be executed
      */
+    //根据提供的候选者和当前状态选择下一个要执行的request 。获取锁并可以更新状态。
     private Optional<CheckpointTriggerRequest> chooseRequestToExecute(
             boolean isTriggering, long lastCompletionMs) {
         if (isTriggering

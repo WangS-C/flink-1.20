@@ -129,6 +129,7 @@ public interface StreamOperator<OUT> extends CheckpointListener, KeyContext, Ser
      *     synchronous implementations, the runnable might already be finished.
      * @throws Exception exception that happened during snapshotting.
      */
+    //调用以从运算符绘制状态快照。
     OperatorSnapshotFutures snapshotState(
             long checkpointId,
             long timestamp,

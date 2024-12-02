@@ -43,9 +43,11 @@ public class CheckpointCoordinatorDeActivator implements JobStatusListener {
     public void jobStatusChanges(JobID jobId, JobStatus newJobStatus, long timestamp) {
         if (newJobStatus == JobStatus.RUNNING && allTasksOutputNonBlocking) {
             // start the checkpoint scheduler if there is no blocking edge
+            //如果没有阻塞边缘则启动检查点调度程序
             coordinator.startCheckpointScheduler();
         } else {
             // anything else should stop the trigger for now
+            //其他任何事情都应该暂时停止触发器
             coordinator.stopCheckpointScheduler();
         }
     }

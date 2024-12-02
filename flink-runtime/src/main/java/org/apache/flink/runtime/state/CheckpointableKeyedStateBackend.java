@@ -38,6 +38,7 @@ public interface CheckpointableKeyedStateBackend<K>
         extends KeyedStateBackend<K>, Snapshotable<SnapshotResult<KeyedStateHandle>>, Closeable {
 
     /** Returns the key groups which this state backend is responsible for. */
+    //返回此状态后端负责的键组。
     KeyGroupRange getKeyGroupRange();
 
     /**

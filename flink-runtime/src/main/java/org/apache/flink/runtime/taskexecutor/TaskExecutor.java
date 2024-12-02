@@ -1103,6 +1103,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                         checkpointId,
                         checkpointTimestamp,
                         executionAttemptID);
+                //触发检查点障碍
                 task.triggerCheckpointBarrier(checkpointId, checkpointTimestamp, checkpointOptions);
 
                 return CompletableFuture.completedFuture(Acknowledge.get());

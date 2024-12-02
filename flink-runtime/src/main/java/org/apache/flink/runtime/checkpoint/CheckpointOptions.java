@@ -187,7 +187,10 @@ public class CheckpointOptions implements Serializable {
     }
 
     public boolean needsChannelState() {
-        return isUnalignedCheckpoint() || isTimeoutable();
+        //是未对齐的检查点
+        return isUnalignedCheckpoint() ||
+                //是否可超时
+                isTimeoutable();
     }
 
     public CheckpointOptions withUnalignedSupported() {

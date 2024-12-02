@@ -258,6 +258,8 @@ public class OperatorCoordinatorHolder
         // checkpoint coordinator time thread.
         // we can remove the delegation once the checkpoint coordinator runs fully in the
         // scheduler's main thread executor
+        //不幸的是，此方法不在调度器执行器中运行，而是在检查点协调器时间线程中运行。
+        //一旦检查点协调器在调度程序的主线程执行器中完全运行，我们就可以删除委托
         mainThreadExecutor.execute(() -> checkpointCoordinatorInternal(checkpointId, result));
     }
 
@@ -344,7 +346,10 @@ public class OperatorCoordinatorHolder
 
         try {
             subtaskGatewayMap.forEach(
-                    (subtask, gateway) -> gateway.markForCheckpoint(checkpointId));
+                    (subtask, gateway) -> gateway
+                            //检查点标记
+                            .markForCheckpoint(checkpointId));
+            //获取协调器的检查点
             coordinator.checkpointCoordinator(checkpointId, coordinatorCheckpoint);
         } catch (Throwable t) {
             ExceptionUtils.rethrowIfFatalErrorOrOOM(t);

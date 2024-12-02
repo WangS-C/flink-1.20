@@ -1413,6 +1413,7 @@ public class Task
      * @param checkpointTimestamp The timestamp associated with the checkpoint.
      * @param checkpointOptions Options for performing this checkpoint.
      */
+    //调用invokable以触发检查点。
     public void triggerCheckpointBarrier(
             final long checkpointID,
             final long checkpointTimestamp,
@@ -1427,6 +1428,7 @@ public class Task
             checkState(invokable instanceof CheckpointableTask, "invokable is not checkpointable");
             try {
                 ((CheckpointableTask) invokable)
+                        //触发器检查点异步
                         .triggerCheckpointAsync(checkpointMetaData, checkpointOptions)
                         .handle(
                                 (triggerResult, exception) -> {
@@ -1475,6 +1477,7 @@ public class Task
                     executionId);
 
             // send back a message that we did not do the checkpoint
+            //发回一条消息，我们没有做检查点
             declineCheckpoint(
                     checkpointID, CheckpointFailureReason.CHECKPOINT_DECLINED_TASK_NOT_READY);
         }

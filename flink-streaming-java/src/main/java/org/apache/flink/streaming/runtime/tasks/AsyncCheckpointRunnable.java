@@ -121,6 +121,7 @@ final class AsyncCheckpointRunnable implements Runnable, Closeable {
             SnapshotsFinalizeResult snapshotsFinalizeResult =
                     isTaskDeployedAsFinished
                             ? finalizedFinishedSnapshots()
+                            //最终确定未完成的快照
                             : finalizeNonFinishedSnapshots();
 
             final long asyncEndNanos = System.nanoTime();
@@ -133,6 +134,7 @@ final class AsyncCheckpointRunnable implements Runnable, Closeable {
             if (asyncCheckpointState.compareAndSet(
                     AsyncCheckpointState.RUNNING, AsyncCheckpointState.COMPLETED)) {
 
+                //报告已完成快照状态
                 reportCompletedSnapshotStates(
                         snapshotsFinalizeResult.jobManagerTaskOperatorSubtaskStates,
                         snapshotsFinalizeResult.localTaskOperatorSubtaskStates,
@@ -175,8 +177,10 @@ final class AsyncCheckpointRunnable implements Runnable, Closeable {
     }
 
     private SnapshotsFinalizeResult finalizeNonFinishedSnapshots() throws Exception {
+        //代表TaskExecutor向JobManager 确认的算子状态快照元数据信息，用于状态数据高可用
         TaskStateSnapshot jobManagerTaskOperatorSubtaskStates =
                 new TaskStateSnapshot(operatorSnapshotsInProgress.size(), isTaskFinished);
+        //代表本地TaskManager端状态快照元数据信息，主要用作Task异常时快速恢复
         TaskStateSnapshot localTaskOperatorSubtaskStates =
                 new TaskStateSnapshot(operatorSnapshotsInProgress.size(), isTaskFinished);
 
@@ -188,7 +192,9 @@ final class AsyncCheckpointRunnable implements Runnable, Closeable {
             OperatorSnapshotFutures snapshotInProgress = entry.getValue();
 
             // finalize the async part of all by executing all snapshot runnables
+            //通过执行所有快照可运行对象来完成all的异步部分
             OperatorSnapshotFinalizer finalizedSnapshots =
+                    //构造函数中异步执行这4个不同类型的状态快照过程
                     new OperatorSnapshotFinalizer(snapshotInProgress);
 
             jobManagerTaskOperatorSubtaskStates.putSubtaskStateByOperatorID(
@@ -232,6 +238,8 @@ final class AsyncCheckpointRunnable implements Runnable, Closeable {
         // empty state
         // to stateless tasks on restore. This enables simple job modifications that only concern
         // stateless without the need to assign them uids to match their (always empty) states.
+        //我们通过报告null来向无状态任务发出信号，因此在还原时不会尝试将空状态分配给无状态任务。
+        // 这使得简单的作业修改只涉及无状态，而不需要为它们分配uid来匹配它们的 (总是空的) 状态。
         taskEnvironment
                 .getTaskStateManager()
                 .reportTaskStateSnapshots(

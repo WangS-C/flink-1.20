@@ -285,6 +285,8 @@ class SubtaskCheckpointCoordinatorImpl implements SubtaskCheckpointCoordinator {
         // downstream
         // checkpoint alignments
 
+        //从barrier和recordswatermarkstimerscallbacks的角度来看，以下所有步骤都是原子步骤。
+        //我们通常会尽快发出检查点障碍，以免影响下游检查点对齐
         if (lastCheckpointId >= metadata.getCheckpointId()) {
             LOG.info(
                     "Out of order checkpoint barrier (aborted previously?): {} >= {}",
@@ -299,10 +301,12 @@ class SubtaskCheckpointCoordinatorImpl implements SubtaskCheckpointCoordinator {
 
         // Step (0): Record the last triggered checkpointId and abort the sync phase of checkpoint
         // if necessary.
+        //步骤 (0): 记录最后触发的checkpointId，并在必要时中止检查点的同步阶段。
         lastCheckpointId = metadata.getCheckpointId();
         if (checkAndClearAbortedStatus(metadata.getCheckpointId())) {
             // broadcast cancel checkpoint marker to avoid downstream back-pressure due to
             // checkpoint barrier align.
+            //广播取消检查点标记，以避免由于检查点屏障对齐而导致的下游背压。
             operatorChain.broadcastEvent(new CancelCheckpointMarker(metadata.getCheckpointId()));
             channelStateWriter.abort(
                     metadata.getCheckpointId(),
@@ -316,12 +320,14 @@ class SubtaskCheckpointCoordinatorImpl implements SubtaskCheckpointCoordinator {
 
         if (fileMergingSnapshotManager != null) {
             // notify file merging snapshot manager for managed dir lifecycle management
+            //托管dir生命周期管理的通知文件合并快照管理器
             fileMergingSnapshotManager.notifyCheckpointStart(
                     FileMergingSnapshotManager.SubtaskKey.of(env), metadata.getCheckpointId());
         }
 
         // if checkpoint has been previously unaligned, but was forced to be aligned (pointwise
         // connection), revert it here so that it can jump over output data
+        //如果检查点以前未对齐，但被强制对齐 (逐点连接)，请在此处还原它，以便它可以跳过输出数据
         if (options.getAlignment() == CheckpointOptions.AlignmentType.FORCED_ALIGNED) {
             options = options.withUnalignedSupported();
             initInputsCheckpoint(metadata.getCheckpointId(), options);
@@ -329,9 +335,11 @@ class SubtaskCheckpointCoordinatorImpl implements SubtaskCheckpointCoordinator {
 
         // Step (1): Prepare the checkpoint, allow operators to do some pre-barrier work.
         //           The pre-barrier work should be nothing or minimal in the common case.
+        //步骤 (1): 准备检查点，允许操作员做一些预屏障工作。在常见情况下，预屏障工作应该没有或很少。
         operatorChain.prepareSnapshotPreBarrier(metadata.getCheckpointId());
 
         // Step (2): Send the checkpoint barrier downstream
+        //步骤 (2): 向下游发送checkpoint barrier
         LOG.debug(
                 "Task {} broadcastEvent at {}, triggerTime {}, passed time {}",
                 taskName,
@@ -340,26 +348,33 @@ class SubtaskCheckpointCoordinatorImpl implements SubtaskCheckpointCoordinator {
                 System.currentTimeMillis() - metadata.getTimestamp());
         CheckpointBarrier checkpointBarrier =
                 new CheckpointBarrier(metadata.getCheckpointId(), metadata.getTimestamp(), options);
+        //广播事件
         operatorChain.broadcastEvent(checkpointBarrier, options.isUnalignedCheckpoint());
 
         // Step (3): Register alignment timer to timeout aligned barrier to unaligned barrier
+        //步骤 (3): 将对齐计时器注册到超时对齐屏障到未对齐屏障
         registerAlignmentTimer(metadata.getCheckpointId(), operatorChain, checkpointBarrier);
 
         // Step (4): Prepare to spill the in-flight buffers for input and output
+        //步骤 (4): 准备溢出用于输入和输出的飞行缓冲区
         if (options.needsChannelState()) {
             // output data already written while broadcasting event
+            //广播事件时已写入输出数据
             channelStateWriter.finishOutput(metadata.getCheckpointId());
         }
 
         // Step (5): Take the state snapshot. This should be largely asynchronous, to not impact
         // progress of the
         // streaming topology
+        //步骤 (5): 拍摄状态快照。这应该在很大程度上是异步的，以不影响流拓扑的进度
 
         Map<OperatorID, OperatorSnapshotFutures> snapshotFutures =
                 CollectionUtil.newHashMapWithExpectedSize(operatorChain.getNumberOfOperators());
         try {
+            //拍摄快照同步
             if (takeSnapshotSync(
                     snapshotFutures, metadata, metrics, options, operatorChain, isRunning)) {
+                //完成并报告异步
                 finishAndReportAsync(
                         snapshotFutures,
                         metadata,
@@ -381,17 +396,20 @@ class SubtaskCheckpointCoordinatorImpl implements SubtaskCheckpointCoordinator {
             OperatorChain<?, ?> operatorChain,
             CheckpointBarrier checkpointBarrier) {
         // The timer isn't triggered when the checkpoint completes quickly, so cancel timer here.
+        //当检查点快速完成时，计时器不会触发，因此请在此处取消计时器。
         cancelAlignmentTimer();
         if (!checkpointBarrier.getCheckpointOptions().isTimeoutable()) {
             return;
         }
 
+        //获取计时器延迟
         long timerDelay = BarrierAlignmentUtil.getTimerDelay(clock, checkpointBarrier);
 
         alignmentTimer =
                 registerTimer.registerTask(
                         () -> {
                             try {
+                                //对齐屏障超时
                                 operatorChain.alignedBarrierTimeout(checkpointId);
                             } catch (Exception e) {
                                 ExceptionUtils.rethrowIOException(e);
@@ -526,12 +544,15 @@ class SubtaskCheckpointCoordinatorImpl implements SubtaskCheckpointCoordinator {
     @Override
     public void initInputsCheckpoint(long id, CheckpointOptions checkpointOptions)
             throws CheckpointException {
+        //是未对齐的检查点
         if (checkpointOptions.isUnalignedCheckpoint()) {
             channelStateWriter.start(id, checkpointOptions);
 
+            //准备机上数据快照
             prepareInflightDataSnapshot(id);
         } else if (checkpointOptions.isTimeoutable()) {
             // The output buffer may need to be snapshotted, so start the channelStateWriter here.
+            //输出缓冲区可能需要快照，因此在此处启动channelStateWriter。
             channelStateWriter.start(id, checkpointOptions);
             channelStateWriter.finishInput(id);
         }
@@ -708,6 +729,7 @@ class SubtaskCheckpointCoordinatorImpl implements SubtaskCheckpointCoordinator {
                         isTaskFinished,
                         isRunning);
 
+        //注册异步检查点可运行
         registerAsyncCheckpointRunnable(
                 asyncCheckpointRunnable.getCheckpointId(), asyncCheckpointRunnable);
 
@@ -748,6 +770,7 @@ class SubtaskCheckpointCoordinatorImpl implements SubtaskCheckpointCoordinator {
         storage = applyFileMergingCheckpoint(storage, checkpointOptions);
 
         try {
+            //快照状态
             operatorChain.snapshotState(
                     operatorSnapshotsInProgress,
                     checkpointMetaData,

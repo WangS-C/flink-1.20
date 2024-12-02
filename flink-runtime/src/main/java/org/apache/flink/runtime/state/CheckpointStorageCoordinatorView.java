@@ -79,6 +79,10 @@ public interface CheckpointStorageCoordinatorView {
      * @throws IOException Thrown if the storage location cannot be initialized due to an I/O
      *     exception.
      */
+    //使用给定的ID初始化新检查点的存储位置。
+    //返回的存储位置可用于将检查点数据和元数据写入到实际检查点数据应被存储的位置并获得该位置的指针。
+    //参数:
+    //checkpointId-应保留的检查点的ID (逻辑时间戳)。
     CheckpointStorageLocation initializeLocationForCheckpoint(long checkpointId) throws IOException;
 
     /**

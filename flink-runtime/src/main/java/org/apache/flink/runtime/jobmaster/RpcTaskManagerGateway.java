@@ -110,6 +110,7 @@ public class RpcTaskManagerGateway implements TaskManagerGateway {
             long checkpointId,
             long timestamp,
             CheckpointOptions checkpointOptions) {
+        //触发检查点
         return taskExecutorGateway.triggerCheckpoint(
                 executionAttemptID, checkpointId, timestamp, checkpointOptions);
     }

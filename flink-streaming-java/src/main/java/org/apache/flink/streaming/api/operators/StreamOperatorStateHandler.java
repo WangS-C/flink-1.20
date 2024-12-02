@@ -190,8 +190,10 @@ public class StreamOperatorStateHandler {
             CheckpointStreamFactory factory,
             boolean isUsingCustomRawKeyedState)
             throws CheckpointException {
+
         KeyGroupRange keyGroupRange =
                 null != keyedStateBackend
+                        //返回此状态后端负责的键组。
                         ? keyedStateBackend.getKeyGroupRange()
                         : KeyGroupRange.EMPTY_KEY_GROUP_RANGE;
 
@@ -201,6 +203,7 @@ public class StreamOperatorStateHandler {
                 new StateSnapshotContextSynchronousImpl(
                         checkpointId, timestamp, factory, keyGroupRange, closeableRegistry);
 
+        //快照状态
         snapshotState(
                 streamOperator,
                 timeServiceManager,

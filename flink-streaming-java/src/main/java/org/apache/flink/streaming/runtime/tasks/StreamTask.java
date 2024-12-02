@@ -1305,10 +1305,12 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 
                         if (noUnfinishedInputGates) {
                             result.complete(
+                                    //触发器检查点异步
                                     triggerCheckpointAsyncInMailbox(
                                             checkpointMetaData, checkpointOptions));
                         } else {
                             result.complete(
+                                    //触发未完成的通道检查点
                                     triggerUnfinishedChannelsCheckpoint(
                                             checkpointMetaData, checkpointOptions));
                         }
@@ -1336,18 +1338,22 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
                                     System.currentTimeMillis() - checkpointMetaData.getTimestamp());
 
             // No alignment if we inject a checkpoint
+            //如果我们注入检查点，则不对齐
             CheckpointMetricsBuilder checkpointMetrics =
                     new CheckpointMetricsBuilder()
                             .setAlignmentDurationNanos(0L)
                             .setBytesProcessedDuringAlignment(0L)
                             .setCheckpointStartDelayNanos(latestAsyncCheckpointStartDelayNanos);
 
+            //初始化新检查点。
             subtaskCheckpointCoordinator.initInputsCheckpoint(
                     checkpointMetaData.getCheckpointId(), checkpointOptions);
 
             boolean success =
+                    //执行检查点
                     performCheckpoint(checkpointMetaData, checkpointOptions, checkpointMetrics);
             if (!success) {
+                //拒绝检查点
                 declineCheckpoint(checkpointMetaData.getCheckpointId());
             }
             return success;
@@ -1463,16 +1469,19 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
         if (isRunning) {
             actionExecutor.runThrowing(
                     () -> {
+                        //是同步的
                         if (isSynchronous(checkpointType)) {
                             setSynchronousSavepoint(checkpointMetaData.getCheckpointId());
                         }
 
+                        //是否启用了已完成任务的检查点
                         if (areCheckpointsWithFinishedTasksEnabled()
                                 && endOfDataReceived
                                 && this.finalCheckpointMinId == null) {
                             this.finalCheckpointMinId = checkpointMetaData.getCheckpointId();
                         }
 
+                        //检查点状态
                         subtaskCheckpointCoordinator.checkpointState(
                                 checkpointMetaData,
                                 checkpointOptions,

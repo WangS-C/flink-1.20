@@ -600,6 +600,7 @@ public class RocksDBKeyedStateBackend<K> extends AbstractKeyedStateBackend<K> {
             throws Exception {
 
         // flush everything into db before taking a snapshot
+        //在拍摄快照之前将所有内容刷新到db中
         writeBatchWrapper.flush();
 
         return new SnapshotStrategyRunner<>(

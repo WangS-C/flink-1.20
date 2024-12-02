@@ -104,6 +104,7 @@ public interface ChannelStateWriter extends Closeable {
     int SEQUENCE_NUMBER_UNKNOWN = -2;
 
     /** Initiate write of channel state for the given checkpoint id. */
+    //启动给定检查点id的通道状态写入。
     void start(long checkpointId, CheckpointOptions checkpointOptions);
 
     /**
@@ -172,6 +173,8 @@ public interface ChannelStateWriter extends Closeable {
      * When both {@link #finishInput} and {@link #finishOutput} were called the results can be
      * (eventually) obtained using {@link #getAndRemoveWriteResult}
      */
+    //完成给定检查点id的通道状态数据的写入。必须在start(long，CheckpointOptions) 之后调用，并添加给定检查点的所有输出数据。
+    //当同时调用finishInput和finishOutput时，可以 (最终) 使用getandremovwriteresult获得结果
     void finishOutput(long checkpointId);
 
     /**

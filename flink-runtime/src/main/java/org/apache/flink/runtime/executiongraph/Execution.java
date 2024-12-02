@@ -938,6 +938,7 @@ public class Execution
      * @param checkpointOptions of the checkpoint to trigger
      * @return Future acknowledge which is returned once the checkpoint has been triggered
      */
+    //在此执行的任务上触发新的检查点。
     public CompletableFuture<Acknowledge> triggerCheckpoint(
             long checkpointId, long timestamp, CheckpointOptions checkpointOptions) {
         return triggerCheckpointHelper(checkpointId, timestamp, checkpointOptions);
@@ -964,6 +965,7 @@ public class Execution
         if (slot != null) {
             final TaskManagerGateway taskManagerGateway = slot.getTaskManagerGateway();
 
+            //通过RPC组件远程调用来执行Task上的Checkpoint操作。
             return taskManagerGateway.triggerCheckpoint(
                     attemptId, getVertex().getJobId(), checkpointId, timestamp, checkpointOptions);
         }

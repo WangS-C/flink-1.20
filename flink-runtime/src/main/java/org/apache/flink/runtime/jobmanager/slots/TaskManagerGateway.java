@@ -132,6 +132,7 @@ public interface TaskManagerGateway extends TaskExecutorOperatorEventGateway {
      * @param checkpointOptions of the checkpoint to trigger
      * @return Future acknowledge which is returned once the checkpoint has been triggered
      */
+    //为给定任务触发一个检查点。
     CompletableFuture<Acknowledge> triggerCheckpoint(
             ExecutionAttemptID executionAttemptID,
             JobID jobId,

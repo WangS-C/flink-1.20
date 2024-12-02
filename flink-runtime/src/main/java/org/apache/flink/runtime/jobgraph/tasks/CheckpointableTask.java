@@ -49,6 +49,9 @@ public interface CheckpointableTask {
      * @return future with value of {@code false} if the checkpoint was not carried out, {@code
      *     true} otherwise
      */
+    //此方法由检查点协调器异步调用以触发检查点。
+    //对于通过注入初始屏障 (即源任务) 启动检查点的任务，调用此方法。
+    //相比之下，下游运算符上的检查点 (接收检查点屏障的结果) 调用方法triggerCheckpointOnBarrier(CheckpointMetaData，CheckpointOptions，CheckpointMetricsBuilder)。
     CompletableFuture<Boolean> triggerCheckpointAsync(
             CheckpointMetaData checkpointMetaData, CheckpointOptions checkpointOptions);
 
