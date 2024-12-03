@@ -163,6 +163,7 @@ public interface TaskExecutorGateway
      * @param lastSubsumedCheckpointId unique id for the checkpoint to be subsumed
      * @return Future acknowledge if the checkpoint has been successfully confirmed
      */
+    //确认给定任务的检查点。检查点由检查点ID和检查点时间戳标识。
     CompletableFuture<Acknowledge> confirmCheckpoint(
             ExecutionAttemptID executionAttemptID,
             long completedCheckpointId,

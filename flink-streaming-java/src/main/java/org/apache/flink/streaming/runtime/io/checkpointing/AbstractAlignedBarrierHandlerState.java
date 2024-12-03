@@ -58,10 +58,12 @@ abstract class AbstractAlignedBarrierHandlerState implements BarrierHandlerState
             throws IOException, CheckpointException {
         checkState(!checkpointBarrier.getCheckpointOptions().isUnalignedCheckpoint());
 
+        //在收到所有channel发送的CheckpointBarrier消息之前只阻塞channel
         if (markChannelBlocked) {
             state.blockChannel(channelInfo);
         }
 
+        //当收到所有channel发送的屏障消息时Task端开始执行Checkpoint过程。
         if (controller.allBarriersReceived()) {
             return triggerGlobalCheckpoint(controller, checkpointBarrier);
         }
@@ -71,6 +73,7 @@ abstract class AbstractAlignedBarrierHandlerState implements BarrierHandlerState
 
     protected WaitingForFirstBarrier triggerGlobalCheckpoint(
             Controller controller, CheckpointBarrier checkpointBarrier) throws IOException {
+        //触发全局检查点
         controller.triggerGlobalCheckpoint(checkpointBarrier);
         state.unblockAllChannels();
         return new WaitingForFirstBarrier(state.getInputs());

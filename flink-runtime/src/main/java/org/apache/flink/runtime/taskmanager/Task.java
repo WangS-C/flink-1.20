@@ -1538,6 +1538,7 @@ public class Task
                         break;
                     case COMPLETE:
                         ((CheckpointableTask) invokable)
+                                //通知检查点完成异步
                                 .notifyCheckpointCompleteAsync(checkpointId);
                         break;
                     case SUBSUME:

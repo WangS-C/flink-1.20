@@ -83,8 +83,10 @@ public class SingleCheckpointBarrierHandler extends CheckpointBarrierHandler {
      */
     @Nullable private CheckpointBarrier pendingCheckpointBarrier;
 
+    //代表当前收到CheckpointBarrier消息的上游channel集合
     private final Set<InputChannelInfo> alignedChannels = new HashSet<>();
 
+   //代表Task需要接收CheckpointBarrier消息的所有channel数量
     private int targetChannelCount;
 
     private long lastCancelledOrCompletedCheckpointId = -1L;
@@ -228,6 +230,7 @@ public class SingleCheckpointBarrierHandler extends CheckpointBarrierHandler {
         checkNewCheckpoint(barrier);
         checkState(currentCheckpointId == barrierId);
 
+        //标记检查点对齐并转换状态
         markCheckpointAlignedAndTransformState(
                 channelInfo,
                 barrier,
@@ -240,18 +243,21 @@ public class SingleCheckpointBarrierHandler extends CheckpointBarrierHandler {
             FunctionWithException<BarrierHandlerState, BarrierHandlerState, Exception>
                     stateTransformer)
             throws IOException {
-
         alignedChannels.add(alignedChannel);
+
+        //当收到第一个channel发送的CheckpointBarrier消息时，Task开始进行barrier对齐，并将该channel设置为阻塞状态
         if (alignedChannels.size() == 1) {
             if (targetChannelCount == 1) {
                 markAlignmentStartAndEnd(barrier.getId(), barrier.getTimestamp());
             } else {
+                //标记对齐开始
                 markAlignmentStart(barrier.getId(), barrier.getTimestamp());
             }
         }
 
         // we must mark alignment end before calling currentState.barrierReceived which might
         // trigger a checkpoint with unfinished future for alignment duration
+        //我们必须在调用currentState.Barrierreceives之前标记对齐结束，这可能会在对齐持续时间内触发具有未完成的future的检查点
         if (alignedChannels.size() == targetChannelCount) {
             if (targetChannelCount > 1) {
                 markAlignmentEnd();
@@ -259,6 +265,7 @@ public class SingleCheckpointBarrierHandler extends CheckpointBarrierHandler {
         }
 
         try {
+            //调用org.apache.flink.streaming.runtime.io.checkpointing.BarrierHandlerState.barrierReceived
             currentState = stateTransformer.apply(currentState);
         } catch (CheckpointException e) {
             abortInternal(currentCheckpointId, e);

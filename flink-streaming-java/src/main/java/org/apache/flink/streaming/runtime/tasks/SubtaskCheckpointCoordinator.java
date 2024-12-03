@@ -74,6 +74,7 @@ public interface SubtaskCheckpointCoordinator extends Closeable {
      * @param operatorChain The chain of operators executed by the task.
      * @param isRunning Whether the task is running.
      */
+    //分布式检查点完成后，在任务端发出通知。
     void notifyCheckpointComplete(
             long checkpointId, OperatorChain<?, ?> operatorChain, Supplier<Boolean> isRunning)
             throws Exception;

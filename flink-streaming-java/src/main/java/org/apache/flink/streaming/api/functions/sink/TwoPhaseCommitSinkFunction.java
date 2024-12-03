@@ -191,6 +191,7 @@ public abstract class TwoPhaseCommitSinkFunction<IN, TXN, CONTEXT> extends RichS
      * and {@link TwoPhaseCommitSinkFunction#recoverAndCommit(Object)} will be called again for the
      * same transaction.
      */
+    //提交预先提交的事务。如果此方法失败，则会重新启动Flink应用程序，并为同一事务再次调用recoverAndCommit(Object)。
     protected abstract void commit(TXN transaction);
 
     /**
@@ -307,6 +308,7 @@ public abstract class TwoPhaseCommitSinkFunction<IN, TXN, CONTEXT> extends RichS
 
             logWarningIfTimeoutAlmostReached(pendingTransaction);
             try {
+                //提交预先提交的事务
                 commit(pendingTransaction.handle);
             } catch (Throwable t) {
                 if (firstError == null) {

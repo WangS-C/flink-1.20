@@ -64,6 +64,7 @@ public interface CheckpointableTask {
      * @param checkpointMetrics Metrics about this checkpoint
      * @throws IOException Exceptions thrown as the result of triggering a checkpoint are forwarded.
      */
+    //当由于在所有输入流上接收到检查点屏障而触发检查点时，将调用此方法。
     void triggerCheckpointOnBarrier(
             CheckpointMetaData checkpointMetaData,
             CheckpointOptions checkpointOptions,
@@ -77,6 +78,7 @@ public interface CheckpointableTask {
      * @param checkpointId The ID of the checkpoint that is complete.
      * @return future that completes when the notification has been processed by the task.
      */
+    //当检查点已经完成时，即，当检查点协调器已经从所有参与的任务接收到通知时，调用。
     Future<Void> notifyCheckpointCompleteAsync(long checkpointId);
 
     /**
@@ -97,6 +99,7 @@ public interface CheckpointableTask {
      * @param checkpointId The ID of the checkpoint that is subsumed.
      * @return future that completes when the notification has been processed by the task.
      */
+    //当检查点已被包含时，即，当检查点协调器已确认一个检查点已完成时，调用，并尝试删除第一个先前的检查点。
     Future<Void> notifyCheckpointSubsumedAsync(long checkpointId);
 
     /**

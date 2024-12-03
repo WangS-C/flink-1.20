@@ -1424,6 +1424,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 
         FlinkSecurityManager.monitorUserSystemExitForCurrentThread();
         try {
+            //执行检查点
             performCheckpoint(checkpointMetaData, checkpointOptions, checkpointMetrics);
         } catch (CancelTaskException e) {
             LOG.info(
@@ -1551,6 +1552,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
     @Override
     public Future<Void> notifyCheckpointCompleteAsync(long checkpointId) {
         return notifyCheckpointOperation(
+                //通知检查点完成
                 () -> notifyCheckpointComplete(checkpointId),
                 String.format("checkpoint %d complete", checkpointId));
     }
@@ -1610,6 +1612,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 
         latestReportCheckpointId = checkpointId;
 
+        //通知检查点完成
         subtaskCheckpointCoordinator.notifyCheckpointComplete(
                 checkpointId, operatorChain, this::isRunning);
         if (isRunning) {

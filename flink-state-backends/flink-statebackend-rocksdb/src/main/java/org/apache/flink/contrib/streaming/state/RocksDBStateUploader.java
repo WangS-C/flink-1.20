@@ -68,6 +68,7 @@ public class RocksDBStateUploader implements Closeable {
      * @param stateScope
      * @throws Exception Thrown if can not upload all the files.
      */
+    //使用指定数量的线程将所有文件上传到检查点文件系统。
     public List<HandleAndLocalPath> uploadFilesToCheckpointFs(
             @Nonnull List<Path> files,
             CheckpointStreamFactory checkpointStreamFactory,

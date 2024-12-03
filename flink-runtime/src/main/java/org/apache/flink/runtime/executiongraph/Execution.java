@@ -883,6 +883,7 @@ public class Execution
      *     org.apache.flink.runtime.checkpoint.CheckpointStoreUtil#INVALID_CHECKPOINT_ID} means no
      *     checkpoint has been subsumed.
      */
+    //如果可能，向执行此任务通知已完成的检查点和最后包含的检查点id。
     public void notifyCheckpointOnComplete(
             long completedCheckpointId, long completedTimestamp, long lastSubsumedCheckpointId) {
         final LogicalSlot slot = assignedResource;

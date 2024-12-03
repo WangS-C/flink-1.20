@@ -1137,6 +1137,7 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                         completedCheckpointTimestamp,
                         lastSubsumedCheckpointId,
                         executionAttemptID);
+                //通知检查点完成
                 task.notifyCheckpointComplete(completedCheckpointId);
 
                 task.notifyCheckpointSubsumed(lastSubsumedCheckpointId);

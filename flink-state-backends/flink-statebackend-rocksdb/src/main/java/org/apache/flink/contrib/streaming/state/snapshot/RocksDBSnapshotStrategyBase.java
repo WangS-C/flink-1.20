@@ -96,6 +96,7 @@ public abstract class RocksDBSnapshotStrategyBase<K, R extends SnapshotResources
     @Nonnull protected final TypeSerializer<K> keySerializer;
 
     /** Key/Value state meta info from the backend. */
+    //来自后端的键/ 值状态元信息。
     @Nonnull protected final LinkedHashMap<String, RocksDbKvStateInfo> kvStateInformation;
 
     /** The key-group range for the task. */
@@ -154,8 +155,10 @@ public abstract class RocksDBSnapshotStrategyBase<K, R extends SnapshotResources
         final List<StateMetaInfoSnapshot> stateMetaInfoSnapshots =
                 new ArrayList<>(kvStateInformation.size());
         final PreviousSnapshot previousSnapshot =
+                //快照元数据
                 snapshotMetaData(checkpointId, stateMetaInfoSnapshots);
 
+        //获取DB本机检查点
         takeDBNativeCheckpoint(snapshotDirectory);
 
         return new NativeRocksDBSnapshotResources(
@@ -276,6 +279,7 @@ public abstract class RocksDBSnapshotStrategyBase<K, R extends SnapshotResources
 
         try {
             // no need for compression scheme support because sst-files are already compressed
+            //不需要压缩方案支持，因为sst文件已经压缩
             KeyedBackendSerializationProxy<K> serializationProxy =
                     new KeyedBackendSerializationProxy<>(
                             keySerializer, stateMetaInfoSnapshots, false);

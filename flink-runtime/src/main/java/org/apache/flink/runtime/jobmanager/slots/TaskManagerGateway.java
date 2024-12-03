@@ -99,6 +99,7 @@ public interface TaskManagerGateway extends TaskExecutorOperatorEventGateway {
      * @param completedTimestamp of the completed checkpoint
      * @param lastSubsumedCheckpointId of the last subsumed checkpoint id,
      */
+    //如果可能，向给定任务通知已完成的检查点和最后包含的检查点id。
     void notifyCheckpointOnComplete(
             ExecutionAttemptID executionAttemptID,
             JobID jobId,

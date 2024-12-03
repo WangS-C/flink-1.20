@@ -139,6 +139,7 @@ public class RocksIncrementalSnapshotStrategy<K>
         }
 
         final PreviousSnapshot previousSnapshot;
+        //共享文件策略
         final CheckpointType.SharingFilesStrategy sharingFilesStrategy =
                 checkpointOptions.getCheckpointType().getSharingFilesStrategy();
         switch (sharingFilesStrategy) {
@@ -199,6 +200,7 @@ public class RocksIncrementalSnapshotStrategy<K>
         final Collection<HandleAndLocalPath> confirmedSstFiles;
 
         // use the last completed checkpoint as the comparison base.
+        //使用最后完成的检查点作为比较基础。
         synchronized (uploadedSstFiles) {
             lastCompletedCheckpoint = lastCompletedCheckpointId;
             confirmedSstFiles = uploadedSstFiles.get(lastCompletedCheckpoint);
@@ -215,6 +217,7 @@ public class RocksIncrementalSnapshotStrategy<K>
                 confirmedSstFiles);
 
         // snapshot meta data to save
+        //要保存的快照元数据
         for (Map.Entry<String, RocksDbKvStateInfo> stateMetaInfoEntry :
                 kvStateInformation.entrySet()) {
             stateMetaInfoSnapshots.add(stateMetaInfoEntry.getValue().metaInfo.snapshot());
@@ -256,10 +259,13 @@ public class RocksIncrementalSnapshotStrategy<K>
             boolean completed = false;
 
             // Handle to the meta data file
+            //元数据文件的句柄
             SnapshotResult<StreamStateHandle> metaStateHandle = null;
             // Handles to new sst files since the last completed checkpoint will go here
+            //自上次完成检查点以来对新sst文件的句柄将转到此处
             final List<HandleAndLocalPath> sstFiles = new ArrayList<>();
             // Handles to the misc files in the current snapshot will go here
+            //当前快照中的misc文件的句柄将转到此处
             final List<HandleAndLocalPath> miscFiles = new ArrayList<>();
 
             final List<StreamStateHandle> reusedHandle = new ArrayList<>();
@@ -267,6 +273,7 @@ public class RocksIncrementalSnapshotStrategy<K>
             try {
 
                 metaStateHandle =
+                        //物化元数据
                         materializeMetaData(
                                 snapshotCloseableRegistry,
                                 tmpResourcesRegistry,
@@ -282,6 +289,7 @@ public class RocksIncrementalSnapshotStrategy<K>
 
                 long checkpointedSize = metaStateHandle.getStateSize();
                 checkpointedSize +=
+                        //上传快照文件
                         uploadSnapshotFiles(
                                 sstFiles,
                                 miscFiles,
@@ -309,6 +317,7 @@ public class RocksIncrementalSnapshotStrategy<K>
                                 checkpointedSize);
 
                 Optional<KeyedStateHandle> localSnapshot =
+                        //获取本地快照
                         getLocalSnapshot(metaStateHandle.getTaskLocalSnapshot(), sstFiles);
                 final SnapshotResult<KeyedStateHandle> snapshotResult =
                         localSnapshot
@@ -343,6 +352,7 @@ public class RocksIncrementalSnapshotStrategy<K>
                 throws Exception {
 
             // write state data
+            //写入状态数据
             Preconditions.checkState(localBackupDirectory.exists());
 
             Path[] files = localBackupDirectory.listDirectory();
@@ -359,9 +369,11 @@ public class RocksIncrementalSnapshotStrategy<K>
                                 : CheckpointedStateScope.SHARED;
 
                 // Collect the reuse of state handle.
+                //收集状态句柄的重用。
                 sstFiles.stream().map(HandleAndLocalPath::getHandle).forEach(reusedHandle::add);
 
                 List<HandleAndLocalPath> sstFilesUploadResult =
+                        //将文件上传到检查点fs
                         stateUploader.uploadFilesToCheckpointFs(
                                 sstFilePaths,
                                 checkpointStreamFactory,
