@@ -169,13 +169,17 @@ abstract class PlannerBase(
 
   override def translate(
       modifyOperations: util.List[ModifyOperation]): util.List[Transformation[_]] = {
+    //前期准备
     beforeTranslation()
     if (modifyOperations.isEmpty) {
       return List.empty[Transformation[_]]
     }
 
+    //转换为rel
     val relNodes = modifyOperations.map(translateToRel)
+    //优化rel
     val optimizedRelNodes = optimize(relNodes)
+    //转换为ExecNodeGraph
     val execGraph = translateToExecNodeGraph(optimizedRelNodes, isCompiled = false)
     val transformations = translateToPlan(execGraph)
     afterTranslation()
@@ -468,6 +472,8 @@ abstract class PlannerBase(
   protected def beforeTranslation(): Unit = {
     // Add query start time to TableConfig, these config are used internally,
     // these configs will be used by temporal functions like CURRENT_TIMESTAMP,LOCALTIMESTAMP.
+    //将查询开始时间添加到TableConfig，这些配置在内部使用，
+    // 这些配置将由时间函数使用，如CURRENT_TIMESTAMP，LOCALTIMESTAMP。
     val epochTime: JLong = System.currentTimeMillis()
     tableConfig.set(TABLE_QUERY_START_EPOCH_TIME, epochTime)
     val localTime: JLong = epochTime +

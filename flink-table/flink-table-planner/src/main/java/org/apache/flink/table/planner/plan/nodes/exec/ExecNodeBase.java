@@ -200,6 +200,7 @@ public abstract class ExecNodeBase<T> implements ExecNode<T> {
      *     retrieving configuration from the {@code planner}. For more details check {@link
      *     ExecNodeConfig}.
      */
+    //内部方法，将此节点转换为Flink运算符。
     protected abstract Transformation<T> translateToPlanInternal(
             PlannerBase planner, ExecNodeConfig config);
 

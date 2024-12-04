@@ -68,6 +68,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * <p>Regular joins are the most generic type of join in which any new records or changes to either
  * side of the join input are visible and are affecting the whole join result.
  */
+//用于常规联接的StreamExecNode。
+//常规联接是最通用的联接类型，其中对联接输入任一侧的任何新记录或更改都是可见的，并且会影响整个联接结果
 @ExecNodeMetadata(
         name = "stream-exec-join",
         version = 1,
