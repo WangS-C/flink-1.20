@@ -75,12 +75,16 @@ abstract class CommonSubGraphBasedOptimizer extends Optimizer {
    * @return
    *   a list of RelNode represents an optimized RelNode DAG.
    */
+  //生成优化的RelNode来自原始关系节点的DAG。
+  //注意: 结果DAG中的重用节点将转换为相同的RelNode，并且结果不包含IntermediateRelTable.。
   override def optimize(roots: Seq[RelNode]): Seq[RelNode] = {
     // resolve hints before optimizing
+    //在优化之前解决提示
     val queryHintsResolver = new QueryHintsResolver()
     val resolvedHintRoots = queryHintsResolver.resolve(toJava(roots))
 
     // clear query block alias bef optimizing
+    //清除查询块别名bef优化
     val clearQueryBlockAliasResolver = new ClearQueryBlockAliasResolver
     val resolvedAliasRoots = clearQueryBlockAliasResolver.resolve(resolvedHintRoots)
 
@@ -91,16 +95,19 @@ abstract class CommonSubGraphBasedOptimizer extends Optimizer {
         require(plan != null)
         plan
     }
+    //展开每个RelNode块中的中间Rel表
     val expanded = expandIntermediateTableScan(optimizedPlan)
 
     val postOptimizedPlan = postOptimize(expanded)
 
     // Rewrite same rel object to different rel objects
     // in order to get the correct dag (dag reuse is based on object not digest)
+    //将相同的rel对象重写为不同的rel对象，以获得正确的dag (dag重用基于对象而不是摘要)
     val shuttle = new SameRelObjectShuttle()
     val relsWithoutSameObj = postOptimizedPlan.map(_.accept(shuttle))
 
     // reuse subplan
+    //重用子计划
     SubplanReuser.reuseDuplicatedSubplan(
       relsWithoutSameObj,
       unwrapTableConfig(roots.head),
@@ -112,6 +119,7 @@ abstract class CommonSubGraphBasedOptimizer extends Optimizer {
    * Post process for the physical [[RelNode]] dag, e.g., can be overloaded for validation or
    * rewriting purpose.
    */
+  //例如，物理RelNode dag的后处理可以被重载以用于验证或重写目的。
   protected def postOptimize(expanded: Seq[RelNode]): Seq[RelNode] = expanded
 
   /**
@@ -121,6 +129,7 @@ abstract class CommonSubGraphBasedOptimizer extends Optimizer {
    * @return
    *   optimized [[RelNodeBlock]]s.
    */
+  //将RelNode树分解为多个RelNodeBlocks，递归优化每个RelNodeBlock,返回优化RelNodeBlocks。
   protected def doOptimize(roots: Seq[RelNode]): Seq[RelNodeBlock]
 
   /** Returns a new table scan which wraps the given IntermediateRelTable. */
@@ -132,11 +141,13 @@ abstract class CommonSubGraphBasedOptimizer extends Optimizer {
   }
 
   /** Expand [[IntermediateRelTable]] in each RelNodeBlock. */
+  //展开每个RelNode块中的中间Rel表。
   private def expandIntermediateTableScan(nodes: Seq[RelNode]): Seq[RelNode] = {
 
     class ExpandShuttle extends RelShuttleImpl {
 
       // ensure the same intermediateTable would be expanded to the same RelNode tree.
+      //确保相同的intermediateTable将被扩展到相同的RelNode树。
       private val expandedIntermediateTables =
         new util.IdentityHashMap[IntermediateRelTable, RelNode]()
 

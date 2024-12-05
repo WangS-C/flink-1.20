@@ -39,6 +39,13 @@ import java.util.Map;
  * in this operation so that we can reuse this DynamicTableSink instead of creating a new
  * DynamicTableSink during translating the operation again which is error-prone.
  */
+//DML操作，告诉写入实现SupportsStaging的接收器。
+// 当前。此操作针对CTAS(CREATE TABLE AS SELECT) 和RTAS([CREATE OR] REPLACE TABLE AS SELECT) 语句。
+//StagedSinkModifyOperation是原子CTAS/ RTAS方案中SinkModifyOperation的扩展。
+// 在检查相应的接收器是否支持原子CTAS/ RTAS时，我们需要首先获取DynamicTableSink并检查它是否实现了SupportsStaging ，
+// 然后调用SupportsStaging. applyStaging方法。
+// 我们在此操作中维护DynamicTableSink，以便我们可以重用此DynamicTableSink，
+// 而不是在再次翻译操作期间创建新的DynamicTableSink，这很容易出错。
 @Internal
 public class StagedSinkModifyOperation extends SinkModifyOperation {
 

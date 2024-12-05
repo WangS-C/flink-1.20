@@ -172,6 +172,8 @@ class ExpandTableScanShuttle extends RelShuttleImpl {
  * }}}
  * After rewrote, Scan1 and Scan2 are different object but have same digest.
  */
+//将相同的rel对象重写为不同的rel对象。
+//重写后，Scan1和Scan2是不同的对象，但具有相同的摘要。
 class SameRelObjectShuttle extends DefaultRelShuttle {
   private val visitedNodes = Sets.newIdentityHashSet[RelNode]()
 

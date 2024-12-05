@@ -871,6 +871,7 @@ public class TableEnvironmentImpl implements TableEnvironmentInternal {
             }
         }
 
+        //转换成Transformation
         List<Transformation<?>> transformations = translate(mapOperations);
         List<String> sinkIdentifierNames = extractSinkIdentifierNames(mapOperations);
         return executeInternal(transformations, sinkIdentifierNames, jobStatusHookList);
@@ -1098,6 +1099,7 @@ public class TableEnvironmentImpl implements TableEnvironmentInternal {
     @Override
     public TableResultInternal executeInternal(Operation operation) {
         // delegate execution to Operation if it implements ExecutableOperation
+        //如果它实现了ExecutableOperation，则将执行委托给Operation
         if (operation instanceof ExecutableOperation) {
             return ((ExecutableOperation) operation).execute(operationCtx);
         }

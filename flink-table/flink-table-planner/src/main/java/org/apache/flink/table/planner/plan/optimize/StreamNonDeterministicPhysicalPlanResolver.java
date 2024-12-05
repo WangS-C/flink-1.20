@@ -168,6 +168,8 @@ public class StreamNonDeterministicPhysicalPlanResolver {
      * OptimizerConfigOptions#TABLE_OPTIMIZER_NONDETERMINISTIC_UPDATE_STRATEGY} is in `TRY_RESOLVE`
      * mode. Will raise an error if the NDU issues in the given plan can not be completely solved.
      */
+    //如果配置的OptimizerConfigOptions. TABLE_OPTIMIZER_NONDETERMINISTIC_UPDATE_策略在 'TRY_RESOLVE' 模式，
+    // 请尝试解决NDU问题。如果给定计划中的NDU问题无法完全解决，则会出现错误。
     public static List<RelNode> resolvePhysicalPlan(
             List<RelNode> expanded, TableConfig tableConfig) {
         OptimizerConfigOptions.NonDeterministicUpdateStrategy handling =

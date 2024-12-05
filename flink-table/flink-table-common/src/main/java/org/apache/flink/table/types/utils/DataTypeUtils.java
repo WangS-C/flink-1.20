@@ -202,6 +202,9 @@ public final class DataTypeUtils {
      * @param transformations the transformations to transform data type to another type.
      * @return the new data type
      */
+    //使用给定的转换将给定的数据类型转换为不同的数据类型。
+    //转换将按给定的顺序调用。在构造或复合类型的情况下，转换将首先被传递地应用于子类型。
+    //可以转换DataType. getLogicalType() 和DataType. getConversionClass()。
     public static DataType transform(
             @Nullable DataTypeFactory factory,
             DataType typeToTransform,

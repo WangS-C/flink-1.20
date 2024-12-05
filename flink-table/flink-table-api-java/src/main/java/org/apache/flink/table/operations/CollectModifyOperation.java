@@ -28,6 +28,7 @@ import java.util.Collections;
  * Special, internal kind of {@link ModifyOperation} that collects the content of {@link
  * QueryOperation} to local.
  */
+//特殊的内部类型的ModifyOperation ，它将QueryOperation的内容收集到本地。
 @Internal
 public final class CollectModifyOperation implements ModifyOperation {
 

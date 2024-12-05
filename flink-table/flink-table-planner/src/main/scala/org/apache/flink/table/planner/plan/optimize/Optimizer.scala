@@ -34,5 +34,7 @@ trait Optimizer {
    * @return
    *   a list of RelNode represents an optimized RelNode DAG.
    */
+  //生成优化的RelNode来自原始关系节点的DAG。
+  //注意: 结果DAG中的重用节点将转换为相同的RelNode。
   def optimize(roots: Seq[RelNode]): Seq[RelNode]
 }

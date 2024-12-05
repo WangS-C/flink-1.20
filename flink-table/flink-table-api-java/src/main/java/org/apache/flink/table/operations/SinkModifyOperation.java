@@ -37,6 +37,9 @@ import java.util.Map;
  * TableResult#collect()} sinks are handled by respectively {@link ExternalModifyOperation} and
  * {@link CollectModifyOperation}.
  */
+//告诉写入到接收器的DML操作。
+//接收器由getContextResolvedTable() 描述，通常用于使用DynamicTableSink定义实现的每个接收器。
+// DataStream和TableResult. collect() 的接收器分别由ExternalModifyOperation和CollectModifyOperation处理。
 @Internal
 public class SinkModifyOperation implements ModifyOperation {
 

@@ -25,6 +25,7 @@ import java.util.Collections;
 
 /** DML operation that tells to write to the given sink. */
 @Internal
+//告诉写入给定接收器的DML操作。
 public class UnregisteredSinkModifyOperation<T> implements ModifyOperation {
 
     private final TableSink<T> sink;

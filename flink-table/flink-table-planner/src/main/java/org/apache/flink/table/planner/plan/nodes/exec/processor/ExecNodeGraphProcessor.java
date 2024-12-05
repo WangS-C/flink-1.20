@@ -27,5 +27,6 @@ import org.apache.flink.table.planner.plan.nodes.exec.ExecNodeGraph;
 public interface ExecNodeGraphProcessor {
 
     /** Given an {@link ExecNodeGraph}, process it and return the result {@link ExecNodeGraph}. */
+    //给定execnodeggraph ，处理它并返回结果execnodeggraph。
     ExecNodeGraph process(ExecNodeGraph execGraph, ProcessorContext context);
 }

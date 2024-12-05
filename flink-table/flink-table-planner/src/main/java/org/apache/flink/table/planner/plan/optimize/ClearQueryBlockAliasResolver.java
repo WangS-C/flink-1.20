@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /** A shuttle to remove query block alias hint. */
+//要删除查询块别名的shuttle提示。
 public class ClearQueryBlockAliasResolver extends RelShuttleImpl {
 
     public List<RelNode> resolve(List<RelNode> roots) {

@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /** Internal operation used to convert a {@link Table} into a DataStream. */
+//用于将表转换为数据流的内部操作。
 @Internal
 public final class ExternalModifyOperation implements ModifyOperation {
 

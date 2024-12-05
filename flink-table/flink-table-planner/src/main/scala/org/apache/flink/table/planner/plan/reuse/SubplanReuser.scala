@@ -49,9 +49,12 @@ import scala.collection.JavaConversions._
  *  Scan1    Scan2               Scan1
  * }}}
  */
+//一个实用程序类，用于通过摘要和重用它们来找出重复的子计划。
+//例如，如果Project1-Scan1和Project2-Scan2具有相同的摘要，则可以重复使用它们，并且仅保留一个重复的子计划。之后
 object SubplanReuser {
 
   /** Finds duplicated sub-plans and return the reused plan. */
+  //查找重复的子计划并返回重复使用的计划。
   def reuseDuplicatedSubplan(
       rels: Seq[RelNode],
       tableConfig: ReadableConfig,

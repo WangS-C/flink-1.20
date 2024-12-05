@@ -58,6 +58,10 @@ import static org.apache.flink.table.api.config.LookupJoinHintOptions.LOOKUP_TAB
  *
  * <p>For LIST hints such as regular join hints, they will all be retained.
  */
+//解析并验证查询提示。
+//注意: 此处不检查重复的查询提示。
+//对于诸如状态ttl提示和查找联接提示之类的KV提示，它们将被合并。如果具有相同提示名称的键冲突，则仅选择第一个值。
+//对于常规联接提示等列表提示，它们都将被保留。
 public class QueryHintsResolver extends QueryHintsRelShuttle {
     private final Set<RelHint> allHints = new HashSet<>();
     private final Set<RelHint> validHints = new HashSet<>();
@@ -77,6 +81,9 @@ public class QueryHintsResolver extends QueryHintsRelShuttle {
      * right side of this query, that means this query hint is invalid and a {@link
      * ValidationException} will be thrown.
      */
+    //解析并验证给定的RelNode列表中的查询提示，对于无效的提示，将引发ValidationException。
+    //解析查询提示后，查询提示的选项 (声明的表名或查询块名) 将替换为FlinkHints. LEFT_INPUT或FlinkHints. RIGHT_INPUT
+    //如果查询提示中声明的表名称或查询名称与此查询的左侧或右侧不匹配，则意味着此查询提示无效，将引发ValidationException。
     final List<RelNode> resolve(List<RelNode> roots) {
         List<RelNode> resolvedRoots =
                 roots.stream().map(node -> node.accept(this)).collect(Collectors.toList());

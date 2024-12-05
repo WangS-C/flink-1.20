@@ -80,6 +80,7 @@ class StreamPlanner(
 
   override protected def translateToPlan(execGraph: ExecNodeGraph): util.List[Transformation[_]] = {
     beforeTranslation()
+    //创建虚拟计划器
     val planner = createDummyPlanner()
     val transformations = execGraph.getRootNodes.map {
       //使用StreamExecNode的translateToPlan方法
@@ -158,6 +159,7 @@ class StreamPlanner(
     sb.toString()
   }
 
+  //创建虚拟计划器
   private def createDummyPlanner(): StreamPlanner = {
     val dummyExecEnv = new DummyStreamExecutionEnvironment(getExecEnv)
     val executor = new DefaultExecutor(dummyExecEnv)

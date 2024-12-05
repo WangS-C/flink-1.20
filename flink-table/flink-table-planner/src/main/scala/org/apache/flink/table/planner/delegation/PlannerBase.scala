@@ -100,6 +100,7 @@ abstract class PlannerBase(
   private var currentDialect: SqlDialect = getTableConfig.getSqlDialect
   // the transformations generated in translateToPlan method, they are not connected
   // with sink transformations but also are needed in the final graph.
+  //在translateToPlan方法中生成的转换，它们与接收器转换无关，但在最终图中也需要。
   private[flink] val extraTransformations = new util.ArrayList[Transformation[_]]()
 
   @VisibleForTesting
@@ -181,12 +182,14 @@ abstract class PlannerBase(
     val optimizedRelNodes = optimize(relNodes)
     //转换为ExecNodeGraph
     val execGraph = translateToExecNodeGraph(optimizedRelNodes, isCompiled = false)
+    //翻译一个ExecNodeGraph变成一个Transformation DAG。
     val transformations = translateToPlan(execGraph)
     afterTranslation()
     transformations
   }
 
   /** Converts a relational tree of [[ModifyOperation]] into a Calcite relational expression. */
+  //将ModifyOperation的关系树转换为Calcite关系表达式。
   @VisibleForTesting
   private[flink] def translateToRel(modifyOperation: ModifyOperation): RelNode = {
     val dataTypeFactory = catalogManager.getDataTypeFactory
@@ -195,6 +198,7 @@ abstract class PlannerBase(
         val input = createRelBuilder.queryOperation(s.getChild).build()
         val sinkSchema = s.getSink.getTableSchema
         // validate query schema and sink schema, and apply cast if possible
+        //验证查询架构和接收器架构，并在可能的情况下应用强制转换
         val query = validateSchemaAndApplyImplicitCast(
           input,
           catalogManager.getSchemaResolver.resolve(sinkSchema.toSchema),
@@ -209,6 +213,7 @@ abstract class PlannerBase(
 
       case collectModifyOperation: CollectModifyOperation =>
         val input = createRelBuilder.queryOperation(modifyOperation.getChild).build()
+        //将tablelesult.collect() 的接收器转换为RelNode。
         DynamicSinkUtils.convertCollectToRel(
           createRelBuilder,
           input,
@@ -219,6 +224,7 @@ abstract class PlannerBase(
 
       case stagedSink: StagedSinkModifyOperation =>
         val input = createRelBuilder.queryOperation(modifyOperation.getChild).build()
+        //将给定的DynamicTableSink转换为RelNode。如果需要，它会添加辅助投影。
         DynamicSinkUtils.convertSinkToRel(
           createRelBuilder,
           input,
@@ -231,9 +237,11 @@ abstract class PlannerBase(
         getTableSink(catalogSink.getContextResolvedTable, dynamicOptions).map {
           case (table, sink: TableSink[_]) =>
             // Legacy tables can't be anonymous
+            //旧表不能是匿名的
             val identifier = catalogSink.getContextResolvedTable.getIdentifier
 
             // check it's not for UPDATE/DELETE because they're not supported for Legacy table
+            //检查它不是UPDATE DELETE，因为它们不支持旧版表
             if (catalogSink.isDelete || catalogSink.isUpdate) {
               throw new TableException(
                 String.format(
@@ -247,12 +255,16 @@ abstract class PlannerBase(
             }
 
             // check the logical field type and physical field type are compatible
+            //检查逻辑字段类型和物理字段类型是否兼容
             val queryLogicalType = FlinkTypeFactory.toLogicalRowType(input.getRowType)
             // validate logical schema and physical schema are compatible
+            //验证逻辑架构和物理架构是否兼容
             validateLogicalPhysicalTypesCompatible(table, sink, queryLogicalType)
             // validate TableSink
+            //验证 TableSink
             validateTableSink(catalogSink, identifier, sink, table.getPartitionKeys)
             // validate query schema and sink schema, and apply cast if possible
+            //验证查询架构和接收器架构，并在可能的情况下应用强制转换
             val query = validateSchemaAndApplyImplicitCast(
               input,
               table.getResolvedSchema,
@@ -272,6 +284,7 @@ abstract class PlannerBase(
               catalogSink.getStaticPartitions.toMap)
 
           case (table, sink: DynamicTableSink) =>
+            //将给定的DynamicTableSink转换为RelNode
             DynamicSinkUtils.convertSinkToRel(createRelBuilder, input, catalogSink, sink)
         } match {
           case Some(sinkRel) => sinkRel
@@ -282,9 +295,11 @@ abstract class PlannerBase(
 
       case externalModifyOperation: ExternalModifyOperation =>
         val input = createRelBuilder.queryOperation(modifyOperation.getChild).build()
+        //将外部接收器 (即进一步的数据流转换) 转换为RelNode。
         DynamicSinkUtils.convertExternalToRel(createRelBuilder, input, externalModifyOperation)
 
       // legacy
+      //遗留问题
       case outputConversion: OutputConversionModifyOperation =>
         val input = createRelBuilder.queryOperation(outputConversion.getChild).build()
         val (needUpdateBefore, withChangeFlag) = outputConversion.getUpdateMode match {
@@ -297,6 +312,7 @@ abstract class PlannerBase(
         val sinkPhysicalSchema =
           inferSinkPhysicalSchema(outputConversion.getType, inputLogicalType, withChangeFlag)
         // validate query schema and sink schema, and apply cast if possible
+        //验证查询架构和接收器架构，并在可能的情况下应用强制转换
         val query = validateSchemaAndApplyImplicitCast(
           input,
           catalogManager.getSchemaResolver.resolve(sinkPhysicalSchema.toSchema),
@@ -337,6 +353,7 @@ abstract class PlannerBase(
    * Converts [[FlinkPhysicalRel]] DAG to [[ExecNodeGraph]], tries to reuse duplicate sub-plans and
    * transforms the graph based on the given processors.
    */
+  //将FlinkPhysicalRel DAG转换为execnodeggraph ，尝试重用重复的子计划，并根据给定的处理器转换图。
   @VisibleForTesting
   private[flink] def translateToExecNodeGraph(
       optimizedRelNodes: Seq[RelNode],
@@ -351,11 +368,15 @@ abstract class PlannerBase(
     require(optimizedRelNodes.forall(_.isInstanceOf[FlinkPhysicalRel]))
 
     // convert FlinkPhysicalRel DAG to ExecNodeGraph
+    //将FlinkPhysicalRel DAG转换为execnodegrah
     val generator = new ExecNodeGraphGenerator()
-    val execGraph =
+    val execGraph = {
+      //生成ExecNodeGraph
       generator.generate(optimizedRelNodes.map(_.asInstanceOf[FlinkPhysicalRel]), isCompiled)
+    }
 
     // process the graph
+    //处理graph
     val context = new ProcessorContext(this)
     val processors = getExecNodeGraphProcessors
     processors.foldLeft(execGraph)((graph, processor) => processor.process(graph, context))
@@ -371,6 +392,7 @@ abstract class PlannerBase(
    * @return
    *   The [[Transformation]] DAG that corresponds to the node DAG.
    */
+  //翻译一个ExecNodeGraph变成一个Transformation DAG。
   protected def translateToPlan(execGraph: ExecNodeGraph): util.List[Transformation[_]]
 
   def addExtraTransformation(transformation: Transformation[_]): Unit = {
@@ -496,12 +518,14 @@ abstract class PlannerBase(
 
   protected def afterTranslation(): Unit = {
     // Cleanup all internal configuration after plan translation finished.
+    //完成计划转换后，清除所有内部配置。
     val configuration = tableConfig.getConfiguration
     configuration.removeConfig(TABLE_QUERY_START_EPOCH_TIME)
     configuration.removeConfig(TABLE_QUERY_START_LOCAL_TIME)
     configuration.removeConfig(TABLE_QUERY_CURRENT_DATABASE)
 
     // Clean caches that might have filled up during optimization
+    //清理优化过程中可能填满的缓存
     CompileUtils.cleanUp()
     extraTransformations.clear()
   }

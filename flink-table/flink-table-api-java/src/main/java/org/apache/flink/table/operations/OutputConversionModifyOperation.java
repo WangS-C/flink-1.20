@@ -32,6 +32,8 @@ import java.util.Map;
  * QueryOperation}s to a {@link Transformation} of given type described with {@link
  * TypeInformation}. This is used to convert a relational query to a datastream.
  */
+//特殊的内部ModifyOperation类型，它允许将QueryOperation树转换为使用TypeInformation描述的给定类型的转换。
+// 这用于将关系查询转换为数据流。
 @Internal
 public class OutputConversionModifyOperation implements ModifyOperation {
 

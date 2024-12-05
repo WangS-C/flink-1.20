@@ -51,6 +51,7 @@ public class ExecNodeGraphGenerator {
     public ExecNodeGraph generate(List<FlinkPhysicalRel> relNodes, boolean isCompiled) {
         List<ExecNode<?>> rootNodes = new ArrayList<>(relNodes.size());
         for (FlinkPhysicalRel relNode : relNodes) {
+            //生成
             rootNodes.add(generate(relNode, isCompiled));
         }
         return new ExecNodeGraph(rootNodes);
@@ -73,6 +74,7 @@ public class ExecNodeGraphGenerator {
 
         execNode = rel.translateToExecNode(isCompiled);
         // connects the input nodes
+        //连接输入节点
         List<ExecEdge> inputEdges = new ArrayList<>(inputNodes.size());
         for (ExecNode<?> inputNode : inputNodes) {
             inputEdges.add(ExecEdge.builder().source(inputNode).target(execNode).build());

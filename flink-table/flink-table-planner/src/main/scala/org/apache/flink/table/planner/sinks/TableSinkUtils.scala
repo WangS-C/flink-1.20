@@ -56,6 +56,7 @@ object TableSinkUtils {
    * @param partitionKeys
    *   The partition keys of this table.
    */
+  //它检查表链接是否与INSERT INTO子句兼容，例如接收器是否为PartitionableTableSink以及分区是否有效。
   def validateTableSink(
       sinkOperation: SinkModifyOperation,
       sinkIdentifier: ObjectIdentifier,
@@ -63,6 +64,7 @@ object TableSinkUtils {
       partitionKeys: Seq[String]): Unit = {
 
     // check partitions are valid
+    //检查分区是否有效
     if (partitionKeys.nonEmpty) {
       sink match {
         case _: PartitionableTableSink =>
@@ -253,15 +255,19 @@ object TableSinkUtils {
    * @param queryLogicalType
    *   the logical type of query
    */
+  //检查sink的逻辑架构 (来自DDL) 和物理架构 (来自TableSink. getConsumedDataType()) 是否兼容。
   def validateLogicalPhysicalTypesCompatible(
       catalogTable: CatalogTable,
       sink: TableSink[_],
       queryLogicalType: RowType): Unit = {
     // there may be generated columns in DDL, only get the physical part of DDL
+    //DDL中可能有生成的列，只获取DDL的物理部分
     val logicalSchema = TableSchemaUtils.getPhysicalSchema(catalogTable.getSchema)
     // infer the physical schema from TableSink#getConsumedDataType
+    //从TableSinkgetConsumedDataType推断物理架构
     val physicalSchema = TableSinkUtils.inferSinkPhysicalSchema(queryLogicalType, sink)
     // check for valid type info
+    //检查有效的类型信息
     if (logicalSchema.getFieldCount != physicalSchema.getFieldCount) {
       throw new ValidationException(
         "The field count of logical schema of the table does" +

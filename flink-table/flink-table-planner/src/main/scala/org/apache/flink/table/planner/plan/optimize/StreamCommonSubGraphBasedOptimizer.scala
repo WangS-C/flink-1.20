@@ -51,12 +51,15 @@ class StreamCommonSubGraphBasedOptimizer(planner: StreamPlanner)
       tableConfig: TableConfig,
       sinkBlocks: Seq[RelNodeBlock]): Seq[RelNodeBlock] = {
     // infer trait properties for sink block
+    //推断接收器块的特征属性
     sinkBlocks.foreach {
       sinkBlock =>
         // don't require update before by default
+        //默认情况下不需要更新
         sinkBlock.setUpdateBeforeRequired(false)
 
-        val miniBatchInterval: MiniBatchInterval =
+        val miniBatchInterval: MiniBatchInterval = {
+          //是否启用MiniBatch优化。
           if (tableConfig.get(ExecutionConfigOptions.TABLE_EXEC_MINIBATCH_ENABLED)) {
             val miniBatchLatency =
               tableConfig.get(ExecutionConfigOptions.TABLE_EXEC_MINIBATCH_ALLOW_LATENCY).toMillis
@@ -68,6 +71,7 @@ class StreamCommonSubGraphBasedOptimizer(planner: StreamPlanner)
           } else {
             MiniBatchIntervalTrait.NONE.getMiniBatchInterval
           }
+        }
         sinkBlock.setMiniBatchInterval(miniBatchInterval)
     }
 
@@ -75,6 +79,8 @@ class StreamCommonSubGraphBasedOptimizer(planner: StreamPlanner)
       // If there is only one sink block, the given relational expressions are a simple tree
       // (only one root), not a dag. So many operations (e.g. infer and propagate
       // requireUpdateBefore) can be omitted to save optimization time.
+      //如果只有一个sink块，则给定的关系表达式是一个简单的树 (只有一个根)，而不是dag。
+      // 可以省略许多操作 (例如推断和传播requireUpdateBefore) 以节省优化时间。
       val block = sinkBlocks.head
       val optimizedTree = optimizeTree(
         block.getPlan,
@@ -85,9 +91,12 @@ class StreamCommonSubGraphBasedOptimizer(planner: StreamPlanner)
       return sinkBlocks
     }
     // TODO FLINK-24048: Move changeLog inference out of optimizing phase
+    //将changeLog推理移出优化阶段
     // infer modifyKind property for each blocks independently
+    //独立推断每个块的modifyKind属性
     sinkBlocks.foreach(b => optimizeBlock(b, isSinkBlock = true))
     // infer and propagate updateKind and miniBatchInterval property for each blocks
+    //推断和传播每个块的updateKind和miniBatchInterval属性
     sinkBlocks.foreach {
       b =>
         propagateUpdateKindAndMiniBatchInterval(
@@ -97,8 +106,10 @@ class StreamCommonSubGraphBasedOptimizer(planner: StreamPlanner)
           isSinkBlock = true)
     }
     // clear the intermediate result
+    //清除中间结果
     sinkBlocks.foreach(resetIntermediateResult)
     // optimize recursively RelNodeBlock
+    //递归优化relodeblock
     sinkBlocks.foreach(b => optimizeBlock(b, isSinkBlock = true))
     sinkBlocks
   }
@@ -106,8 +117,10 @@ class StreamCommonSubGraphBasedOptimizer(planner: StreamPlanner)
   override protected def doOptimize(roots: Seq[RelNode]): Seq[RelNodeBlock] = {
     val tableConfig = planner.getTableConfig
     // build RelNodeBlock plan
+    //建立RelNodeBlock计划
     val sinkBlocks = RelNodeBlockPlanBuilder.buildRelNodeBlockPlan(roots, tableConfig)
     // get the original configuration, and disable it if it is unnecessary
+    //获取原始配置，如果不必要，请禁用它
     val origMiniBatchEnabled = tableConfig.get(ExecutionConfigOptions.TABLE_EXEC_MINIBATCH_ENABLED)
     try {
       if (origMiniBatchEnabled) {
@@ -118,6 +131,7 @@ class StreamCommonSubGraphBasedOptimizer(planner: StreamPlanner)
       optimizeSinkBlocks(tableConfig, sinkBlocks)
     } finally {
       // revert the changed configuration back in the end
+      //最后将更改后的配置恢复回来
       tableConfig.getConfiguration.set(
         ExecutionConfigOptions.TABLE_EXEC_MINIBATCH_ENABLED,
         origMiniBatchEnabled)

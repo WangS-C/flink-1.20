@@ -113,6 +113,7 @@ import static org.apache.flink.table.types.logical.utils.LogicalTypeCasts.suppor
 public final class DynamicSinkUtils {
 
     /** Converts an {@link TableResult#collect()} sink to a {@link RelNode}. */
+    //将tablelesult. collect() 的接收器转换为RelNode。
     public static RelNode convertCollectToRel(
             FlinkRelBuilder relBuilder,
             RelNode input,
@@ -170,6 +171,7 @@ public final class DynamicSinkUtils {
      * Converts an external sink (i.e. further {@link DataStream} transformations) to a {@link
      * RelNode}.
      */
+    //将外部接收器 (即进一步的数据流转换) 转换为RelNode。
     public static RelNode convertExternalToRel(
             FlinkRelBuilder relBuilder,
             RelNode input,
@@ -178,6 +180,7 @@ public final class DynamicSinkUtils {
                 new ExternalDynamicSink(
                         externalModifyOperation.getChangelogMode().orElse(null),
                         externalModifyOperation.getPhysicalDataType());
+//        将接收器转换为rel
         return convertSinkToRel(
                 relBuilder,
                 input,
@@ -193,6 +196,7 @@ public final class DynamicSinkUtils {
      * Converts a given {@link DynamicTableSink} to a {@link RelNode}. It adds helper projections if
      * necessary.
      */
+    //将给定的DynamicTableSink转换为RelNode。如果需要，它会添加辅助投影。
     public static RelNode convertSinkToRel(
             FlinkRelBuilder relBuilder,
             RelNode input,
@@ -209,6 +213,7 @@ public final class DynamicSinkUtils {
                 sink);
     }
 
+    //将接收器转换为rel
     private static RelNode convertSinkToRel(
             FlinkRelBuilder relBuilder,
             RelNode input,
@@ -235,6 +240,7 @@ public final class DynamicSinkUtils {
         }
 
         // 1. prepare table sink
+        //准备给定的DynamicTableSink。它检查接收器是否与INSERT INTO子句兼容，并应用初始参数。
         prepareDynamicSink(
                 tableDebugName,
                 staticPartitions,
@@ -244,6 +250,7 @@ public final class DynamicSinkUtils {
                 sinkAbilitySpecs);
 
         // rewrite rel node for delete
+        //重写rel节点以进行删除
         if (isDelete) {
             input =
                     convertDelete(
@@ -269,10 +276,13 @@ public final class DynamicSinkUtils {
         sinkAbilitySpecs.forEach(spec -> spec.apply(sink));
 
         // 2. validate the query schema to the sink's table schema and apply cast if possible
+        //将查询架构验证为接收器的表架构，并在可能的情况下应用强制转换
         RelNode query = input;
         // skip validate and implicit cast when it's delete/update since it has been done before
+        //跳过验证和隐式转换时，它的delete update，因为它已经完成之前
         if (!isDelete && !isUpdate) {
             query =
+                    //检查给定查询是否可以写入给定接收器的表架构。
                     validateSchemaAndApplyImplicitCast(
                             input, schema, tableDebugName, dataTypeFactory, typeFactory);
         }
@@ -280,6 +290,7 @@ public final class DynamicSinkUtils {
         relBuilder.push(query);
 
         // 3. convert the sink's table schema to the consumed data type of the sink
+        //将接收器的表架构转换为接收器的消费数据类型
         final List<Integer> metadataColumns = extractPersistedMetadataColumns(schema);
         if (!metadataColumns.isEmpty()) {
             pushMetadataProjection(relBuilder, typeFactory, schema, sink);
@@ -302,6 +313,7 @@ public final class DynamicSinkUtils {
     }
 
     /** Checks if the given query can be written into the given sink's table schema. */
+    //检查给定查询是否可以写入给定接收器的表架构。
     public static RelNode validateSchemaAndApplyImplicitCast(
             RelNode query,
             ResolvedSchema sinkSchema,
@@ -310,9 +322,11 @@ public final class DynamicSinkUtils {
             FlinkTypeFactory typeFactory) {
         final RowType sinkType =
                 (RowType)
+                        //使用给定的转换将给定的数据类型转换为不同的数据类型。
                         fixSinkDataType(dataTypeFactory, sinkSchema.toSinkRowDataType())
                                 .getLogicalType();
 
+        //验证架构并应用隐式强制转换
         return validateSchemaAndApplyImplicitCast(query, sinkType, tableDebugName, typeFactory);
     }
 
@@ -339,6 +353,9 @@ public final class DynamicSinkUtils {
      * If types are not compatible, but can be implicitly cast, a cast projection will be applied.
      * Otherwise, an exception will be thrown.
      */
+    //检查给定的查询是否可以写入给定的接收器类型。
+    //它检查字段类型是否兼容 (类型应该相等，包括精度)。
+    //如果类型不兼容，但可以隐式强制转换，则将应用强制转换投影。否则，将引发异常。
     private static RelNode validateSchemaAndApplyImplicitCast(
             RelNode query, RowType sinkType, String tableDebugName, FlinkTypeFactory typeFactory) {
         final RowType queryType = FlinkTypeFactory.toLogicalRowType(query.getRowType());
@@ -391,6 +408,7 @@ public final class DynamicSinkUtils {
         }
 
         // get the row-level delete info
+        //获取行级删除信息
         SupportsRowLevelDelete supportsRowLevelDelete = (SupportsRowLevelDelete) sink;
         RowLevelModificationScanContext context = RowLevelModificationContextUtils.getScanContext();
         SupportsRowLevelDelete.RowLevelDeleteInfo rowLevelDeleteInfo =
@@ -408,10 +426,12 @@ public final class DynamicSinkUtils {
                 == SupportsRowLevelDelete.RowLevelDeleteMode.REMAINING_ROWS) {
             // if it's for remaining row, convert the predicate in where clause
             // to the negative predicate
+            //如果是剩余行，则将where子句中的谓词转换为否定谓词
             convertPredicateToNegative(tableModify);
         }
 
         // convert the LogicalTableModify node to a RelNode representing row-level delete
+        //将LogicalTableModify节点转换为表示行级删除的RelNode
         Tuple2<RelNode, int[]> deleteRelNodeAndRequireIndices =
                 convertToRowLevelDelete(
                         tableModify,
@@ -951,6 +971,7 @@ public final class DynamicSinkUtils {
      * Prepares the given {@link DynamicTableSink}. It checks whether the sink is compatible with
      * the INSERT INTO clause and applies initial parameters.
      */
+    //准备给定的DynamicTableSink。它检查接收器是否与INSERT INTO子句兼容，并应用初始参数。
     private static void prepareDynamicSink(
             String tableDebugName,
             Map<String, String> staticPartitions,
@@ -1031,6 +1052,7 @@ public final class DynamicSinkUtils {
             DataTypeFactory dataTypeFactory, DataType sinkDataType) {
         // we ignore NULL constraint, the NULL constraint will be checked during runtime
         // see StreamExecSink and BatchExecSink
+        //我们忽略NULL约束，NULL约束将在运行时检查，请参见StreamExecSink和BatchExecSink
         return DataTypeUtils.transform(
                 dataTypeFactory,
                 sinkDataType,

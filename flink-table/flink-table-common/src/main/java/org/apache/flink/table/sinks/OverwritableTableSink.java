@@ -35,5 +35,6 @@ import org.apache.flink.table.connector.sink.abilities.SupportsOverwrite;
 public interface OverwritableTableSink {
 
     /** Configures whether the insert should overwrite existing data or not. */
+    //配置插入是否应覆盖现有数据。
     void setOverwrite(boolean overwrite);
 }
