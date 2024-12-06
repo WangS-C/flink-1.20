@@ -75,6 +75,12 @@ public interface StatementSet extends Explainable<StatementSet>, Compilable, Exe
      *
      * <p>The added statements will be cleared after calling this method.
      */
+    //执行此对象。
+    //默认情况下，所有DML操作都是异步执行的。
+    // 使用TableResult. await() 或TableResult. getJobClient() 监视执行。
+    // 将TableConfigOptions. TABLE_DML_SYNC设置为始终同步执行。
+    //此方法将所有语句作为一个作业执行。
+    //添加的语句将在调用此方法后清除。
     @Override
     TableResult execute();
 

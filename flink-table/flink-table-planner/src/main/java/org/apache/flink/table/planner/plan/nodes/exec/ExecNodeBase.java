@@ -165,6 +165,7 @@ public abstract class ExecNodeBase<T> implements ExecNode<T> {
     public final Transformation<T> translateToPlan(Planner planner) {
         if (transformation == null) {
             transformation =
+                    //将此节点转换为Flink运算符
                     translateToPlanInternal(
                             (PlannerBase) planner,
                             ExecNodeConfig.of(

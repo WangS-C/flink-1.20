@@ -337,6 +337,7 @@ abstract class PlannerBase(
 
   @VisibleForTesting
   private[flink] def optimize(relNodes: Seq[RelNode]): Seq[RelNode] = {
+    //生成优化的RelNode
     val optimizedRelNodes = getOptimizer.optimize(relNodes)
     require(optimizedRelNodes.size == relNodes.size)
     optimizedRelNodes
@@ -379,6 +380,7 @@ abstract class PlannerBase(
     //处理graph
     val context = new ProcessorContext(this)
     val processors = getExecNodeGraphProcessors
+    //给定execnodeggraph ，处理它并返回结果execnodeggraph。
     processors.foldLeft(execGraph)((graph, processor) => processor.process(graph, context))
   }
 
@@ -506,9 +508,11 @@ abstract class PlannerBase(
     tableConfig.set(TABLE_QUERY_CURRENT_DATABASE, currentDatabase)
 
     // We pass only the configuration to avoid reconfiguration with the rootConfiguration
+    //我们仅传递配置以避免使用 rootConfiguration 重新配置
     getExecEnv.configure(tableConfig.getConfiguration, classLoader)
 
     // Use config parallelism to override env parallelism.
+    //使用配置并行性来覆盖环境并行性。
     val defaultParallelism =
       getTableConfig.get(ExecutionConfigOptions.TABLE_EXEC_RESOURCE_DEFAULT_PARALLELISM)
     if (defaultParallelism > 0) {

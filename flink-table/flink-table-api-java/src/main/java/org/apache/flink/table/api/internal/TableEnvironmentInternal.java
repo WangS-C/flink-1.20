@@ -74,6 +74,7 @@ public interface TableEnvironmentInternal extends TableEnvironment {
      * @param operations The operations to be executed.
      * @return the affected row counts (-1 means unknown).
      */
+    //执行给定的修改操作并返回执行结果。
     TableResultInternal executeInternal(List<ModifyOperation> operations);
 
     /**

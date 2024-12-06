@@ -873,6 +873,7 @@ public class TableEnvironmentImpl implements TableEnvironmentInternal {
 
         //转换成Transformation
         List<Transformation<?>> transformations = translate(mapOperations);
+        //从ModifyOperation中提取接收器标识符名称
         List<String> sinkIdentifierNames = extractSinkIdentifierNames(mapOperations);
         return executeInternal(transformations, sinkIdentifierNames, jobStatusHookList);
     }
@@ -1023,6 +1024,7 @@ public class TableEnvironmentImpl implements TableEnvironmentInternal {
         resourceManager.addJarConfiguration(tableConfig);
 
         // We pass only the configuration to avoid reconfiguration with the rootConfiguration
+        //我们只传递配置，以避免重新配置与rootConfiguration
         Pipeline pipeline =
                 execEnv.createPipeline(
                         transformations,
@@ -1035,6 +1037,7 @@ public class TableEnvironmentImpl implements TableEnvironmentInternal {
             Long[] affectedRowCounts = new Long[transformations.size()];
             for (int i = 0; i < transformations.size(); ++i) {
                 // use sink identifier name as field name
+                //使用接收器标识符名称作为字段名称
                 columns.add(Column.physical(sinkIdentifierNames.get(i), DataTypes.BIGINT()));
                 affectedRowCounts[i] = -1L;
             }
@@ -1203,6 +1206,7 @@ public class TableEnvironmentImpl implements TableEnvironmentInternal {
      * extract sink identifier names from {@link ModifyOperation}s and deduplicate them with {@link
      * #deduplicateSinkIdentifierNames(List)}.
      */
+    //从ModifyOperation中提取接收器标识符名称，并使用deduplicateSinkIdentifierNames(List) 对其进行重复数据删除。
     private List<String> extractSinkIdentifierNames(List<ModifyOperation> operations) {
         List<String> tableNames = new ArrayList<>(operations.size());
         for (ModifyOperation operation : operations) {
@@ -1224,6 +1228,7 @@ public class TableEnvironmentImpl implements TableEnvironmentInternal {
      * Deduplicate sink identifier names. If there are multiple tables with the same name, an index
      * suffix will be added at the end of the name to ensure each name is unique.
      */
+    //删除重复的接收器标识符名称。如果有多个表具有相同的名称，则将在名称的末尾添加索引后缀，以确保每个名称都是唯一的。
     private List<String> deduplicateSinkIdentifierNames(List<String> tableNames) {
         Map<String, Integer> tableNameToCount = new HashMap<>();
         for (String fullName : tableNames) {

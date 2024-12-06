@@ -38,5 +38,7 @@ public interface ExecNodeTranslator<T> {
      *
      * @param planner The {@link Planner} of the translated graph.
      */
+    //将此节点转换为Transformation 。
+    //注意：如果多次调用此方法应返回相同的翻译结果。
     Transformation<T> translateToPlan(Planner planner);
 }
