@@ -156,6 +156,8 @@ public class ScanReuser {
             // Input scan schema: physical projection fields + metadata fields.
             // (See DynamicSourceUtils.validateAndApplyMetadata)
             // So It is safe to collect physical projection fields + metadata fields.
+            //1. 查找联合字段。输入扫描模式：物理投影字段+元数据字段。
+            // （请参阅DynamicSourceUtils.validateAndApplyMetadata）因此收集物理投影字段+元数据字段是安全的。
             TreeSet<int[]> allProjectFieldSet = new TreeSet<>(INT_ARRAY_COMPARATOR);
             Set<String> allMetaKeySet = new HashSet<>();
             for (CommonPhysicalTableSourceScan scan : reusableNodes) {
@@ -168,6 +170,7 @@ public class ScanReuser {
             List<String> allMetaKeys = new ArrayList<>(allMetaKeySet);
 
             // 2. Create new source.
+            //2. 创建新源。
             List<SourceAbilitySpec> specs = abilitySpecsWithoutEscaped(pickTable);
 
             // 2.1 Create produced type.
@@ -175,12 +178,15 @@ public class ScanReuser {
             // PHYSICAL COLUMNS + METADATA COLUMNS. While re-compute the source ability specs with
             // source metadata, we need to distinguish between schema type and produced type, which
             // source ability specs use produced type instead of schema type.
+            //2.1 创建生产类型。源生成的类型是运行时的输入类型。格式如下：物理列 + 元数据列。
+            //在使用源元数据重新计算源能力规范时，我们需要区分模式类型和生成类型，其中源能力规范使用生成类型而不是模式类型。
             RowType originType =
                     DynamicSourceUtils.createProducedType(
                             pickTable.contextResolvedTable().getResolvedSchema(),
                             pickTable.tableSource());
 
             // 2.2 Apply projections
+            //2.2 应用预测
             List<SourceAbilitySpec> newSpecs = new ArrayList<>();
             RowType newSourceType =
                     applyPhysicalAndMetadataPushDown(
@@ -197,6 +203,7 @@ public class ScanReuser {
             specs.addAll(newSpecs);
 
             // 2.3 Watermark spec
+            //2.3 水印规范
             Optional<WatermarkPushDownSpec> watermarkSpec =
                     getAdjustedWatermarkSpec(pickTable, originType, newSourceType);
             if (watermarkSpec.isPresent()) {
@@ -205,6 +212,7 @@ public class ScanReuser {
             }
 
             // 2.4 Create a new ScanTableSource. ScanTableSource can not be pushed down twice.
+            //2.4 创建一个新的ScanTableSource。 ScanTableSource 不能被下推两次。
             DynamicTableSourceSpec tableSourceSpec =
                     new DynamicTableSourceSpec(pickTable.contextResolvedTable(), specs);
             ScanTableSource newTableSource =
@@ -220,15 +228,18 @@ public class ScanReuser {
             RelNode newScan = pickScan.copy(newSourceTable);
 
             // 3. Create projects.
+            //3. 创建项目。
             for (CommonPhysicalTableSourceScan scan : reusableNodes) {
                 TableSourceTable source = scan.tableSourceTable();
                 int[][] projectedFields = projectedFields(source);
                 List<String> metaKeys = metadataKeys(source);
 
                 // Don't need add calc
+                //不需要添加计算
                 if (Arrays.deepEquals(projectedFields, allProjectFields)
                         && metaKeys.equals(allMetaKeys)) {
                     // full project may be pushed into source, update to the new source
+                    //完整的项目可能会被推送到源代码中，更新到新的源代码
                     replaceMap.put(scan, newScan);
                     continue;
                 }

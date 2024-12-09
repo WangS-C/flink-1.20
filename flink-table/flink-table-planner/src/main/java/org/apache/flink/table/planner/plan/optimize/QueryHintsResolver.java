@@ -316,6 +316,7 @@ public class QueryHintsResolver extends QueryHintsRelShuttle {
         String errorPattern;
 
         // firstly, check the unknown table (view) names in hints
+        //首先检查hints中未知的表（视图）名称
         errorPattern =
                 "The options of following hints cannot match the name of "
                         + "input tables or views: %s";
@@ -345,6 +346,7 @@ public class QueryHintsResolver extends QueryHintsRelShuttle {
 
         // secondly, check invalid hints.
         // see more at JoinStrategy#validOptions
+        //其次，检查无效提示。更多信息请参见 JoinStrategyvalidOptions
         if (!invalidHints.isEmpty()) {
             errorPattern = "The options of following hints is invalid: %s";
             String errorMsg =
