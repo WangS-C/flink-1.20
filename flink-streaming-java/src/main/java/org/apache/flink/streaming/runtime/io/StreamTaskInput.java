@@ -25,14 +25,17 @@ import java.io.Closeable;
 import java.util.concurrent.CompletableFuture;
 
 /** Basic interface for inputs of stream operators. */
+//流运算符输入的基本接口。
 @Internal
 public interface StreamTaskInput<T> extends PushingAsyncDataInput<T>, Closeable {
     int UNSPECIFIED = -1;
 
     /** Returns the input index of this input. */
+    //返回此输入的输入索引
     int getInputIndex();
 
     /** Prepares to spill the in-flight input buffers as checkpoint snapshot. */
+    //准备将运行中的输入缓冲区溢出作为检查点快照。
     CompletableFuture<Void> prepareSnapshot(
             ChannelStateWriter channelStateWriter, long checkpointId) throws CheckpointException;
 }

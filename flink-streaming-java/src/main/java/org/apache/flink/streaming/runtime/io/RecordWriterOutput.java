@@ -133,6 +133,7 @@ public class RecordWriterOutput<OUT>
         if (!OutputTag.isResponsibleFor(this.outputTag, outputTag)) {
             // we are not responsible for emitting to the side-output specified by this
             // OutputTag.
+            //我们不负责发送到此 OutputTag 指定的侧面输出。
             return false;
         }
 

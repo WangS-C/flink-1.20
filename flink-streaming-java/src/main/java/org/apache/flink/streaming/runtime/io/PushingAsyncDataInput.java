@@ -31,6 +31,8 @@ import org.apache.flink.streaming.runtime.watermarkstatus.WatermarkStatus;
  * source input in a unified way via {@link #emitNext(DataOutput)} instead of returning {@code
  * Optional.empty()} via {@link PullingAsyncDataInput#pollNext()}.
  */
+//PullingAsyncDataInput的变体被定义为通过emitNext(PushingAsyncDataInput. DataOutput)
+// 以统一的方式处理网络输入和源输入，而不是通过PullingAsyncDataInput. pollNext()返回Optional. empty() 。
 @Internal
 public interface PushingAsyncDataInput<T> extends AvailabilityProvider {
 
@@ -49,6 +51,7 @@ public interface PushingAsyncDataInput<T> extends AvailabilityProvider {
      *
      * @param <T> The type encapsulated with the stream record.
      */
+    //基本数据输出接口，用于从数据输入发出下一个元素。
     interface DataOutput<T> {
 
         void emitRecord(StreamRecord<T> streamRecord) throws Exception;

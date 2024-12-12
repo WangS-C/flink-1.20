@@ -67,6 +67,7 @@ class BroadcastingOutputCollector<T> implements WatermarkGaugeExposingOutput<Str
             outputs[0].emitLatencyMarker(latencyMarker);
         } else {
             // randomly select an output
+            //随机选择一个输出
             outputs[random.nextInt(outputs.length)].emitLatencyMarker(latencyMarker);
         }
     }

@@ -54,6 +54,7 @@ import static org.apache.flink.util.Preconditions.checkArgument;
 public abstract class RecordWriter<T extends IOReadableWritable> implements AvailabilityProvider {
 
     /** Default name for the output flush thread, if no name with a task reference is given. */
+    //如果未给出带有任务引用的名称，则输出刷新线程的默认名称。
     @VisibleForTesting
     public static final String DEFAULT_OUTPUT_FLUSH_THREAD_NAME = "OutputFlusher";
 
@@ -81,6 +82,7 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
      * To avoid synchronization overhead on the critical path, best-effort error tracking is enough
      * here.
      */
+    //为了避免关键路径上的同步开销，尽力而为的错误跟踪在这里就足够了。
     private Throwable flusherException;
 
     private volatile Throwable volatileFlusherException;
@@ -175,6 +177,7 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
     }
 
     /** Sets the metric group for this RecordWriter. */
+    //设置此 RecordWriter 的指标组。
     public void setMetricGroup(TaskIOMetricGroup metrics) {
         targetPartition.setMetricGroup(metrics);
     }
@@ -189,6 +192,8 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
      * onto an element before writing it to a subpartition, if the element needs this information
      * afterward.
      */
+    //是否可以从现有信息中推导出某个元素来自哪个子分区。
+    //如果为 false，则此写入器的调用方应在将元素写入子分区之前将其附加到元素（如果该元素随后需要此信息）。
     public boolean isSubpartitionDerivable() {
         return !(targetPartition instanceof ResultPartition
                 && ((ResultPartition) targetPartition).isNumberOfPartitionConsumerUndefined());
@@ -204,6 +209,7 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
     public abstract void emit(T record) throws IOException;
 
     /** This is used to send LatencyMarks to a random target subpartition. */
+    //这用于将 LatencyMark 发送到随机目标子分区
     public void randomEmit(T record) throws IOException {
         checkErroneous();
 
@@ -212,11 +218,14 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
     }
 
     /** This is used to broadcast streaming Watermarks in-band with records. */
+    //这用于在带内广播带有记录的流水印。
     public abstract void broadcastEmit(T record) throws IOException;
 
     /** Closes the writer. This stops the flushing thread (if there is one). */
+    //关闭。这会停止冲洗线程（如果有的话）。
     public void close() {
         // make sure we terminate the thread in any case
+        //确保我们在任何情况下都终止线程
         if (outputFlusher != null) {
             outputFlusher.terminate();
             try {
@@ -224,6 +233,7 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
             } catch (InterruptedException e) {
                 // ignore on close
                 // restore interrupt flag to fast exit further blocking calls
+                //忽略关闭恢复中断标志以快速退出进一步的阻塞调用
                 Thread.currentThread().interrupt();
             }
         }
@@ -234,6 +244,7 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
      *
      * @param t The exception to report.
      */
+    //通知编写器输出刷新器线程遇到异常
     private void notifyFlusherException(Throwable t) {
         if (flusherException == null) {
             LOG.error("An exception happened while flushing the outputs", t);
@@ -244,6 +255,7 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
 
     protected void checkErroneous() throws IOException {
         // For performance reasons, we are not checking volatile field every single time.
+        //出于性能原因，我们不会每次都检查易失性字段。
         if (flusherException != null
                 || (volatileFlusherExceptionCheckSkipCount
                                 >= VOLATILE_FLUSHER_EXCEPTION_MAX_CHECK_SKIP_COUNT
@@ -258,6 +270,7 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
     }
 
     /** Sets the max overdraft buffer size of per gate. */
+    //设置每个门的最大透支缓冲区大小。
     public void setMaxOverdraftBuffersPerGate(int maxOverdraftBuffersPerGate) {
         targetPartition.setMaxOverdraftBuffersPerGate(maxOverdraftBuffersPerGate);
     }
@@ -269,6 +282,8 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
      *
      * <p>The thread is daemonic, because it is only a utility thread.
      */
+    //定期刷新输出缓冲区的专用线程，以设置延迟上限。
+    //该线程是守护线程，因为它只是一个实用程序线程。
     private class OutputFlusher extends Thread {
 
         private final long timeout;
@@ -295,6 +310,7 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
                     } catch (InterruptedException e) {
                         // propagate this if we are still running, because it should not happen
                         // in that case
+                        //如果我们仍在运行，则传播此信息，因为在这种情况下它不应该发生
                         if (running) {
                             throw new Exception(e);
                         }
@@ -302,6 +318,7 @@ public abstract class RecordWriter<T extends IOReadableWritable> implements Avai
 
                     // any errors here should let the thread come to a halt and be
                     // recognized by the writer
+                    //这里的任何错误都应该让线程停止并被作者识别
                     flushAll();
                 }
             } catch (Throwable t) {

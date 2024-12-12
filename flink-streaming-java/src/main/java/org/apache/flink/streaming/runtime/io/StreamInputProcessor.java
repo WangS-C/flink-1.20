@@ -30,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Interface for processing records by {@link org.apache.flink.streaming.runtime.tasks.StreamTask}.
  */
+//org. apache. flink. streaming. runtime. tasks. StreamTask处理记录的接口。
 @Internal
 public interface StreamInputProcessor extends AvailabilityProvider, Closeable {
     /**

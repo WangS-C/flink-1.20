@@ -43,6 +43,9 @@ import java.util.concurrent.CompletableFuture;
  * ResultPartitionWriter#fail(Throwable)} still needs to be called afterwards to fully release all
  * resources associated the partition and propagate failure cause to the consumer if possible.
  */
+//用于生成结果的面向记录的运行时结果编写器 API。
+//如果在fail(Throwable)或finish()之前调用close() ，它会突然触发失败并取消生产。
+//在这种情况下，之后仍然需要调用fail(Throwable)来完全释放与分区相关的所有资源，并在可能的情况下将失败原因传播给消费者。
 public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvider {
 
     /** Setup partition, potentially heavy-weight, blocking operation comparing to just creation. */
@@ -56,6 +59,7 @@ public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvid
     int getNumTargetKeyGroups();
 
     /** Sets the max overdraft buffer size of per gate. */
+    //设置每个门的最大透支缓冲区大小
     void setMaxOverdraftBuffersPerGate(int maxOverdraftBuffersPerGate);
 
     /** Writes the given serialized record to the target subpartition. */
@@ -69,6 +73,10 @@ public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvid
      * coping the given serialized record only once to a shared channel which can be consumed by all
      * subpartitions.
      */
+    //将给定的序列化记录写入所有子分区。
+    //也可以通过将相同的记录一一发送到所有子分区来达到相同的效果，
+    // 但是，这种方法可以具有更好的性能，因为底层实现可以做一些优化，
+    //例如仅将给定的序列化记录复制到共享通道一次可以被所有子分区使用
     void broadcastRecord(ByteBuffer record) throws IOException;
 
     /** Writes the given {@link AbstractEvent} to all subpartitions. */
@@ -80,6 +88,7 @@ public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvid
     void alignedBarrierTimeout(long checkpointId) throws IOException;
 
     /** Abort the checkpoint. */
+    //中止检查点。
     void abortCheckpoint(long checkpointId, CheckpointException cause);
 
     /**
@@ -89,26 +98,32 @@ public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvid
      * @param mode tells if we should flush all records or not (it is false in case of
      *     stop-with-savepoint (--no-drain))
      */
+    //通知下游任务此ResultPartitionWriter已发出所有用户记录
     void notifyEndOfData(StopMode mode) throws IOException;
 
     /**
      * Gets the future indicating whether all the records has been processed by the downstream
      * tasks.
      */
+    //获取表示所有记录是否已被下游任务处理的 future。
     CompletableFuture<Void> getAllDataProcessedFuture();
 
     /** Sets the metric group for the {@link ResultPartitionWriter}. */
+    //设置ResultPartitionWriter的指标组。
     void setMetricGroup(TaskIOMetricGroup metrics);
 
     /** Returns a reader for the subpartition with the given index range. */
+    //返回具有给定索引范围的子分区的读取器。
     ResultSubpartitionView createSubpartitionView(
             ResultSubpartitionIndexSet indexSet, BufferAvailabilityListener availabilityListener)
             throws IOException;
 
     /** Manually trigger the consumption of data from all subpartitions. */
+    //手动触发所有子分区的数据消耗。
     void flushAll();
 
     /** Manually trigger the consumption of data from the given subpartitions. */
+    //手动触发给定子分区的数据消耗。
     void flush(int subpartitionIndex);
 
     /**
@@ -120,6 +135,9 @@ public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvid
      *
      * @param throwable failure cause
      */
+    //分区制作失败。
+    //此方法尽力将非null故障原因传播给消费者。
+    //此调用还会导致与该分区关联的所有资源的释放。如果之前没有关闭分区，之后仍然需要关闭分区
     void fail(@Nullable Throwable throwable);
 
     /**
@@ -127,6 +145,8 @@ public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvid
      *
      * <p>Closing of partition is still needed afterwards.
      */
+    //顺利完成隔断的制作。
+    //之后仍需要关闭分区。
     void finish() throws IOException;
 
     boolean isFinished();
@@ -135,6 +155,7 @@ public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvid
      * Releases the partition writer which releases the produced data and no reader can consume the
      * partition any more.
      */
+    //释放分区写入器，释放生成的数据，并且任何读取器都不能再使用该分区。
     void release(Throwable cause);
 
     boolean isReleased();
@@ -143,5 +164,6 @@ public interface ResultPartitionWriter extends AutoCloseable, AvailabilityProvid
      * Closes the partition writer which releases the allocated resource, for example the buffer
      * pool.
      */
+    //关闭分区写入器，释放分配的资源，例如缓冲池。
     void close() throws Exception;
 }

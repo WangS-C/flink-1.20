@@ -244,6 +244,7 @@ public class StreamMultipleInputProcessorFactory {
      * The network data output implementation used for processing stream elements from {@link
      * StreamTaskNetworkInput} in two input selective processor.
      */
+    //网络数据输出实现用于在两个输入选择处理器中处理来自StreamTaskNetworkInput的流元素。
     private static class StreamTaskNetworkOutput<T> implements PushingAsyncDataInput.DataOutput<T> {
         private final Input<T> input;
 
@@ -254,6 +255,7 @@ public class StreamMultipleInputProcessorFactory {
         private final Counter networkRecordsIn;
 
         /** The function way is only used for frequent record processing as for JIT optimization. */
+        //函数方式仅用于频繁的记录处理，如 JIT 优化。
         private final ThrowingConsumer<StreamRecord<T>, Exception> recordConsumer;
 
         private StreamTaskNetworkOutput(

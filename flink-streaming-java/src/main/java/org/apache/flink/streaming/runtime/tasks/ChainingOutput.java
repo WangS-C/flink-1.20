@@ -61,6 +61,7 @@ class ChainingOutput<T>
         } else {
             // Uses a dummy counter here to avoid checking the existence of numRecordsOut on the
             // per-record path.
+            //此处使用虚拟计数器以避免检查每个记录路径上是否存在 numRecordsOut。
             this.numRecordsOut = new SimpleCounter();
         }
         this.numRecordsIn = curOperatorMetricGroup.getIOMetricGroup().getNumRecordsInCounter();
@@ -72,6 +73,7 @@ class ChainingOutput<T>
     public void collect(StreamRecord<T> record) {
         if (this.outputTag != null) {
             // we are not responsible for emitting to the main output.
+            //我们不负责发射到主输出。
             return;
         }
 
@@ -101,6 +103,7 @@ class ChainingOutput<T>
         try {
             // we know that the given outputTag matches our OutputTag so the record
             // must be of the type that our operator expects.
+            //我们知道给定的outputTag与我们的OutputTag匹配，因此记录必须是我们的操作员期望的类型。
             @SuppressWarnings("unchecked")
             StreamRecord<T> castRecord = (StreamRecord<T>) record;
 
@@ -137,6 +140,7 @@ class ChainingOutput<T>
     @Override
     public void close() {
         // nothing is owned by ChainingOutput and should be closed, see FLINK-20888
+        //ChainingOutput 不拥有任何内容，应该关闭，请参阅 FLINK-20888
     }
 
     @Override
