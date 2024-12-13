@@ -597,6 +597,7 @@ public class Task
      *
      * @return The current execution state of the task.
      */
+    //返回任务的当前执行状态
     public ExecutionState getExecutionState() {
         return this.executionState;
     }
@@ -606,6 +607,9 @@ public class Task
      *
      * @return True is the task in state FAILED, CANCELING, or CANCELED, false otherwise.
      */
+    //检查任务是否已失败、已取消或正在取消。
+    //返回：
+    //True 表示任务处于 FAILED、CANCELING 或 CANCELED 状态，否则为 false。
     public boolean isCanceledOrFailed() {
         return executionState == ExecutionState.CANCELING
                 || executionState == ExecutionState.CANCELED
@@ -618,16 +622,21 @@ public class Task
      *
      * @return The exception that caused the task to fail, or null, if the task has not failed.
      */
+    //如果任务失败，此方法将获取导致该任务失败的异常。否则该方法返回 null。
+    //返回：
+    //导致任务失败的异常，如果任务未失败，则为 null。
     public Throwable getFailureCause() {
         return failureCause;
     }
 
     /** Starts the task's thread. */
+   //启动任务的线程。
     public void startTaskThread() {
         executingThread.start();
     }
 
     /** The core work method that bootstraps the task and executes its code. */
+    //引导任务并执行其代码的核心工作方法。
     @Override
     public void run() {
         try (MdcCloseable ignored = MdcUtils.withContext(MdcUtils.asContextData(jobId))) {
@@ -641,15 +650,18 @@ public class Task
         // ----------------------------
         //  Initial State transition
         // ----------------------------
+        //初始状态转换
         while (true) {
             ExecutionState current = this.executionState;
             if (current == ExecutionState.CREATED) {
                 if (transitionState(ExecutionState.CREATED, ExecutionState.DEPLOYING)) {
                     // success, we can start our work
+                    //成功了，我们就可以开始我们的工作了
                     break;
                 }
             } else if (current == ExecutionState.FAILED) {
                 // we were immediately failed. tell the TaskManager that we reached our final state
+                //我们立即失败了。告诉任务管理器我们到达了最终状态
                 notifyFinalState();
                 if (metrics != null) {
                     metrics.close();
@@ -659,6 +671,7 @@ public class Task
                 if (transitionState(ExecutionState.CANCELING, ExecutionState.CANCELED)) {
                     // we were immediately canceled. tell the TaskManager that we reached our final
                     // state
+                    //我们立即被取消。告诉任务管理器我们到达了最终状态
                     notifyFinalState();
                     if (metrics != null) {
                         metrics.close();
@@ -676,6 +689,7 @@ public class Task
 
         // all resource acquisitions and registrations from here on
         // need to be undone in the end
+        //从这里开始的所有资源获取和注册最终都需要撤消
         Map<String, Future<Path>> distributedCacheEntries = new HashMap<>();
         TaskInvokable invokable = null;
 
@@ -684,13 +698,16 @@ public class Task
             //  Task Bootstrap - We periodically
             //  check for canceling as a shortcut
             // ----------------------------
+            //任务引导 - 我们定期检查取消作为快捷方式
 
             // activate safety net for task thread
+            //激活任务线程的安全网
             LOG.debug("Creating FileSystem stream leak safety net for task {}", this);
             FileSystemSafetyNet.initializeSafetyNetForThread();
 
             // first of all, get a user-code classloader
             // this may involve downloading the job's JAR files and/or classes
+            //首先，获取用户代码类加载器，这可能涉及下载作业的 JAR 文件和/或类
             LOG.info("Loading JAR files for task {}.", this);
 
             userCodeClassLoader = createUserCodeClassloader();
@@ -699,6 +716,7 @@ public class Task
             Configuration executionConfigConfiguration = executionConfig.toConfiguration();
 
             // override task cancellation interval from Flink config if set in ExecutionConfig
+            //如果在 ExecutionConfig 中设置，则覆盖 Flink 配置中的任务取消间隔
             taskCancellationInterval =
                     executionConfigConfiguration
                             .getOptional(TaskManagerOptions.TASK_CANCELLATION_INTERVAL)
@@ -706,6 +724,7 @@ public class Task
                             .toMillis();
 
             // override task cancellation timeout from Flink config if set in ExecutionConfig
+            //如果在 ExecutionConfig 中设置，则覆盖 Flink 配置中的任务取消超时
             taskCancellationTimeout =
                     executionConfigConfiguration
                             .getOptional(TaskManagerOptions.TASK_CANCELLATION_TIMEOUT)
@@ -722,6 +741,7 @@ public class Task
             // memory to run the necessary data exchanges
             // the registration must also strictly be undone
             // ----------------------------------------------------------------
+            //向网络堆栈注册任务 如果系统没有足够的内存来运行必要的数据交换，则此操作可能会失败 还必须严格撤消注册
 
             LOG.debug("Registering task at network: {}.", this);
 
@@ -733,6 +753,7 @@ public class Task
             }
 
             // next, kick off the background copying of files for the distributed cache
+            //接下来，启动分布式缓存的后台文件复制
             try {
                 for (Map.Entry<String, DistributedCache.DistributedCacheEntry> entry :
                         DistributedCache.readFileInfoFromConfig(jobConfiguration)) {
@@ -757,6 +778,7 @@ public class Task
             // ----------------------------------------------------------------
             //  call the user code initialization methods
             // ----------------------------------------------------------------
+            //调用用户代码初始化方法
 
             TaskKvStateRegistry kvStateRegistry =
                     kvStateService.createKvStateTaskRegistry(jobId, getJobVertexId());
@@ -798,13 +820,17 @@ public class Task
             // Make sure the user code classloader is accessible thread-locally.
             // We are setting the correct context class loader before instantiating the invokable
             // so that it is available to the invokable during its entire lifetime.
+            //确保用户代码类加载器可本地线程访问。
+            //我们在实例化可调用对象之前设置正确的上下文类加载器，以便可调用对象在其整个生命周期内都可以使用它。
             executingThread.setContextClassLoader(userCodeClassLoader.asClassLoader());
 
             // When constructing invokable, separate threads can be constructed and thus should be
             // monitored for system exit (in addition to invoking thread itself monitored below).
+            //构造可调用时，可以构造单独的线程，因此应该监视系统退出（除了下面监视的调用线程本身之外）。
             FlinkSecurityManager.monitorUserSystemExitForCurrentThread();
             try {
                 // now load and instantiate the task's invokable code
+                //现在加载并实例化任务的可调用代码
                 invokable =
                         //此处反射创建的invokable实例就是StreamTask实例。
                         loadAndInstantiateInvokable(
@@ -816,9 +842,11 @@ public class Task
             // ----------------------------------------------------------------
             //  actual task core work
             // ----------------------------------------------------------------
+            //实际任务核心工作
 
             // we must make strictly sure that the invokable is accessible to the cancel() call
             // by the time we switched to running.
+            //我们必须严格确保当我们切换到运行状态时，cancel() 调用可以访问该可调用对象。
             this.invokable = invokable;
 
             //恢复和调用
@@ -826,6 +854,7 @@ public class Task
 
             // make sure, we enter the catch block if the task leaves the invoke() method due
             // to the fact that it has been canceled
+            //确保，如果任务由于已被取消而离开 invoke() 方法，我们将进入 catch 块
             if (isCanceledOrFailed()) {
                 throw new CancelTaskException();
             }
@@ -833,8 +862,10 @@ public class Task
             // ----------------------------------------------------------------
             //  finalization of a successful execution
             // ----------------------------------------------------------------
+            //最终确定成功执行
 
             // finish the produced partitions. if this fails, we consider the execution failed.
+            //完成制作的分区。如果失败，我们认为执行失败。
             for (ResultPartitionWriter partitionWriter : partitionWriters) {
                 if (partitionWriter != null) {
                     partitionWriter.finish();
@@ -843,6 +874,7 @@ public class Task
 
             // try to mark the task as finished
             // if that fails, the task was canceled/failed in the meantime
+            //尝试将任务标记为已完成，如果失败，则任务已取消，同时失败
             if (!transitionState(ExecutionState.RUNNING, ExecutionState.FINISHED)) {
                 throw new CancelTaskException();
             }
@@ -851,6 +883,7 @@ public class Task
             // the execution failed. either the invokable code properly failed, or
             // an exception was thrown as a side effect of cancelling
             // ----------------------------------------------------------------
+            //执行失败。可调用代码正确失败，或者作为取消的副作用而引发异常
 
             t = preProcessException(t);
 
@@ -859,6 +892,9 @@ public class Task
                 // RUNNING, CANCELING, or FAILED
                 // loop for multiple retries during concurrent state changes via calls to cancel()
                 // or to failExternally()
+                //过渡到我们的最终状态。
+                //在并发状态更改期间，通过调用cancel()或failExternally()，
+                //我们应该处于DEPLOYING、INITIALIZING、RUNNING、CANCELING或FAILED循环中进行多次重试
                 while (true) {
                     ExecutionState current = this.executionState;
 
@@ -883,9 +919,11 @@ public class Task
                         }
                     } else if (current == ExecutionState.FAILED) {
                         // in state failed already, no transition necessary any more
+                        //状态已经失败，不再需要转换
                         break;
                     }
                     // unexpected state, go to failed
+                    //意外状态，进入失败状态
                     else if (transitionState(current, ExecutionState.FAILED, t)) {
                         LOG.error(
                                 "Unexpected state in task {} ({}) during an exception: {}.",
@@ -895,6 +933,7 @@ public class Task
                         break;
                     }
                     // else fall through the loop and
+                    //否则会掉入循环中
                 }
             } catch (Throwable tt) {
                 String message =
@@ -911,26 +950,32 @@ public class Task
                 // clear the reference to the invokable. this helps guard against holding references
                 // to the invokable and its structures in cases where this Task object is still
                 // referenced
+                //清除对可调用项的引用。这有助于防止在仍然引用此任务对象的情况下保留对可调用及其结构的引用
                 this.invokable = null;
 
                 // free the network resources
+                //释放网络资源
                 releaseResources();
 
                 // free memory resources
+                //释放内存资源
                 if (invokable != null) {
                     memoryManager.releaseAll(invokable);
                 }
 
                 // remove all of the tasks resources
+                //删除所有任务资源
                 fileCache.releaseJob(jobId, executionId);
 
                 // close and de-activate safety net for task thread
+                //关闭并停用任务线程的安全网
                 LOG.debug("Ensuring all FileSystem streams are closed for task {}", this);
                 FileSystemSafetyNet.closeSafetyNetAndGuardedResourcesForThread();
 
                 notifyFinalState();
             } catch (Throwable t) {
                 // an error in the resource cleanup is fatal
+                //资源清理中的错误是致命的
                 String message =
                         String.format(
                                 "FATAL - exception in resource cleanup of task %s (%s).",
@@ -942,6 +987,7 @@ public class Task
             // un-register the metrics at the end so that the task may already be
             // counted as finished when this happens
             // errors here will only be logged
+            //最后取消注册指标，以便在发生这种情况时任务可能已经被计为完成，此处的错误只会被记录
             try {
                 metrics.close();
             } catch (Throwable t) {
@@ -955,8 +1001,10 @@ public class Task
     }
 
     /** Unwrap, enrich and handle fatal errors. */
+    //展开、丰富并处理致命错误。
     private Throwable preProcessException(Throwable t) {
         // unwrap wrapped exceptions to make stack traces more compact
+        //解开包装的异常以使堆栈跟踪更加紧凑
         if (t instanceof WrappingRuntimeException) {
             t = ((WrappingRuntimeException) t).unwrap();
         }
@@ -964,6 +1012,7 @@ public class Task
         TaskManagerExceptionUtils.tryEnrichTaskManagerError(t);
 
         // check if the exception is unrecoverable
+        //检查异常是否不可恢复
         if (ExceptionUtils.isJvmFatalError(t)
                 || (t instanceof OutOfMemoryError
                         && taskManagerConfig.shouldExitJvmOnOutOfMemoryError())) {
@@ -971,6 +1020,7 @@ public class Task
             // terminate the JVM immediately
             // don't attempt a clean shutdown, because we cannot expect the clean shutdown
             // to complete
+            //立即终止 JVM 不要尝试干净关闭，因为我们不能期望干净关闭完成
             try {
                 LOG.error(
                         "Encountered fatal error {} - terminating the JVM",
@@ -1031,6 +1081,9 @@ public class Task
      * by framework is not performed and expected in this invoke function anyhow, we can monitor
      * exiting JVM for entire scope.
      */
+   //监视退出 JVM 中的用户代码（涵盖用户函数调用）。
+    //这可以通过更细粒度的方式来完成，例如单独封装用户回调函数，
+    //但由于框架触发的退出在该调用函数中并未执行和预期，因此我们可以在整个范围内监视退出 JVM。
     private void runWithSystemExitMonitoring(RunnableWithException action) throws Exception {
         FlinkSecurityManager.monitorUserSystemExitForCurrentThread();
         try {
@@ -1061,6 +1114,7 @@ public class Task
      * Releases resources before task exits. We should also fail the partition to release if the
      * task has failed, is canceled, or is being canceled at the moment.
      */
+    //任务退出前释放资源。如果任务失败、被取消或正在被取消，我们还应该使分区无法释放。
     private void releaseResources() {
         LOG.debug(
                 "Release task {} network resources (state: {}).",
@@ -1072,6 +1126,7 @@ public class Task
         }
 
         // close network resources
+        //关闭网络资源
         if (isCanceledOrFailed()) {
             failAllResultPartitions();
         }
@@ -1109,6 +1164,8 @@ public class Task
             // Cleanup resources instead of invokable if it is null, or prevent it from being
             // blocked on input, or interrupt if it is already blocked. Not needed for StreamTask
             // (which does NOT use blocking input); for which this could cause race conditions
+            //如果为空，则清理资源而不是可调用，或者防止其在输入时被阻塞，或者如果已经被阻塞则中断。
+            //StreamTask 不需要（它不使用阻塞输入）；这可能会导致竞争条件
             for (InputGate inputGate : inputGates) {
                 try {
                     inputGate.close();
@@ -1124,6 +1181,7 @@ public class Task
         long startDownloadTime = System.currentTimeMillis();
 
         // triggers the download of all missing jar files from the job manager
+        //触发从作业管理器下载所有丢失的 jar 文件
         final UserCodeClassLoader userCodeClassLoader =
                 classLoaderHandle.getOrResolveClassLoader(requiredJarFiles, requiredClasspaths);
 
@@ -1152,6 +1210,7 @@ public class Task
      * @param newState of the execution
      * @return true if the transition was successful, otherwise false
      */
+    //尝试将执行状态从当前状态转换到新状态。
     private boolean transitionState(ExecutionState currentState, ExecutionState newState) {
         return transitionState(currentState, newState, null);
     }
@@ -1164,6 +1223,7 @@ public class Task
      * @param cause of the transition change or null
      * @return true if the transition was successful, otherwise false
      */
+    //尝试将执行状态从当前状态转换到新状态。
     private boolean transitionState(
             ExecutionState currentState, ExecutionState newState, Throwable cause) {
         if (STATE_UPDATER.compareAndSet(this, currentState, newState)) {
@@ -1194,6 +1254,7 @@ public class Task
             } else {
                 // proper failure of the task. record the exception as the root
                 // cause
+                //任务的正确失败。将异常记录为根本原因
                 failureCause = cause;
                 LOG.warn(
                         "{} ({}) switched from {} to {} with failure cause:",
@@ -1213,6 +1274,7 @@ public class Task
     // ----------------------------------------------------------------------------------------------------------------
     //  Canceling / Failing the task from the outside
     // ----------------------------------------------------------------------------------------------------------------
+    //从外部取消失败的任务
 
     /**
      * Cancels the task execution. If the task is already in a terminal state (such as FINISHED,
@@ -1222,6 +1284,10 @@ public class Task
      *
      * <p>This method never blocks.
      */
+    //取消任务执行。
+    //如果任务已处于最终状态（例如 FINISHED、CANCELED、FAILED），或者任务已在取消，则不会执行任何操作。
+    //否则，它将状态设置为 CANCELING，并且如果可调用代码正在运行，则启动一个异步线程来中止该代码。
+    //此方法永远不会阻塞
     public void cancelExecution() {
         try (MdcUtils.MdcCloseable ignored = MdcUtils.withContext(MdcUtils.asContextData(jobId))) {
             LOG.info("Attempting to cancel task {} ({}).", taskNameWithSubtask, executionId);
@@ -1238,6 +1304,10 @@ public class Task
      *
      * <p>This method never blocks.
      */
+    //标记任务执行因外部原因（任务代码本身抛出异常以外的原因）失败。
+    //如果任务已处于最终状态（例如 FINISHED、CANCELED、FAILED），或者任务已在取消，则不会执行任何操作。
+    //否则，它将状态设置为 FAILED，并且如果可调用代码正在运行，则启动一个异步线程来中止该代码。
+    //此方法永远不会阻塞
     @Override
     public void failExternally(Throwable cause) {
         try (MdcUtils.MdcCloseable ignored = MdcUtils.withContext(MdcUtils.asContextData(jobId))) {
@@ -1274,6 +1344,7 @@ public class Task
 
             // if the task is already canceled (or canceling) or finished or failed,
             // then we need not do anything
+            //如果任务已经被取消（或正在取消）或完成或失败，那么我们不需要做任何事情
             if (current.isTerminal() || current == ExecutionState.CANCELING) {
                 LOG.info("Task {} is already in state {}", taskNameWithSubtask, current);
                 return;
@@ -1283,6 +1354,7 @@ public class Task
                 if (transitionState(current, targetState, cause)) {
                     // if we manage this state transition, then the invokable gets never called
                     // we need not call cancel on it
+                    //如果我们管理此状态转换，则可调用的对象永远不会被调用，我们无需对其调用取消
                     return;
                 }
             } else if (current == ExecutionState.INITIALIZING
@@ -1290,8 +1362,10 @@ public class Task
                 if (transitionState(current, targetState, cause)) {
                     // we are canceling / failing out of the running state
                     // we need to cancel the invokable
+                    //我们正在取消运行状态失败，我们需要取消可调用
 
                     // copy reference to guard against concurrent null-ing out the reference
+                    //复制引用以防止并发清空引用
                     final TaskInvokable invokable = this.invokable;
 
                     if (invokable != null && invokableHasBeenCanceled.compareAndSet(false, true)) {
@@ -1305,8 +1379,11 @@ public class Task
                         // we do not reuse the async call handler, because that one may be blocked,
                         // in which
                         // case the canceling could not continue
+                        //因为取消可能会阻塞用户代码，所以我们从一个单独的线程中取消，
+                        //我们不会重用异步调用处理程序，因为该处理程序可能会被阻塞，在这种情况下取消无法继续
 
                         // The canceller calls cancel and interrupts the executing thread once
+                        //取消程序调用cancel并中断正在执行的线程一次
                         Runnable canceler =
                                 new TaskCanceler(
                                         LOG, invokable, executingThread, taskNameWithSubtask);
@@ -1326,6 +1403,7 @@ public class Task
                         // the periodic interrupting thread - a different thread than the canceller,
                         // in case
                         // the application code does blocking stuff in its cancellation paths.
+                        //周期性中断线程 - 与取消程序不同的线程，以防应用程序代码在其取消路径中阻塞某些内容。
                         Runnable interrupter =
                                 new TaskInterrupter(
                                         LOG,
@@ -1349,6 +1427,7 @@ public class Task
 
                         // if a cancellation timeout is set, the watchdog thread kills the process
                         // if graceful cancellation does not succeed
+                        //如果设置了取消超时，如果优雅取消未成功，看门狗线程将终止该进程
                         if (taskCancellationTimeout > 0) {
                             Runnable cancelWatchdog =
                                     new TaskCancelerWatchDog(
@@ -1385,6 +1464,7 @@ public class Task
     // ------------------------------------------------------------------------
     //  Partition State Listeners
     // ------------------------------------------------------------------------
+    //分区状态监听器
 
     @Override
     public void requestPartitionProducerState(
@@ -1405,6 +1485,7 @@ public class Task
     // ------------------------------------------------------------------------
     //  Notifications on the invokable
     // ------------------------------------------------------------------------
+    //关于可调用的通知
 
     /**
      * Calls the invokable to trigger a checkpoint.
@@ -1444,6 +1525,7 @@ public class Task
             } catch (RejectedExecutionException ex) {
                 // This may happen if the mailbox is closed. It means that the task is shutting
                 // down, so we just ignore it.
+                //如果mailbox关闭，则可能会发生这种情况。这意味着任务正在关闭，所以我们忽略它。
                 LOG.debug(
                         "Triggering checkpoint {} for {} ({}) was rejected by the mailbox",
                         checkpointID,
@@ -1548,6 +1630,7 @@ public class Task
             } catch (RejectedExecutionException ex) {
                 // This may happen if the mailbox is closed. It means that the task is shutting
                 // down, so we just ignore it.
+                //如果mailbox关闭，则可能会发生这种情况。这意味着任务正在关闭，所以我们忽略它。
                 LOG.debug(
                         "Notify checkpoint {}} {} for {} ({}) was rejected by the mailbox.",
                         notifyCheckpointOperation,
@@ -1570,6 +1653,7 @@ public class Task
                     case SUBSUME:
                         // just rethrow the throwable out as we do not expect notification of
                         // subsume could fail the task.
+                        //只是重新抛出可抛出的东西，因为我们不希望 subsume 的通知会使任务失败。
                         ExceptionUtils.rethrow(t);
                 }
             }
@@ -1591,6 +1675,8 @@ public class Task
      * @throws FlinkException This method throws exceptions indicating the reason why delivery did
      *     not succeed.
      */
+    //将操作员事件分派给可调用任务。
+    //如果事件传递未成功，此方法将引发异常。调用者可以使用该异常进行错误报告，但无需对此任务失败做出反应（此方法负责处理该问题）。
     public void deliverOperatorEvent(OperatorID operator, SerializedValue<OperatorEvent> evt)
             throws FlinkException {
         final TaskInvokable invokable = this.invokable;
@@ -1624,6 +1710,7 @@ public class Task
 
     private void cancelInvokable(TaskInvokable invokable) {
         // in case of an exception during execution, we still call "cancel()" on the task
+        //如果执行过程中出现异常，我们仍然对任务调用“cancel()”
         if (invokable != null && invokableHasBeenCanceled.compareAndSet(false, true)) {
             try {
                 invokable.cancel();
@@ -1743,11 +1830,19 @@ public class Task
     //  'interrupt()'. This is a workaround for the following JVM bug
     //   https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8138622
     // ------------------------------------------------------------------------
+    //任务取消
+    //任务取消总共使用三个线程，作为针对各种形式的用户和 JVM 错误的安全网。
+    // - 第一个线程对可调用对象调用“cancel()”，并关闭输入和输出连接，以实现快速线程终止
+    // - 第二个线程定期中断可调用对象，以便将线程从阻塞等待和 IO 操作中拉出
+    // - 第三个线程（看门狗线程）等待取消超时，然后执行硬取消（杀死进程，或让 TaskManager 知道）
+    // 以前，线程二和三在一个线程中，但我们需要将其分开以确保看门狗线程不会调用“中断()”。
+    //这是针对以下 JVM 错误的解决方法 https:bugs.java.combugdatabaseview_bug.do?bug_id=8138622
 
     /**
      * This runner calls cancel() on the invokable, closes input-/output resources, and initially
      * interrupts the task thread.
      */
+    //该运行程序对可调用对象调用 cancel()，关闭输入/ 输出资源，并首先中断任务线程。
     private class TaskCanceler implements Runnable {
 
         private final Logger logger;
@@ -1767,6 +1862,7 @@ public class Task
             try (MdcCloseable ignored = MdcUtils.withContext(MdcUtils.asContextData(jobId))) {
                 // the user-defined cancel method may throw errors.
                 // we need do continue despite that
+                //用户定义的取消方法可能会抛出错误。尽管如此，我们仍需要继续
                 try {
                     invokable.cancel();
                 } catch (Throwable t) {
@@ -1782,6 +1878,11 @@ public class Task
                 // the task thread itself will release them; 2) We can not close
                 // ResultPartitions here because of possible race conditions with
                 // Task thread so we just call the fail here.
+                //提前释放输入和输出缓冲池。
+                //我们这样做是为了解除异步线程的阻塞，异步线程会消耗主任务线程之外的中间流（如 Kafka 消费者）。
+                // 注意：
+                // 1）这并不意味着释放所有网络资源，任务线程本身会释放它们；
+                // 2）我们不能在这里关闭 ResultPartitions，因为任务线程可能存在竞争条件，所以我们在这里调用失败。
                 failAllResultPartitions();
                 closeAllInputGates();
 
@@ -1794,21 +1895,27 @@ public class Task
     }
 
     /** This thread sends the delayed, periodic interrupt calls to the executing thread. */
+    //该线程向执行线程发送延迟的周期性中断调用。
     private static final class TaskInterrupter implements Runnable {
 
         /** The logger to report on the fatal condition. */
+        //记录器报告致命情况。
         private final Logger log;
 
         /** The invokable task. */
+        //可调用的任务。
         private final TaskInvokable task;
 
         /** The executing task thread that we wait for to terminate. */
+        //我们等待终止的执行任务线程。
         private final Thread executorThread;
 
         /** The name of the task, for logging purposes. */
+        //任务的名称，用于记录目的。
         private final String taskName;
 
         /** The interval in which we interrupt. */
+        //我们中断的时间间隔。
         private final long interruptIntervalMillis;
 
         private final JobID jobID;
@@ -1835,16 +1942,19 @@ public class Task
                 // we initially wait for one interval
                 // in most cases, the threads go away immediately (by the cancellation thread)
                 // and we need not actually do anything
+                //在大多数情况下，我们一开始会等待一个时间间隔，线程会立即消失（通过取消线程），并且我们实际上不需要执行任何操作
                 executorThread.join(interruptIntervalMillis);
 
                 // log stack trace where the executing thread is stuck and
                 // interrupt the running thread periodically while it is still alive
+                //记录执行线程被卡住的堆栈跟踪，并在运行线程仍处于活动状态时定期中断它
                 while (executorThread.isAlive()) {
                     task.maybeInterruptOnCancel(executorThread, taskName, interruptIntervalMillis);
                     try {
                         executorThread.join(interruptIntervalMillis);
                     } catch (InterruptedException e) {
                         // we ignore this and fall through the loop
+                        //我们忽略这一点并陷入循环
                     }
                 }
             } catch (Throwable t) {
@@ -1859,15 +1969,19 @@ public class Task
      * certain time, we trigger a hard cancel action (notify TaskManager of fatal error, which in
      * turn kills the process).
      */
+    //取消的看门狗。如果任务线程在一定时间内没有正常消失，我们会触发硬取消操作（通知 TaskManager 致命错误，从而终止进程）
     private static class TaskCancelerWatchDog implements Runnable {
 
         /** The executing task thread that we wait for to terminate. */
+        //我们等待终止的执行任务线程。
         private final Thread executorThread;
 
         /** The TaskManager to notify if cancellation does not happen in time. */
+        //如果取消没有及时发生，TaskManager 会发出通知。
         private final TaskManagerActions taskManager;
 
         /** The timeout for cancellation. */
+        //取消超时。
         private final long timeoutMillis;
 
         private final TaskInfo taskInfo;
@@ -1899,6 +2013,7 @@ public class Task
                         executorThread.join(Math.max(1, timeout.timeLeft().toMillis()));
                     } catch (InterruptedException ignored) {
                         // we don't react to interrupted exceptions, simply fall through the loop
+                        //我们不会对中断的异常做出反应，只是陷入循环
                     }
                 }
 
@@ -1937,6 +2052,7 @@ public class Task
     }
 
     /** Various operation of notify checkpoint. */
+    //通知检查点的各种操作。
     public enum NotifyCheckpointOperation {
         ABORT,
         COMPLETE,
