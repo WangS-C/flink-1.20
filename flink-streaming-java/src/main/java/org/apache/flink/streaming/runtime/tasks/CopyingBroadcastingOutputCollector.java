@@ -25,6 +25,7 @@ import org.apache.flink.util.OutputTag;
  * Special version of {@link BroadcastingOutputCollector} that performs a shallow copy of the {@link
  * StreamRecord} to ensure that multi-chaining works correctly.
  */
+//BroadcastingOutputCollector的特殊版本，执行StreamRecord的浅表复制，以确保多链正常工作。
 final class CopyingBroadcastingOutputCollector<T> extends BroadcastingOutputCollector<T> {
 
     public CopyingBroadcastingOutputCollector(

@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /** A subclass of {@link StreamTaskSourceInput} for {@link ExternallyInducedSourceReader}. */
+//ExternallyInducedSourceReader的StreamTaskSourceInput的子类。
 public class StreamTaskExternallyInducedSourceInput<T> extends StreamTaskSourceInput<T> {
     private final Consumer<Long> checkpointTriggeringHook;
     private final ExternallyInducedSourceReader<T, ?> sourceReader;
@@ -44,6 +45,7 @@ public class StreamTaskExternallyInducedSourceInput<T> extends StreamTaskSourceI
     public void blockUntil(CompletableFuture<?> blockFuture) {
         this.blockFuture = blockFuture;
         // assume that the future is completed in mailbox thread
+        // 假设 future 在mailbox线程中完成
         blockFuture.whenComplete((v, e) -> unblock());
     }
 

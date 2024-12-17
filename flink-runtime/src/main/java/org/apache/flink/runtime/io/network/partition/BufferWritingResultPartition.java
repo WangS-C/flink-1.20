@@ -176,10 +176,12 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
 
         if (buffer.isFull()) {
             // full buffer, full record
+            //满缓冲区、全记录
             finishUnicastBufferBuilder(targetSubpartition);
         }
 
         // partial buffer, full record
+        //部分缓冲区，完整记录
     }
 
     @Override
@@ -190,16 +192,19 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
 
         while (record.hasRemaining()) {
             // full buffer, partial record
+            //完整缓冲区，部分记录
             finishBroadcastBufferBuilder();
             buffer = appendBroadcastDataForRecordContinuation(record);
         }
 
         if (buffer.isFull()) {
             // full buffer, full record
+            //满缓冲区、全记录
             finishBroadcastBufferBuilder();
         }
 
         // partial buffer, full record
+        //部分缓冲区，完整记录
     }
 
     @Override
@@ -271,11 +276,13 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
     @Override
     protected void releaseInternal() {
         // Release all subpartitions
+        // 释放所有子分区
         for (ResultSubpartition subpartition : subpartitions) {
             try {
                 subpartition.release();
             }
             // Catch this in order to ensure that release is called on all subpartitions
+            // 捕获此问题以确保在所有子分区上调用释放
             catch (Throwable t) {
                 LOG.error("Error during release of result subpartition: " + t.getMessage(), t);
             }
@@ -286,6 +293,7 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
     public void close() {
         // We can not close these buffers in the release method because of the potential race
         // condition. This close method will be only called from the Task thread itself.
+        // 由于潜在的竞争条件，我们无法在释放方法中关闭这些缓冲区。此 close 方法只会从任务线程本身调用。
         if (broadcastBufferBuilder != null) {
             broadcastBufferBuilder.close();
             broadcastBufferBuilder = null;
@@ -324,13 +332,17 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
         // This decreases the probability of hard back-pressure in cases when
         // the output size varies significantly and BD suggests too small values.
         // The hint will be re-applied on the next iteration.
+        //通过忽略 Buffer Debloater 提示并在可能的情况下扩展缓冲区（修剪），尝试避免在后续调用请求缓冲区时出现硬背压。
+        //当输出大小变化很大并且 BD 建议值太小时时，这会降低出现硬背压的可能性。该提示将在下一次迭代中重新应用。
         if (record.remaining() >= buffer.getWritableBytes()) {
             // This 2nd check is expensive, so it shouldn't be re-ordered.
             // However, it has the same cost as the subsequent call to request buffer, so it doesn't
             // affect the performance much.
+            //第二次检查费用昂贵，因此不应重新订购。但是，它与后续调用请求缓冲区的成本相同，因此不会对性能产生太大影响。
             if (!bufferPool.isAvailable()) {
                 // add 1 byte to prevent immediately flushing the buffer and potentially fit the
                 // next record
+                //添加 1 个字节以防止立即刷新缓冲区并可能适合下一条记录
                 int newSize =
                         buffer.getMaxCapacity()
                                 + (record.remaining() - buffer.getWritableBytes())
@@ -367,6 +379,7 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
         if (desirableBufferSize > 0) {
             // !! If some of partial data has written already to this buffer, the result size can
             // not be less than written value.
+            //!!如果部分数据已写入此缓冲区，则结果大小不能小于写入值。
             buffer.trim(Math.max(minDesirableBufferSize, desirableBufferSize));
         }
     }
@@ -381,6 +394,8 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
         // starting
         // with a complete record.
         // !! The next two lines can not change order.
+        //!!请注意，如果partialRecordBytes != 0，部分长度和数据必须在创建消费者之前先“appendAndCommit”。
+        // 否则，它将与缓冲区以完整记录开始的情况相混淆。 !!接下来的两行不能改变顺序。
         final int partialRecordBytes = append(remainingRecordBytes, buffer);
         addToSubpartition(buffer, targetSubpartition, partialRecordBytes, partialRecordBytes);
 
@@ -410,6 +425,8 @@ public abstract class BufferWritingResultPartition extends ResultPartition {
         // starting
         // with a complete record.
         // !! The next two lines can not change order.
+        //!!请注意，如果partialRecordBytes != 0，部分长度和数据必须在创建消费者之前先“appendAndCommit”。
+        // 否则，它将与缓冲区以完整记录开始的情况相混淆。 !!接下来的两行不能改变顺序。
         final int partialRecordBytes = append(remainingRecordBytes, buffer);
         createBroadcastBufferConsumers(buffer, partialRecordBytes, partialRecordBytes);
 

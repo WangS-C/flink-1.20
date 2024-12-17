@@ -78,6 +78,15 @@ import java.util.stream.IntStream;
  * <p>Watermarks, watermark statuses, nor latency markers are propagated downstream as they do not
  * make sense with buffered records. The input emits the largest watermark seen after all records.
  */
+//包装底层输入并对传入记录进行排序的输入。
+//仅当与此MultiInputSortingDataInput耦合的所有其他输入也完成排序时，它才开始向下游发送记录。
+//此外，仅当MultiInputSortingDataInput. CommonContext. getQueueOfHeads()的头属于输入时，
+// 如果它有一些待处理的记录，它将报告它available或approximately available 。这样一来，就只有一个输入报告其可用。
+//排序器使用键的二进制比较，从链式输入接收到键时将其提取并序列化。
+// 此外，传入记录的时间戳用于二次排序。
+// 对于比较，如果序列化密钥的长度是常量，
+//则使用固定长度字节FixedLengthByteKeyComparator ，否则使用可变VariableLengthByteKeyComparator 。
+//水印、水印状态或延迟标记都会向下游传播，因为它们对缓冲记录没有意义。输入发出所有记录之后看到的最大水印。
 public final class MultiInputSortingDataInput<IN, K> implements StreamTaskInput<IN> {
     private final int idx;
     private final StreamTaskInput<IN> wrappedInput;
@@ -113,6 +122,7 @@ public final class MultiInputSortingDataInput<IN, K> implements StreamTaskInput<
      * A wrapper that combines sorting {@link StreamTaskInput inputs} with a {@link InputSelectable}
      * that should be used to choose which input to consume next from.
      */
+    //一个包装器，它将inputs排序与InputSelectable相结合，用于选择接下来要使用的输入。
     public static class SelectableSortingInputs {
         private final InputSelectable inputSelectable;
         private final StreamTaskInput<?>[] sortedInputs;
@@ -354,6 +364,8 @@ public final class MultiInputSortingDataInput<IN, K> implements StreamTaskInput<
      * all sorting inputs. Should be used by the {@link StreamInputProcessor} to choose the next
      * input to consume from.
      */
+    //一个InputSelectable ，指示哪个输入包含所有排序输入中当前最小的元素。
+    // StreamInputProcessor应该使用它来选择下一个要使用的输入。
     private static class InputSelector implements InputSelectable, BoundedMultiInput {
 
         private final CommonContext commonContext;
@@ -378,6 +390,7 @@ public final class MultiInputSortingDataInput<IN, K> implements StreamTaskInput<
 
             if (currentPassThroughInputIndex != null) {
                 // yes, 0-based to 1-based mapping ... 🙏
+                // 是的，从 0 到 1 的映射
                 return new InputSelection.Builder()
                         .select(currentPassThroughInputIndex + 1)
                         .build(numInputs);
@@ -403,6 +416,8 @@ public final class MultiInputSortingDataInput<IN, K> implements StreamTaskInput<
      * all the records from the underlying input yet. It forwards the records to a corresponding
      * sorter.
      */
+    //当我们尚未看到底层输入的所有记录时，在排序阶段使用PushingAsyncDataInput. DataOutput 。
+    //它将记录转发到相应的排序器。
     private class SortingPhaseDataOutput implements PushingAsyncDataInput.DataOutput<IN> {
 
         @Override
@@ -432,6 +447,8 @@ public final class MultiInputSortingDataInput<IN, K> implements StreamTaskInput<
             // The MultiInputSortingDataInput is only used in batch execution mode. The
             // RecordAttributes is not used in batch execution mode. We will ignore all the
             // RecordAttributes.
+            //MultiInputSortingDataInput 仅用于批处理执行模式。
+            //RecordAttributes 不用于批处理执行模式。我们将忽略所有 RecordAttributes。
         }
     }
 
@@ -441,6 +458,8 @@ public final class MultiInputSortingDataInput<IN, K> implements StreamTaskInput<
      *
      * <p>The class is mutable and we only ever have a single instance per input.
      */
+    //表示已排序输入的头部的薄包装。此外，它还保留其所属输入的 id。
+    //该类是可变的，每个输入只有一个实例
     private static final class HeadElement implements Comparable<HeadElement> {
         final int inputIndex;
         Tuple2<byte[], StreamRecord<Object>> streamElement;

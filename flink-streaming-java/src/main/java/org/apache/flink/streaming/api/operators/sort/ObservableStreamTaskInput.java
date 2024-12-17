@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
  * A wrapping {@link StreamTaskInput} that invokes a given {@link BoundedMultiInput} when reaching
  * {@link DataInputStatus#END_OF_INPUT}.
  */
+//一个包装StreamTaskInput ，在到达DataInputStatus. END_OF_INPUT时调用给定的BoundedMultiInput
 class ObservableStreamTaskInput<T> implements StreamTaskInput<T> {
 
     private final StreamTaskInput<T> wrappedInput;

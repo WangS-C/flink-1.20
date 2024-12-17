@@ -32,6 +32,7 @@ import org.apache.flink.util.OutputTag;
  * A fake main operator output that skips all the following operators for finished on restored
  * tasks.
  */
+//一个假的主运算符输出，跳过所有以下运算符以完成恢复的任务。
 public class FinishedOnRestoreMainOperatorOutput<OUT> implements WatermarkGaugeExposingOutput<OUT> {
 
     private final RecordWriterOutput<?>[] streamOutputs;

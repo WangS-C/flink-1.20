@@ -83,6 +83,7 @@ public class NetworkBufferPool
 
     private final Set<LocalBufferPool> allBufferPools = new HashSet<>();
 
+    //可调整大小的缓冲池
     private final Set<LocalBufferPool> resizableBufferPools = new HashSet<>();
 
     private int numTotalRequiredBuffers;
@@ -482,6 +483,7 @@ public class NetworkBufferPool
 
         // It is necessary to use a separate lock from the one used for buffer
         // requests to ensure deadlock freedom for failure cases.
+        //有必要使用与缓冲区请求所用的锁不同的锁，以确保故障情况下没有死锁。
         synchronized (factoryLock) {
             if (isDestroyed) {
                 throw new IllegalStateException("Network buffer pool has already been destroyed.");
@@ -489,6 +491,7 @@ public class NetworkBufferPool
 
             // Ensure that the number of required buffers can be satisfied.
             // With dynamic memory management this should become obsolete.
+            // 确保能够满足所需缓冲区的数量。有了动态内存管理，这应该变得过时了。
             if (numTotalRequiredBuffers + numRequiredBuffers > totalNumberOfMemorySegments) {
                 throw new IOException(
                         String.format(
@@ -503,6 +506,7 @@ public class NetworkBufferPool
 
             // We are good to go, create a new buffer pool and redistribute
             // non-fixed size buffers.
+            //我们可以开始创建一个新的缓冲池并重新分配非固定大小的缓冲区。
             LocalBufferPool localBufferPool =
                     new LocalBufferPool(
                             this,
@@ -518,6 +522,7 @@ public class NetworkBufferPool
                 resizableBufferPools.add(localBufferPool);
             }
 
+            //重新分配缓冲区
             redistributeBuffers();
 
             return localBufferPool;
@@ -591,6 +596,7 @@ public class NetworkBufferPool
     }
 
     // Must be called from synchronized block
+    // 必须从同步块调用
     private void redistributeBuffers() {
         assert Thread.holdsLock(factoryLock);
 
@@ -599,10 +605,12 @@ public class NetworkBufferPool
         }
 
         // All buffers, which are not among the required ones
+        // 所有缓冲区，不属于必需的缓冲区
         final int numAvailableMemorySegment = totalNumberOfMemorySegments - numTotalRequiredBuffers;
 
         if (numAvailableMemorySegment == 0) {
             // in this case, we need to redistribute buffers so that every pool gets its minimum
+            // 在这种情况下，我们需要重新分配缓冲区，以便每个池都获得其最小值
             for (LocalBufferPool bufferPool : resizableBufferPools) {
                 bufferPool.setNumBuffers(bufferPool.getNumberOfRequiredMemorySegments());
             }
@@ -616,6 +624,9 @@ public class NetworkBufferPool
          * it may be less. Based on this and the sum of all these values (totalCapacity), we build
          * a ratio that we use to distribute the buffers.
          */
+        //由于缓冲池可能受到限制，让我们根据每个缓冲池的容量来分配可用内存段，
+        // 即无限缓冲池可以占用的最大段数是 numAvailableMemorySegment，对于有限缓冲池，它可能会更少。
+        // 基于此以及所有这些值的总和（totalCapacity），我们构建了一个用于分配缓冲区的比率
 
         long totalCapacity = 0; // long to avoid int overflow
 
@@ -627,13 +638,17 @@ public class NetworkBufferPool
         }
 
         // no capacity to receive additional buffers?
+        // 没有能力接收额外的缓冲区？
         if (totalCapacity == 0) {
+            //当没有什么可以重新分配时，有必要避免 div 为零
             return; // necessary to avoid div by zero when nothing to re-distribute
         }
 
         // since one of the arguments of 'min(a,b)' is a positive int, this is actually
         // guaranteed to be within the 'int' domain
         // (we use a checked downCast to handle possible bugs more gracefully).
+        //由于 'min(a,b)' 的参数之一是正 int，
+        // 因此实际上保证它位于 'int' 域内（我们使用检查的 downCast 来更优雅地处理可能的错误）。
         final int memorySegmentsToDistribute =
                 MathUtils.checkedDownCast(Math.min(numAvailableMemorySegment, totalCapacity));
 
@@ -655,6 +670,7 @@ public class NetworkBufferPool
             // re-distributed up until here
             // the downcast will always succeed, because both arguments of the subtraction are in
             // the 'int' domain
+            //通过查看应该重新分配的总容量来避免剩余缓冲区，直到这里向下转换总是会成功，因为减法的两个参数都在“int”域中
             final int mySize =
                     MathUtils.checkedDownCast(
                             memorySegmentsToDistribute * totalPartsUsed / totalCapacity

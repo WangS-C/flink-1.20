@@ -65,6 +65,8 @@ public final class ChannelSelectorRecordWriter<T extends IOReadableWritable>
         // Emitting to all subpartitions in a for loop can be better than calling
         // ResultPartitionWriter#broadcastRecord because the broadcastRecord
         // method incurs extra overhead.
+        //在 for 循环中发送到所有子分区可能比调用 ResultPartitionWriterbroadcastRecord 更好，
+        // 因为 BroadcastRecord 方法会产生额外的开销。
         ByteBuffer serializedRecord = serializeRecord(serializer, record);
         for (int subpartitionIndex = 0;
                 subpartitionIndex < numberOfSubpartitions;

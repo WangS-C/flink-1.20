@@ -42,6 +42,7 @@ public interface BlockCompressionFactory {
      *
      * @param compressionName supported compression codecs.
      */
+    //根据配置创建BlockCompressionFactory 。
     static BlockCompressionFactory createBlockCompressionFactory(CompressionCodec compressionName) {
 
         checkNotNull(compressionName);

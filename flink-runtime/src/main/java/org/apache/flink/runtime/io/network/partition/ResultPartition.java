@@ -125,6 +125,7 @@ public abstract class ResultPartition implements ResultPartitionWriter {
     private final SupplierWithException<BufferPool, IOException> bufferPoolFactory;
 
     /** Used to compress buffer to reduce IO. */
+    //用于压缩buffer以减少IO。
     @Nullable protected final BufferCompressor bufferCompressor;
 
     protected Counter numBytesOut = new SimpleCounter();
@@ -184,6 +185,7 @@ public abstract class ResultPartition implements ResultPartitionWriter {
     }
 
     /** Do the subclass's own setup operation. */
+    //做子类自己的设置操作。
     protected abstract void setupInternal() throws IOException;
 
     public String getOwningTaskName() {
@@ -217,12 +219,15 @@ public abstract class ResultPartition implements ResultPartitionWriter {
     }
 
     /** Returns the total number of queued buffers of all subpartitions. */
+    //返回所有子分区的排队缓冲区总数。
     public abstract int getNumberOfQueuedBuffers();
 
     /** Returns the total size in bytes of queued buffers of all subpartitions. */
+    //返回所有子分区的排队缓冲区的总大小（以字节为单位）。
     public abstract long getSizeOfQueuedBuffersUnsafe();
 
     /** Returns the number of queued buffers of the given target subpartition. */
+    //返回给定目标子分区的排队缓冲区数。
     public abstract int getNumberOfQueuedBuffers(int targetSubpartition);
 
     public void setMaxOverdraftBuffersPerGate(int maxOverdraftBuffersPerGate) {
@@ -234,6 +239,7 @@ public abstract class ResultPartition implements ResultPartitionWriter {
      *
      * @return result partition type
      */
+    //返回此结果分区的类型。
     public ResultPartitionType getPartitionType() {
         return partitionType;
     }
@@ -261,6 +267,7 @@ public abstract class ResultPartition implements ResultPartitionWriter {
      * @see EndOfData
      * @param subpartition The index of the subpartition sending the notification.
      */
+    //子分区通知相应的下游任务已处理完所有用户记录。
     public void onSubpartitionAllDataProcessed(int subpartition) {}
 
     /**
@@ -270,6 +277,9 @@ public abstract class ResultPartition implements ResultPartitionWriter {
      *
      * <p>For BLOCKING results, this will trigger the deployment of consuming tasks.
      */
+    //完成结果分区。
+    //执行此操作后，无法向结果分区添加更多数据。
+    //对于 BLOCKING 结果，这将触发消耗任务的部署。
     @Override
     public void finish() throws IOException {
         checkInProduceState();
@@ -301,6 +311,7 @@ public abstract class ResultPartition implements ResultPartitionWriter {
     }
 
     /** Releases all produced data including both those stored in memory and persisted on disk. */
+    //释放所有生成的数据，包括存储在内存中和保留在磁盘上的数据。
     protected abstract void releaseInternal();
 
     private void closeBufferPool() {
@@ -317,6 +328,7 @@ public abstract class ResultPartition implements ResultPartitionWriter {
     @Override
     public void fail(@Nullable Throwable throwable) {
         // the task canceler thread will call this method to early release the output buffer pool
+        //任务取消线程将调用此方法提前释放输出缓冲池
         closeBufferPool();
         partitionManager.releasePartition(partitionId, throwable);
     }
@@ -368,6 +380,9 @@ public abstract class ResultPartition implements ResultPartitionWriter {
      * uniformly in {@link UnionResultSubpartitionView}, subclasses of {@link ResultPartition} only
      * needs to take care of creating subpartition view for a single subpartition.
      */
+    //返回具有给定索引的子分区的读取器。
+    //由于UnionResultSubpartitionView统一支持合并多个子分区视图输出的功能，
+    //因此ResultPartition的子类只需要负责为单个子分区创建子分区视图。
     protected abstract ResultSubpartitionView createSubpartitionView(
             int index, BufferAvailabilityListener availabilityListener) throws IOException;
 
@@ -377,6 +392,8 @@ public abstract class ResultPartition implements ResultPartitionWriter {
      * <p>A partition is released when each subpartition is either consumed and communication is
      * closed by consumer or failed. A partition is also released if task is cancelled.
      */
+    //该分区是否被释放。
+    //当每个子分区被消耗并且通信被消费者关闭或失败时，分区被释放。如果任务被取消，分区也会被释放。
     @Override
     public boolean isReleased() {
         return isReleased.get();
@@ -401,6 +418,7 @@ public abstract class ResultPartition implements ResultPartitionWriter {
     // ------------------------------------------------------------------------
 
     /** Notification when a subpartition is released. */
+    //释放子分区时的通知。
     void onConsumedSubpartition(int subpartitionIndex) {
 
         if (isReleased.get()) {
@@ -426,6 +444,7 @@ public abstract class ResultPartition implements ResultPartitionWriter {
      * Whether the buffer can be compressed or not. Note that event is not compressed because it is
      * usually small and the size can become even larger after compression.
      */
+    //缓冲区是否可以压缩。请注意，事件不会被压缩，因为它通常很小，并且压缩后大小可能会变得更大。
     protected boolean canBeCompressed(Buffer buffer) {
         return bufferCompressor != null && buffer.isBuffer() && buffer.readableBytes() > 0;
     }

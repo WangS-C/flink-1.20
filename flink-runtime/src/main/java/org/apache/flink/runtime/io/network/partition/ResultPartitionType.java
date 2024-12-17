@@ -210,6 +210,11 @@ public enum ResultPartitionType {
      * related to partition release, use {@link #isReleaseByScheduler()} instead, and as consume
      * type, use {@link #mustBePipelinedConsumed()} or {@link #canBePipelinedConsumed()} instead.
      */
+    //isBlockingOrBlockingPersistentResultPartition()用于判断是否是指定的BLOCKING或BLOCKING_PERSISTENT resultPartitionType。
+    //该方法适用于ResultPartitionType具体实现相关的判断条件。
+    //该方法与数据消耗和分区释放无关。
+    // 对于分区释放相关的逻辑，使用isReleaseByScheduler()代替，
+    // 消费类型使用mustBePipelinedConsumed()或canBePipelinedConsumed()代替。
     public boolean isBlockingOrBlockingPersistentResultPartition() {
         return this == BLOCKING || this == BLOCKING_PERSISTENT;
     }
@@ -240,6 +245,11 @@ public enum ResultPartitionType {
      * related to partition release, use {@link #isReleaseByScheduler()} instead, and as consume
      * type, use {@link #mustBePipelinedConsumed()} or {@link #canBePipelinedConsumed()} instead.
      */
+    //isPipelinedOrPipelinedBoundedResultPartition()用于判断是否是指定的PIPELINED或PIPELINED_BOUNDED resultPartitionType。
+    //该方法适用于ResultPartitionType具体实现相关的判断条件。
+    //该方法与数据消耗和分区释放无关。
+    //对于分区释放相关的逻辑，使用isReleaseByScheduler()代替，
+    //消费类型使用mustBePipelinedConsumed()或canBePipelinedConsumed()代替。
     public boolean isPipelinedOrPipelinedBoundedResultPartition() {
         return this == PIPELINED || this == PIPELINED_BOUNDED;
     }

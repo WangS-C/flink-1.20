@@ -46,6 +46,7 @@ public class BufferCompressor {
         // the size of this intermediate heap buffer will be gotten from the
         // plugin configuration in the future, and currently, double size of
         // the input buffer is enough for the compression libraries used.
+        //该中间堆缓冲区的大小将来将从插件配置中获取，目前，输入缓冲区的双倍大小足以满足所使用的压缩库的需求。
         this.internalBufferArray = new byte[2 * bufferSize];
         this.internalBuffer =
                 new NetworkBuffer(

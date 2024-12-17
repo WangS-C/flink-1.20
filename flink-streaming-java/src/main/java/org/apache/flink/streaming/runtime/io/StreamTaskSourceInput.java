@@ -39,6 +39,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * returns the {@link DataInputStatus} to indicate whether the source state is available,
  * unavailable or finished.
  */
+//StreamTaskInput的实现，从SourceOperator读取数据并返回DataInputStatus以指示源状态是否可用、不可用或已完成
 @Internal
 public class StreamTaskSourceInput<T> implements StreamTaskInput<T>, CheckpointableInput {
 
@@ -64,6 +65,8 @@ public class StreamTaskSourceInput<T> implements StreamTaskInput<T>, Checkpointa
          * polls the data from this source while it's blocked, it should return {@link
          * DataInputStatus.NOTHING_AVAILABLE}.
          */
+        //安全防范尽力而为的可用性检查。
+        // 如果尽管不可用，但有人在该源被阻止时轮询该源的数据，则它应该返回 {@link DataInputStatus.NOTHING_AVAILABLE}。
         if (isBlockedAvailability.isApproximatelyAvailable()) {
             return operator.emitNext(output);
         }
@@ -116,6 +119,16 @@ public class StreamTaskSourceInput<T> implements StreamTaskInput<T>, Checkpointa
      * <p>However from the correctness point of view, {@link #checkpointStarted(CheckpointBarrier)}
      * and {@link #checkpointStopped(long)} methods could be empty no-op.
      */
+    //此方法与未对齐的检查点一起使用来标记第一个CheckpointBarrier的到达。
+    // 对于链式源，本身没有CheckpointBarrier流经作业图。
+    // 我们可以假设一个虚构的CheckpointBarrier是由源在我们选择的任何时间点生成的。
+    //我们选择解释它，一旦我们收到检查点启动 RPC 或来自网络输入的CheckpointBarrier就会立即收到源的CheckpointBarrier 。
+    // 这样我们就可以同时检查源和所有其他运算符的状态。
+    //此外，我们选择阻止源头，作为尽最大努力的优化：
+    // - 要么没有背压，检查点“对齐”无论如何都会很快发生
+    // - 或者有背压，最好优先处理来自网络的数据以加快检查点速度。
+    // 从集群资源利用的角度来看，阻止链式源不会阻止任何资源的使用，因为运行源的此任务有大量等待处理的缓冲输入数据。
+    //然而，从正确性的角度来看，checkpointStarted(CheckpointBarrier)和checkpointStopped(long)方法可能是空的无操作。
     @Override
     public void checkpointStarted(CheckpointBarrier barrier) {
         blockConsumption(null);
@@ -142,6 +155,7 @@ public class StreamTaskSourceInput<T> implements StreamTaskInput<T>, Checkpointa
     @Override
     public void close() {
         // SourceOperator is closed via OperatorChain
+        // SourceOperator 通过 OperatorChain 关闭
     }
 
     @Override

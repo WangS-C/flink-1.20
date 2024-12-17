@@ -215,6 +215,7 @@ public class LocalBufferPool implements BufferPool {
      * @param maxBuffersPerChannel maximum number of buffers to use for each channel
      * @param maxOverdraftBuffersPerGate maximum number of overdraft buffers to use for each gate
      */
+    //基于给定networkBufferPool和bufferPoolOwner 的本地缓冲池，具有可用网络缓冲区的最小和最大数量。
     LocalBufferPool(
             NetworkBufferPool networkBufferPool,
             int numberOfRequiredMemorySegments,
@@ -264,6 +265,7 @@ public class LocalBufferPool implements BufferPool {
 
         // Lock is only taken, because #checkAndUpdateAvailability asserts it. It's a small penalty
         // for thread safety.
+        //锁定仅被获取，因为 checkAndUpdateAvailability 断言了它。这是对线程安全的一个小小的惩罚。
         synchronized (this.availableMemorySegments) {
             checkAndUpdateAvailability();
         }
@@ -711,6 +713,8 @@ public class LocalBufferPool implements BufferPool {
                 // gets buffers assigned
                 // make sure that checkAndUpdateAvailability is not called as it would proactively
                 // acquire one buffer from NetworkBufferPool.
+                //FLINK-19964：当两个本地缓冲池同时释放时，其中一个会分配缓冲区，
+                // 确保不会调用 checkAndUpdateAvailability，因为它会主动从 NetworkBufferPool 获取一个缓冲区。
                 return;
             }
 

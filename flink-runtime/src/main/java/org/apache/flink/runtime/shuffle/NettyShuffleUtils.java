@@ -61,6 +61,7 @@ public class NettyShuffleUtils {
      * Calculates and returns local network buffer pool size used by the result partition. The
      * left/right value of the returned pair represent the min/max buffers require by the pool.
      */
+    //计算并返回结果分区使用的本地网络缓冲池大小。返回的对的左/ 右值表示池所需的最小/ 最大缓冲区。
     public static Pair<Integer, Integer> getMinMaxNetworkBuffersPerResultPartition(
             final int configuredNetworkBuffersPerChannel,
             final int numFloatingBuffersPerGate,
@@ -94,6 +95,9 @@ public class NettyShuffleUtils {
         // performance. If it's not guaranteed that each subpartition can get at least one buffer,
         // more partial buffers with little data will be outputted to network/disk and recycled to
         // be used by other subpartitions which can not get a buffer for data caching.
+        //对于每个上游基于哈希的阻塞流水线子分区，即使每个通道配置的网络缓冲区为 0，也至少需要一个缓冲区，此行为是为了性能。
+        // 如果不能保证每个子分区都能获得至少一个缓冲区，
+        // 则更多数据较少的部分缓冲区将被输出到网络磁盘并被回收以供其他无法获得缓冲区进行数据缓存的子分区使用。
         return Pair.of(min, Math.max(min, max));
     }
 

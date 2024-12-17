@@ -49,12 +49,14 @@ public class PartitionDescriptor implements Serializable {
     private final ResultPartitionType partitionType;
 
     /** The number of subpartitions. */
+    //子分区的数量。
     private final int numberOfSubpartitions;
 
     /** Connection index to identify this partition of intermediate result. */
     private final int connectionIndex;
 
     /** Whether the intermediate result is a broadcast result. */
+    //中间结果是否为广播结果。
     private final boolean isBroadcast;
 
     /**

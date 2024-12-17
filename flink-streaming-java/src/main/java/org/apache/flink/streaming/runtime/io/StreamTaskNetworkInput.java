@@ -54,6 +54,12 @@ import static java.util.stream.Collectors.toMap;
  * given lock object. This ensures that we don't call methods on a {@link StreamInputProcessor}
  * concurrently with the timer callback or other things.
  */
+//StreamTaskInput的实现，包装来自CheckpointedInputGate的网络输入。
+//这在内部使用StatusWatermarkValve来跟踪Watermark和WatermarkStatus事件，
+// 并在StatusWatermarkValve确定所有输入中的Watermark已提前，
+// 或者WatermarkStatus需要向下游传播以表示状态更改时将它们转发给事件订阅者。
+//转发元素、水印或状态元素必须通过在给定锁定对象上同步来进行保护。
+// 这确保我们不会与计时器回调或其他事情同时调用StreamInputProcessor上的方法。
 @Internal
 public final class StreamTaskNetworkInput<T>
         extends AbstractStreamTaskNetworkInput<
@@ -78,6 +84,7 @@ public final class StreamTaskNetworkInput<T>
     }
 
     // Initialize one deserializer per input channel
+    // 每个输入通道初始化一个解串器
     private static Map<
                     InputChannelInfo,
                     SpillingAdaptiveSpanningRecordDeserializer<
@@ -120,6 +127,7 @@ public final class StreamTaskNetworkInput<T>
         super.close();
 
         // cleanup the resources of the checkpointed input gate
+        // 清理检查点输入门的资源
         checkpointedInputGate.close();
     }
 }

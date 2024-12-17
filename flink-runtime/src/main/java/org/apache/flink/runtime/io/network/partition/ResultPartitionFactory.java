@@ -151,6 +151,7 @@ public class ResultPartitionFactory {
                 //返回下游一个ExecutionJobVertex中有多少个ExecutionVertex实例消费该Task实例的数据
                 desc.getNumberOfSubpartitions(),
                 desc.getMaxParallelism(),
+                //中间结果是否为广播结果。
                 desc.isBroadcast(),
                 desc.getShuffleDescriptor(),
 
@@ -176,6 +177,7 @@ public class ResultPartitionFactory {
             boolean isNumberOfPartitionConsumerUndefined) {
         BufferCompressor bufferCompressor = null;
         if (type.supportCompression() && batchShuffleCompressionEnabled) {
+            //创建Buffer的压缩器。
             bufferCompressor = new BufferCompressor(networkBufferSize, compressionCodec);
         }
         if (tieredStorage.isPresent() && type == ResultPartitionType.BLOCKING) {
@@ -364,6 +366,7 @@ public class ResultPartitionFactory {
     }
 
     /** Return whether this result partition need overdraft buffer. */
+    //返回该结果分区是否需要透支缓冲区。
     private static boolean isOverdraftBufferNeeded(ResultPartitionType resultPartitionType) {
         // Only pipelined / pipelined-bounded partition needs overdraft buffer. More
         // specifically, there is no reason to request more buffers for non-pipelined (i.e.
@@ -373,6 +376,11 @@ public class ResultPartitionFactory {
         // is efficient enough to spill this part of memory to disk.
         // 3. For Hybrid Shuffle, the buffer pool is unbounded. If it can't get a normal buffer, it
         // also can't get an overdraft buffer.
+        //只有流水线流水线分区才需要透支缓冲区。更具体地说，没有理由为非流水线（即批量）洗牌请求更多缓冲区。
+        // 原因如下：
+        // 1、对于BoundedBlockingShuffle来说，每个满的buffer都会被直接释放。
+        // 2. 对于SortMergeShuffle，缓冲池的最大容量为4 numSubpartitions。将这部分内存溢出到磁盘是足够高效的。
+        // 3. 对于Hybrid Shuffle，缓冲池是无界的。如果它无法获得正常缓冲区，它也无法获得透支缓冲区。
         return resultPartitionType.isPipelinedOrPipelinedBoundedResultPartition();
     }
 
@@ -388,13 +396,15 @@ public class ResultPartitionFactory {
      * regression if processing input is based on at-least one buffer available on output side.
      */
    //出于两个考虑，最小池大小应为numberOfSubpartitions 1:
-    //1. StreamTask只能在输出侧至少有一个可用缓冲区的情况下处理输入，因此如果最小池大小恰好等于子分区的数量，则可能会导致卡住问题，因为每个子分区都可能维护部分未填充的缓冲区。
+    //1. StreamTask只能在输出侧至少有一个可用缓冲区的情况下处理输入，
+    // 因此如果最小池大小恰好等于子分区的数量，则可能会导致卡住问题，因为每个子分区都可能维护部分未填充的缓冲区。
     //2.为每个输出LocalBufferPool增加一个缓冲区，以避免性能回归，如果处理输入是基于至少一个缓冲区可用在输出侧
     @VisibleForTesting
     SupplierWithException<BufferPool, IOException> createBufferPoolFactory(
             int numberOfSubpartitions, ResultPartitionType type) {
         return () -> {
             Pair<Integer, Integer> pair =
+                    //计算并返回结果分区使用的本地网络缓冲池大小
                     NettyShuffleUtils.getMinMaxNetworkBuffersPerResultPartition(
                             configuredNetworkBuffersPerChannel,
                             floatingNetworkBuffersPerGate,
@@ -412,6 +422,7 @@ public class ResultPartitionFactory {
                     pair.getRight(),
                     numberOfSubpartitions,
                     maxBuffersPerChannel,
+                    //返回该结果分区是否需要透支缓冲区。
                     isOverdraftBufferNeeded(type) ? maxOverdraftBuffersPerGate : 0);
         };
     }

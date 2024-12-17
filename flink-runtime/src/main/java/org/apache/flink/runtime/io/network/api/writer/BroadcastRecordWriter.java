@@ -30,6 +30,10 @@ import java.io.IOException;
  *
  * @param <T> the type of the record that can be emitted with this record writer
  */
+//仅适用于广播模式的特殊的面向记录的运行时结果编写器。
+//BroadcastRecordWriter 扩展了RecordWriter并将记录发送到所有通道以进行常规的emit(IOReadableWritable) 。
+//类型参数：
+//< T > – 可以使用该记录写入器发出的记录类型
 public final class BroadcastRecordWriter<T extends IOReadableWritable> extends RecordWriter<T> {
 
     BroadcastRecordWriter(ResultPartitionWriter writer, long timeout, String taskName) {

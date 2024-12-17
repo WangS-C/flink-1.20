@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
  * A special source input implementation that immediately emit END_OF_INPUT. It is used for sources
  * that finished on restore.
  */
+//立即发出 END_OF_INPUT 的特殊源输入实现。它用于已完成恢复的源。
 public class StreamTaskFinishedOnRestoreSourceInput<T> extends StreamTaskSourceInput<T> {
 
     private boolean emittedEndOfData = false;

@@ -66,6 +66,15 @@ import java.util.concurrent.CompletableFuture;
  * @param <T> The type of the value in incoming {@link StreamRecord StreamRecords}.
  * @param <K> The type of the key.
  */
+//streamTaskInput对来自链式输入的传入记录进行排序。
+// 它会推迟发出记录，直到从链接输入接收到DataInputStatus. END_OF_INPUT 。完成后，它一次从排序器中发出一条记录。
+//排序器使用键的二进制比较，从链式输入接收到键时将其提取并序列化。
+// 此外，传入记录的时间戳用于二次排序。
+// 对于比较，如果序列化密钥的长度是常量，
+//则使用固定长度字节FixedLengthByteKeyComparator ，否则使用可变VariableLengthByteKeyComparator 。
+//水印、水印状态或延迟标记都会向下游传播，因为它们对缓冲记录没有意义。输入发出所有记录之后看到的最大水印。
+//类型参数：
+//< T > – 传入StreamRecords中的值的类型。 < K > – 密钥的类型。
 public final class SortingDataInput<T, K> implements StreamTaskInput<T> {
 
     private final StreamTaskInput<T> wrappedInput;
@@ -189,6 +198,8 @@ public final class SortingDataInput<T, K> implements StreamTaskInput<T> {
         public void emitRecordAttributes(RecordAttributes recordAttributes) {
             // The SortingDataInput is only used in batch execution mode. The RecordAttributes is
             // not used in batch execution mode. We will ignore all the RecordAttributes.
+            //SortingDataInput 仅在批处理执行模式下使用。
+            //RecordAttributes 不用于批处理执行模式。我们将忽略所有 RecordAttributes。
         }
     }
 

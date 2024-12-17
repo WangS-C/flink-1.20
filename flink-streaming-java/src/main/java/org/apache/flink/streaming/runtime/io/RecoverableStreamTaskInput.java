@@ -23,6 +23,7 @@ import java.io.IOException;
  * A {@link StreamTaskInput} used during recovery of in-flight data. It's converted to a more
  * efficient {@link StreamTaskInput} after recovery finished.
  */
+//在恢复运行中数据期间使用的StreamTaskInput 。恢复完成后，它会转换为更高效的StreamTaskInput
 public interface RecoverableStreamTaskInput<T> extends StreamTaskInput<T> {
     StreamTaskInput<T> finishRecovery() throws IOException;
 }

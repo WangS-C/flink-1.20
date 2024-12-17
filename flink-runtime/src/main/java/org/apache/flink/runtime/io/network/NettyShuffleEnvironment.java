@@ -243,6 +243,7 @@ public class NettyShuffleEnvironment
                                 resultPartitionDeploymentDescriptors.get(partitionIndex));
             }
 
+            //注册指标
             registerOutputMetrics(
                     config.isNetworkDetailedMetrics(),
                     ownerContext.getOutputGroup(),

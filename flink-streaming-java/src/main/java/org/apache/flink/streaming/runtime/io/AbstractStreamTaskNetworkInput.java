@@ -48,6 +48,8 @@ import static org.apache.flink.util.Preconditions.checkState;
  * RecordDeserializer} for spanning records. Specific implementation bind it to a specific {@link
  * RecordDeserializer}.
  */
+//基于网络的 StreamTaskInput 的基类，其中每个通道都有一个指定的RecordDeserializer用于跨越记录。
+//特定的实现将其绑定到特定的RecordDeserializer 。
 public abstract class AbstractStreamTaskNetworkInput<
                 T, R extends RecordDeserializer<DeserializationDelegate<StreamElement>>>
         implements StreamTaskInput<T> {
@@ -57,6 +59,7 @@ public abstract class AbstractStreamTaskNetworkInput<
     protected final Map<InputChannelInfo, R> recordDeserializers;
     protected final Map<InputChannelInfo, Integer> flattenedChannelIndices = new HashMap<>();
     /** Valve that controls how watermarks and watermark statuses are forwarded. */
+    //控制如何转发水印和水印状态的阀门。
     protected final StatusWatermarkValve statusWatermarkValve;
 
     protected final int inputIndex;
@@ -155,6 +158,8 @@ public abstract class AbstractStreamTaskNetworkInput<
      * allow behavior change in emitNext method. For example, the behavior of emitNext may need to
      * change right after process a RecordAttributes.
      */
+    //处理给定的流元素并返回是否停止处理并从emitNext方法返回，以便在处理该元素后立即再次调用emitNext，
+    //以允许emitNext方法中的行为更改。例如，emitNext 的行为可能需要在处理 RecordAttributes 后立即更改。
     private boolean processElement(StreamElement streamElement, DataOutput<T> output)
             throws Exception {
         if (streamElement.isRecord()) {
@@ -186,6 +191,7 @@ public abstract class AbstractStreamTaskNetworkInput<
 
     protected DataInputStatus processEvent(BufferOrEvent bufferOrEvent) {
         // Event received
+        // 收到事件
         final AbstractEvent event = bufferOrEvent.getEvent();
         if (event.getClass() == EndOfData.class) {
             switch (checkpointedInputGate.hasReceivedEndOfData()) {
@@ -200,6 +206,7 @@ public abstract class AbstractStreamTaskNetworkInput<
         } else if (event.getClass() == EndOfPartitionEvent.class) {
             // release the record deserializer immediately,
             // which is very valuable in case of bounded stream
+            // 立即释放记录解串器，这在有界流的情况下非常有价值
             releaseDeserializer(bufferOrEvent.getChannelInfo());
             if (checkpointedInputGate.isFinished()) {
                 return DataInputStatus.END_OF_INPUT;
@@ -243,6 +250,7 @@ public abstract class AbstractStreamTaskNetworkInput<
     @Override
     public void close() throws IOException {
         // release the deserializers . this part should not ever fail
+        // 释放解串器。这部分永远不应该失败
         for (InputChannelInfo channelInfo : new ArrayList<>(recordDeserializers.keySet())) {
             releaseDeserializer(channelInfo);
         }
@@ -252,6 +260,7 @@ public abstract class AbstractStreamTaskNetworkInput<
         R deserializer = recordDeserializers.get(channelInfo);
         if (deserializer != null) {
             // recycle buffers and clear the deserializer.
+            // 回收缓冲区并清除解串器。
             deserializer.clear();
             recordDeserializers.remove(channelInfo);
         }

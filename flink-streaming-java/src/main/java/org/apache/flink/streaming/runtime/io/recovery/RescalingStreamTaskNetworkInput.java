@@ -78,6 +78,14 @@ import static org.apache.flink.util.Preconditions.checkState;
  * the cross product of channels. So if two subtasks are collapsed and two channels overlap from the
  * output side, there is a total of 4 virtual channels.
  */
+//多路分解虚拟通道的StreamTaskNetworkInput实现。
+//对于以下情况，多路分解以二维方式进行。 *
+//当前操作员的子任务已以循环方式折叠。
+//连接的输出运算符已重新调整（向上和向下！）并且通道重叠（主要与键控交换相关）。
+//在这两种情况下，来自多个旧通道的记录都是通过一个新的物理通道接收的，
+// 这需要对记录进行解复用以正确恢复跨记录（类似于 StreamTaskNetworkInput 的工作方式）。
+//请注意，当两种情况同时发生时（多个运营商缩小规模），就会出现通道的叉积。
+// 因此，如果两个子任务折叠起来，两个通道从输出端重叠，则总共有 4 个虚拟通道。
 @Internal
 public final class RescalingStreamTaskNetworkInput<T>
         extends AbstractStreamTaskNetworkInput<T, DemultiplexingRecordDeserializer<T>>
@@ -179,6 +187,7 @@ public final class RescalingStreamTaskNetworkInput<T>
 
     protected DataInputStatus processEvent(BufferOrEvent bufferOrEvent) {
         // Event received
+        //收到事件
         final AbstractEvent event = bufferOrEvent.getEvent();
         if (event instanceof SubtaskConnectionDescriptor) {
             getActiveSerializer(bufferOrEvent.getChannelInfo())
@@ -201,6 +210,8 @@ public final class RescalingStreamTaskNetworkInput<T>
      * <p>Filters must not be shared across different virtual channels to ensure that the state is
      * in-sync across different subtasks.
      */
+    //为不明确通道（恢复到多个子任务的通道）的记录创建过滤器。过滤器确保每条记录都准确恢复一次。
+    //过滤器不得在不同的虚拟通道之间共享，以确保状态在不同的子任务之间保持同步。
     static class RecordFilterFactory<T>
             implements Function<InputChannelInfo, Predicate<StreamRecord<T>>> {
         private final Map<Integer, StreamPartitioner<T>> partitionerCache =
@@ -227,11 +238,13 @@ public final class RescalingStreamTaskNetworkInput<T>
         @Override
         public Predicate<StreamRecord<T>> apply(InputChannelInfo channelInfo) {
             // retrieving the partitioner for one input task is rather costly so cache them all
+            //检索一个输入任务的分区器是相当昂贵的，因此将它们全部缓存
             final StreamPartitioner<T> partitioner =
                     partitionerCache.computeIfAbsent(
                             channelInfo.getGateIdx(), this::createPartitioner);
             // use a copy of partitioner to ensure that the filter of ambiguous virtual channels
             // have the same state across several subtasks
+            //使用分区器的副本来确保模糊虚拟通道的过滤器在多个子任务中具有相同的状态
             StreamPartitioner<T> partitionerCopy = partitioner.copy();
             partitionerCopy.setup(numberOfChannels);
             return new RecordFilter<>(partitionerCopy, inputSerializer, subtaskIndex);

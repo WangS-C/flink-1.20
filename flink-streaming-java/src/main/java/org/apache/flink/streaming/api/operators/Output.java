@@ -35,6 +35,7 @@ import org.apache.flink.util.OutputTag;
  *
  * @param <T> The type of the elements that can be emitted.
  */
+//StreamOperator提供有此接口的对象，该对象可用于从运算符发出元素和其他消息，例如屏障和水印。
 @PublicEvolving
 public interface Output<T> extends Collector<T> {
 
@@ -45,6 +46,8 @@ public interface Output<T> extends Collector<T> {
      * <p>A watermark specifies that no element with a timestamp lower or equal to the watermark
      * timestamp will be emitted in the future.
      */
+    //发出来自操作员的Watermark 。该水印被广播给所有下游运营商。
+    //水印指定将来不会发出时间戳低于或等于水印时间戳的元素。
     void emitWatermark(Watermark mark);
 
     void emitWatermarkStatus(WatermarkStatus watermarkStatus);
@@ -54,6 +57,9 @@ public interface Output<T> extends Collector<T> {
      *
      * @param record The record to collect.
      */
+    //将记录发送到由给定OutputTag标识的侧输出。
+    //参数：
+    //record – 要收集的记录。
     <X> void collect(OutputTag<X> outputTag, StreamRecord<X> record);
 
     void emitLatencyMarker(LatencyMarker latencyMarker);
@@ -62,6 +68,7 @@ public interface Output<T> extends Collector<T> {
      * Emits a {@link RecordAttributes} from an operator. This element is broadcast to all
      * downstream operators.
      */
+    //从操作符发出RecordAttributes 。该元素被广播给所有下游运营商。
     @Experimental
     void emitRecordAttributes(RecordAttributes recordAttributes);
 }

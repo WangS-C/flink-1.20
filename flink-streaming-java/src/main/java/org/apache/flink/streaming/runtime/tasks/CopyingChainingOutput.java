@@ -44,6 +44,7 @@ final class CopyingChainingOutput<T> extends ChainingOutput<T> {
     public void collect(StreamRecord<T> record) {
         if (this.outputTag != null) {
             // we are not responsible for emitting to the main output.
+            //我们不负责发射到主输出。
             return;
         }
 
@@ -55,6 +56,7 @@ final class CopyingChainingOutput<T> extends ChainingOutput<T> {
         if (this.outputTag == null || !this.outputTag.equals(outputTag)) {
             // we are not responsible for emitting to the side-output specified by this
             // OutputTag.
+            //我们不负责发送到此 OutputTag 指定的侧面输出。
             return;
         }
 
@@ -66,6 +68,7 @@ final class CopyingChainingOutput<T> extends ChainingOutput<T> {
         try {
             // we know that the given outputTag matches our OutputTag so the record
             // must be of the type that our operator (and Serializer) expects.
+            //我们知道给定的outputTag与我们的OutputTag匹配，因此记录必须是我们的运算符（和序列化器）期望的类型。
             @SuppressWarnings("unchecked")
             StreamRecord<T> castRecord = (StreamRecord<T>) record;
 
