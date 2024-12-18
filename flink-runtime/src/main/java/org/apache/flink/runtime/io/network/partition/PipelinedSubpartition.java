@@ -67,6 +67,13 @@ import static org.apache.flink.util.Preconditions.checkState;
  * PipelinedSubpartitionView#notifyDataAvailable() notification} for any {@link BufferConsumer}
  * present in the queue.
  */
+//仅在内存中的管道子分区，可以使用一次。
+//每当ResultSubpartition. add(BufferConsumer)添加一个已完成的BufferConsumer或第二个BufferConsumer
+// （在这种情况下，我们将假设第一个已完成），我们将notify通过
+// ResultSubpartition. createReadView(BufferAvailabilityListener)创建的读取视图新数据的可用性。
+// 除了显式调用flush()之外，我们总是只在第一个完成的缓冲区出现时发出通知，然后读取器必须通过pollBuffer()耗尽缓冲区，
+// 直到其返回值显示没有更多缓冲区可用。这会导致缓冲区队列为空或有未完成的BufferConsumer ，通知最终将从中重新开始。
+//对flush()显式调用将强制向队列中存在的任何BufferConsumer发出此notification 。
 public class PipelinedSubpartition extends ResultSubpartition implements ChannelStateHolder {
 
     private static final Logger LOG = LoggerFactory.getLogger(PipelinedSubpartition.class);
@@ -79,6 +86,8 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
      * Number of exclusive credits per input channel at the downstream tasks configured by {@link
      * org.apache.flink.configuration.NettyShuffleEnvironmentOptions#NETWORK_BUFFERS_PER_CHANNEL}.
      */
+    //由org. apache. flink. configuration.
+    // NettyShuffleEnvironmentOptions. NETWORK_BUFFERS_PER_CHANNEL配置的下游任务中每个输入通道的独占积分数。
     private final int receiverExclusiveBuffersPerChannel;
 
     /** All buffers of this subpartition. Access to the buffers is synchronized on this object. */
@@ -88,6 +97,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
             new PrioritizedDeque<>();
 
     /** The number of non-event buffers currently in this subpartition. */
+    //当前此子分区中的非事件缓冲区的数量。
     @GuardedBy("buffers")
     private int buffersInBacklog;
 
@@ -97,26 +107,32 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
     PipelinedSubpartitionView readView;
 
     /** Flag indicating whether the subpartition has been finished. */
+    //指示子分区是否已完成的标志。
     private boolean isFinished;
 
     @GuardedBy("buffers")
     private boolean flushRequested;
 
     /** Flag indicating whether the subpartition has been released. */
+    //指示子分区是否已释放的标志。
     volatile boolean isReleased;
 
     /** The total number of buffers (both data and event buffers). */
+    //缓冲区总数（数据缓冲区和事件缓冲区）。
     private long totalNumberOfBuffers;
 
     /** The total number of bytes (both data and event buffers). */
+    //字节总数（数据缓冲区和事件缓冲区）。
     private long totalNumberOfBytes;
 
     /** Writes in-flight data. */
+    //在检查点/ 保存点期间写入数据
     private ChannelStateWriter channelStateWriter;
 
     private int bufferSize = Integer.MAX_VALUE;
 
     /** The channelState Future of unaligned checkpoint. */
+    //未对齐检查点的channelState Future
     @GuardedBy("buffers")
     private CompletableFuture<List<Buffer>> channelStateFuture;
 
@@ -124,6 +140,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
      * It is the checkpointId corresponding to channelStateFuture. And It should be always update
      * with {@link #channelStateFuture}.
      */
+    //就是channelStateFuture对应的checkpointId。并且它应该始终使用channelStateFuture进行更新。
     @GuardedBy("buffers")
     private long channelStateCheckpointId;
 
@@ -131,6 +148,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
      * Whether this subpartition is blocked (e.g. by exactly once checkpoint) and is waiting for
      * resumption.
      */
+    //该子分区是否被阻塞（例如，被恰好一次检查点阻塞）并正在等待恢复。
     @GuardedBy("buffers")
     boolean isBlocked = false;
 
@@ -255,10 +273,12 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
     }
 
     // It is just called after add priorityEvent.
+    //它只是在添加priorityEvent之后调用。
     @GuardedBy("buffers")
     private boolean needNotifyPriorityEvent() {
         assert Thread.holdsLock(buffers);
         // if subpartition is blocked then downstream doesn't expect any notifications
+        //如果子分区被阻止，则下游不会收到任何通知
         return buffers.getNumPriorityElements() == 1 && !isBlocked;
     }
 
@@ -433,6 +453,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
     @Override
     public void release() {
         // view reference accessible outside the lock, but assigned inside the locked scope
+        //视图引用可在锁外部访问，但在锁定范围内分配
         final PipelinedSubpartitionView view;
 
         synchronized (buffers) {
@@ -441,6 +462,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
             }
 
             // Release all available buffers
+            //释放所有可用缓冲区
             for (BufferConsumerWithPartialRecordLength buffer : buffers) {
                 buffer.getBufferConsumer().close();
             }
@@ -456,6 +478,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
             readView = null;
 
             // Make sure that no further buffers are added to the subpartition
+            //确保没有进一步的缓冲区添加到子分区
             isReleased = true;
         }
 
@@ -497,6 +520,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
 
                 if (buffers.size() == 1) {
                     // turn off flushRequested flag if we drained all the available data
+                    //如果我们耗尽了所有可用数据，请关闭flushRequested标志
                     flushRequested = false;
                 }
 
@@ -565,6 +589,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
         CheckpointBarrier barrier = parseAndCheckTimeoutableCheckpointBarrier(bufferConsumer);
         if (!isChannelStateFutureAvailable(barrier.getId())) {
             // It happens on a previously aborted checkpoint.
+            //它发生在先前中止的检查点上。
             return;
         }
         completeChannelStateFuture(Collections.emptyList(), null);
@@ -758,6 +783,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
     }
 
     /** Gets the number of non-event buffers in this subpartition. */
+    //获取此子分区中非事件缓冲区的数量。
     @SuppressWarnings("FieldAccessNotGuarded")
     @Override
     public int getBuffersInBacklogUnsafe() {
@@ -777,6 +803,7 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
     @GuardedBy("buffers")
     private boolean shouldNotifyDataAvailable() {
         // Notify only when we added first finished buffer.
+        // 仅当我们添加第一个完成的缓冲区时才通知。
         return readView != null
                 && !flushRequested
                 && !isBlocked
@@ -803,12 +830,15 @@ public class PipelinedSubpartition extends ResultSubpartition implements Channel
         // NOTE: isFinished() is not guaranteed to provide the most up-to-date state here
         // worst-case: a single finished buffer sits around until the next flush() call
         // (but we do not offer stronger guarantees anyway)
+        //注意： isFinished() 不能保证在最坏的情况下提供最新的状态：
+        // 单个已完成的缓冲区会一直保留，直到下一次调用flush()为止（但我们无论如何也不提供更强的保证）
         final int numBuffers = buffers.size();
         if (numBuffers == 1 && buffers.peekLast().getBufferConsumer().isFinished()) {
             return 1;
         }
 
         // We assume that only last buffer is not finished.
+        //我们假设只有最后一个缓冲区尚未完成。
         return Math.max(0, numBuffers - 1);
     }
 

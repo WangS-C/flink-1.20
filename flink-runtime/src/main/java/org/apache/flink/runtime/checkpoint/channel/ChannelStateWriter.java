@@ -32,10 +32,12 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /** Writes channel state during checkpoint/savepoint. */
+//在检查点/ 保存点期间写入通道状态
 @Internal
 public interface ChannelStateWriter extends Closeable {
 
     /** Channel state write result. */
+    //通道状态写入结果。
     class ChannelStateWriteResult {
         final CompletableFuture<Collection<InputChannelStateHandle>> inputChannelStateHandles;
         final CompletableFuture<Collection<ResultSubpartitionStateHandle>>
@@ -95,12 +97,14 @@ public interface ChannelStateWriter extends Closeable {
      * restored; and now are to be saved again (as opposed to the buffers received from the upstream
      * or from the operator).
      */
+    //上次执行尝试期间保存的缓冲区的序列号；然后恢复；现在将再次保存（与从上游或操作员接收的缓冲区相反）。
     int SEQUENCE_NUMBER_RESTORED = -1;
 
     /**
      * Signifies that buffer sequence number is unknown (e.g. if passing sequence numbers is not
      * implemented).
      */
+    //表示缓冲区序列号未知（例如，如果未实现传递序列号）。
     int SEQUENCE_NUMBER_UNKNOWN = -2;
 
     /** Initiate write of channel state for the given checkpoint id. */
@@ -119,6 +123,12 @@ public interface ChannelStateWriter extends Closeable {
      * @see org.apache.flink.runtime.checkpoint.channel.ChannelStateWriter#SEQUENCE_NUMBER_RESTORED
      * @see org.apache.flink.runtime.checkpoint.channel.ChannelStateWriter#SEQUENCE_NUMBER_UNKNOWN
      */
+    //从InputChannel添加运行中缓冲区。
+    // 必须在start(long, CheckpointOptions)之后和finishInput(long)之前调用。
+    // 缓冲区在写入或发生异常后被回收。
+    //参数：
+    //startSeqNum – 第一个传递的缓冲区的序列号。它旨在用于增量快照。如果没有数据被传递，它将被忽略。
+    //data – 零个或多个数据缓冲区按其序列号排序
     void addInputData(
             long checkpointId,
             InputChannelInfo info,
@@ -139,6 +149,12 @@ public interface ChannelStateWriter extends Closeable {
      * @see org.apache.flink.runtime.checkpoint.channel.ChannelStateWriter#SEQUENCE_NUMBER_RESTORED
      * @see org.apache.flink.runtime.checkpoint.channel.ChannelStateWriter#SEQUENCE_NUMBER_UNKNOWN
      */
+    //从ResultSubpartition添加运行中的缓冲区。
+    // 必须在start之后和finishOutput(long)之前调用。
+    // 缓冲区在写入或发生异常后被回收。
+    //参数：
+    //startSeqNum – 第一个传递的缓冲区的序列号。它旨在用于增量快照。如果没有数据被传递，它将被忽略。
+    // data – 零个或多个数据缓冲区按其序列号排序
     void addOutputData(
             long checkpointId, ResultSubpartitionInfo info, int startSeqNum, Buffer... data)
             throws IllegalArgumentException;
@@ -152,6 +168,9 @@ public interface ChannelStateWriter extends Closeable {
      * <p>The method will be called when the unaligned checkpoint is enabled and received an aligned
      * barrier.
      */
+    //从ResultSubpartition添加运行中的 bufferFuture 。
+    // 必须在start之后和finishOutput(long)之前调用。缓冲区在写入或发生异常后被回收。
+    //当启用未对齐检查点并收到对齐屏障时，将调用该方法。
     void addOutputDataFuture(
             long checkpointId,
             ResultSubpartitionInfo info,
@@ -165,6 +184,9 @@ public interface ChannelStateWriter extends Closeable {
      * When both {@link #finishInput} and {@link #finishOutput} were called the results can be
      * (eventually) obtained using {@link #getAndRemoveWriteResult}
      */
+    //完成给定检查点 ID 的通道状态数据的写入。
+    // 必须在start(long, CheckpointOptions)并添加给定检查点的所有输入数据之后调用。
+    // 当同时调用finishInput和finishOutput时，可以（最终）使用getAndRemoveWriteResult获得结果
     void finishInput(long checkpointId);
 
     /**
@@ -183,6 +205,7 @@ public interface ChannelStateWriter extends Closeable {
      * @param cleanup true if {@link #getAndRemoveWriteResult(long)} is not supposed to be called
      *     afterwards.
      */
+    //中止检查点并使该检查点的待处理结果失败。
     void abort(long checkpointId, Throwable cause, boolean cleanup);
 
     /**
@@ -190,12 +213,14 @@ public interface ChannelStateWriter extends Closeable {
      *
      * @throws IllegalArgumentException if the passed checkpointId is not known.
      */
+    //必须在start(long, CheckpointOptions)后调用一次。
     ChannelStateWriteResult getAndRemoveWriteResult(long checkpointId)
             throws IllegalArgumentException;
 
     ChannelStateWriter NO_OP = new NoOpChannelStateWriter();
 
     /** No-op implementation of {@link ChannelStateWriter}. */
+    //ChannelStateWriter的无操作实现。
     class NoOpChannelStateWriter implements ChannelStateWriter {
         @Override
         public void start(long checkpointId, CheckpointOptions checkpointOptions) {}

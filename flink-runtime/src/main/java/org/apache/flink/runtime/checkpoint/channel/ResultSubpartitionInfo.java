@@ -30,6 +30,9 @@ import java.util.Objects;
  * org.apache.flink.runtime.io.network.partition.ResultPartition ResultPartition} b) is generated
  * randomly.
  */
+//标识给定子任务中的ResultSubpartition 。请注意，不能使用IntermediateResultPartitionID ，因为它：
+// a) 标识整个ResultPartition
+// b) 是随机生成的。
 @Internal
 public class ResultSubpartitionInfo implements Serializable {
     private static final long serialVersionUID = 1L;

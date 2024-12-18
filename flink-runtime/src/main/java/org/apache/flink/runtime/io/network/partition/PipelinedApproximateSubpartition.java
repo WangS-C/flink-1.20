@@ -33,6 +33,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  * A pipelined in-memory only subpartition, which allows to reconnect after failure. Only one view
  * is allowed at a time to read teh subpartition.
  */
+//仅在内存中的管道子分区，允许在失败后重新连接。一次只允许一个视图读取子分区。
 public class PipelinedApproximateSubpartition extends PipelinedSubpartition {
 
     private static final Logger LOG =
@@ -54,6 +55,9 @@ public class PipelinedApproximateSubpartition extends PipelinedSubpartition {
      * of time then multiple netty worker threads can createReadView at the same time. TODO: This
      * problem will be solved in FLINK-19774
      */
+    //为了简化视图释放线程模型， releaseView()仅在创建新视图之前调用。
+    //还有一种极端情况，当下游任务在短时间内连续失败时，多个 Netty 工作线程可以同时创建 ReadView。
+    //这个问题将在 FLINK-19774 中解决
     @Override
     public PipelinedSubpartitionView createReadView(
             BufferAvailabilityListener availabilityListener) {
@@ -87,6 +91,7 @@ public class PipelinedApproximateSubpartition extends PipelinedSubpartition {
         assert Thread.holdsLock(buffers);
         if (readView != null) {
             // upon reconnecting, two netty threads may require the same view to release
+            //重新连接时，两个 Netty 线程可能需要相同的视图来释放
             LOG.debug(
                     "Releasing view of subpartition {} of {}.",
                     getSubPartitionIndex(),
