@@ -32,6 +32,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * An input channel reads recovered state from previous unaligned checkpoint snapshots and then
  * converts into {@link RemoteInputChannel} finally.
  */
+//输入通道从之前未对齐的检查点快照中读取恢复的状态，然后最终转换为RemoteInputChannel 。
 public class RemoteRecoveredInputChannel extends RecoveredInputChannel {
     private final ConnectionID connectionId;
     private final ConnectionManager connectionManager;

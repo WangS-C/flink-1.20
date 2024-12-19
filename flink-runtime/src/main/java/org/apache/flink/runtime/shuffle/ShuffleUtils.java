@@ -21,6 +21,7 @@ package org.apache.flink.runtime.shuffle;
 import java.util.function.Function;
 
 /** Common utility methods for shuffle service. */
+// shuffle服务的常用实用方法。
 public class ShuffleUtils {
 
     private ShuffleUtils() {}
@@ -39,6 +40,8 @@ public class ShuffleUtils {
      * @param <SD> concrete type of {@code shuffleDescriptor} to check
      * @return result of either function call
      */
+    //对已知和未知的ShuffleDescriptor应用不同的函数。
+    //还强制转换已知的ShuffleDescriptor 。
     @SuppressWarnings("unchecked")
     public static <T, SD extends ShuffleDescriptor> T applyWithShuffleTypeCheck(
             Class<SD> shuffleDescriptorClass,

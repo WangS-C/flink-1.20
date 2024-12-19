@@ -39,6 +39,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * This class wraps {@link InputGate} provided by shuffle service and it is mainly used for
  * increasing general input metrics from {@link TaskIOMetricGroup}.
  */
+//该类包装了 shuffle 服务提供的InputGate ，主要用于增加来自TaskIOMetricGroup的一般输入指标。
 public class InputGateWithMetrics extends IndexedInputGate {
 
     private final IndexedInputGate inputGate;

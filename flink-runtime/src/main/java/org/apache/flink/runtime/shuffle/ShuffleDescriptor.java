@@ -31,6 +31,8 @@ import java.util.Optional;
  * <p>The descriptor is used for the deployment of the partition producer/consumer and their data
  * exchange
  */
+//结果分区资源的随机部署描述符接口。
+//描述符用于分区生产者/ 消费者的部署及其数据交换
 public interface ShuffleDescriptor extends Serializable {
 
     ResultPartitionID getResultPartitionID();
@@ -51,6 +53,13 @@ public interface ShuffleDescriptor extends Serializable {
      * @return whether the partition producer has been ever deployed and the corresponding shuffle
      *     descriptor is obtained from the {@link ShuffleMaster} implementation.
      */
+    //返回分区是否已知并已向ShuffleMaster实现注册。
+    //当分区消费者被调度时，可能会发生分区的生产者（消费者输入通道）尚未被调度并且其位置和其他相关数据尚未定义。
+    // 要继续进行消费者部署，必须用占位符标记当前未知的输入通道。
+    // 占位符是洗牌描述符的特殊实现： UnknownShuffleDescriptor 。
+    //注意：在具体的 shuffle 实现中不应重写此方法。唯一返回true的类是UnknownShuffleDescriptor 。
+    //返回：
+    //分区生产者是否已经部署，并且从ShuffleMaster实现中获取相应的shuffle描述符。
     default boolean isUnknown() {
         return false;
     }
@@ -69,5 +78,11 @@ public interface ShuffleDescriptor extends Serializable {
      * @return the resource id of the producing task executor if the partition occupies local
      *     resources there
      */
+    //如果分区占用了生产任务执行器的本地资源，则返回该位置。
+    //表示该分区占用生产任务执行器本地资源。这种分区要求任务执行器正在运行并已连接才能使用生成的数据。
+    // 这主要与批处理作业和阻塞结果分区相关，这些作业和阻塞结果分区可以比生产者的生命周期长并被外部释放。
+    // ShuffleEnvironment. releasePartitionsLocally(Collection)可用于在本地释放此类分区。
+    //返回：
+    //如果分区占用了生产任务执行器的本地资源，则为生产任务执行器的资源ID
     Optional<ResourceID> storesLocalResourcesOn();
 }

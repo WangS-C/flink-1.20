@@ -186,6 +186,7 @@ public abstract class InputGate
     }
 
     /** Setup gate, potentially heavy-weight, blocking operation comparing to just creation. */
+    //与创建相比，设置gate可能是重量级的阻塞操作。
     public abstract void setup() throws IOException;
 
     public abstract void requestPartitions() throws IOException;

@@ -32,6 +32,8 @@ public interface BufferPoolFactory {
      * @param numRequiredBuffers minimum number of network buffers in this pool
      * @param maxUsedBuffers maximum number of network buffers this pool offers
      */
+    //尝试创建一个缓冲池，保证至少提供所需数量的缓冲区。
+    //缓冲池具有动态大小，至少有numRequiredBuffers 个缓冲区。
     BufferPool createBufferPool(int numRequiredBuffers, int maxUsedBuffers) throws IOException;
 
     /**

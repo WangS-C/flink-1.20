@@ -22,6 +22,7 @@ package org.apache.flink.runtime.io.network.partition.consumer;
  * The buffer specs of the {@link InputGate} include exclusive buffers per channel, required/total
  * floating buffers and the target of total buffers.
  */
+//InputGate的缓冲区规格包括每个通道的独占缓冲区、所需/ 总浮动缓冲区以及总缓冲区的目标。
 public class GateBuffersSpec {
 
     private final int effectiveExclusiveBuffersPerChannel;

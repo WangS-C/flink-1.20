@@ -161,12 +161,14 @@ public class SingleInputGateFactory {
                 igdd.getConsumedPartitionType().isHybridResultPartition()
                         && tieredStorageConfiguration != null;
 
+        //InputGate的缓冲区规格
         GateBuffersSpec gateBuffersSpec =
                 createGateBuffersSpec(
                         maxRequiredBuffersPerGate,
                         configuredNetworkBuffersPerChannel,
                         floatingNetworkBuffersPerGate,
                         igdd.getConsumedPartitionType(),
+                        //计算通道数
                         calculateNumChannels(
                                 igdd.getShuffleDescriptors().length,
                                 //流式作业subpartitionIndexRange范围一般都是1
@@ -174,6 +176,7 @@ public class SingleInputGateFactory {
                                 isSharedInputChannelSupported),
                         tieredStorageConfiguration != null);
         SupplierWithException<BufferPool, IOException> bufferPoolFactory =
+                //尝试创建一个缓冲池，保证至少提供所需数量的缓冲区。
                 createBufferPoolFactory(
                         networkBufferPool,
                         gateBuffersSpec.getRequiredFloatingBuffers(),
@@ -182,6 +185,7 @@ public class SingleInputGateFactory {
         BufferDecompressor bufferDecompressor = null;
         if (igdd.getConsumedPartitionType().supportCompression()
                 && batchShuffleCompressionEnabled) {
+            // 创建压缩Buffer的解压缩器。
             bufferDecompressor = new BufferDecompressor(networkBufferSize, compressionCodec);
         }
 
@@ -352,11 +356,14 @@ public class SingleInputGateFactory {
             ResultSubpartitionIndexSet subpartitionIndexSet,
             ChannelStatistics channelStatistics,
             InputChannelMetrics metrics) {
+        //对已知和未知的ShuffleDescriptor应用不同的函数。
+        //还强制转换已知的ShuffleDescriptor 。
         return applyWithShuffleTypeCheck(
                 NettyShuffleDescriptor.class,
                 shuffleDescriptor,
                 unknownShuffleDescriptor -> {
                     channelStatistics.numUnknownChannels++;
+                    //创建未知输入通道
                     return new UnknownInputChannel(
                             inputGate,
                             index,
@@ -372,6 +379,7 @@ public class SingleInputGateFactory {
                             metrics);
                 },
                 nettyShuffleDescriptor ->
+                        //创建已知的输入通道
                         createKnownInputChannel(
                                 inputGate,
                                 index,
@@ -403,8 +411,11 @@ public class SingleInputGateFactory {
             ChannelStatistics channelStatistics,
             InputChannelMetrics metrics) {
         ResultPartitionID partitionId = inputChannelDescriptor.getResultPartitionID();
+
+        //根据上下游Task实例所在的机器位置信息判断创建不同的LocalRecoveredInputChannel、RemoteRecoveredInputChannel类型实例。
         if (inputChannelDescriptor.isLocalTo(taskExecutorResourceId)) {
             // Consuming task is deployed to the same TaskManager as the partition => local
+            //消费任务部署到与分区相同的TaskManager => local
             channelStatistics.numLocalChannels++;
             return new LocalRecoveredInputChannel(
                     inputGate,
@@ -419,6 +430,7 @@ public class SingleInputGateFactory {
                     metrics);
         } else {
             // Different instances => remote
+            //不同的实例 => 远程
             channelStatistics.numRemoteChannels++;
             return new RemoteRecoveredInputChannel(
                     inputGate,
@@ -463,6 +475,7 @@ public class SingleInputGateFactory {
     }
 
     /** Statistics of input channels. */
+    //输入通道统计
     protected static class ChannelStatistics {
         int numLocalChannels;
         int numRemoteChannels;

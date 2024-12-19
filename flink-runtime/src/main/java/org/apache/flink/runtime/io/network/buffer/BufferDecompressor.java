@@ -30,15 +30,19 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.util.Preconditions.checkState;
 
 /** Decompressor for compressed {@link Buffer}. */
+//压缩Buffer的解压缩器。
 public class BufferDecompressor {
 
     /** The backing block decompressor for data decompression. */
+    //用于数据解压缩的支持块解压缩器。
     private final BlockDecompressor blockDecompressor;
 
     /** The intermediate buffer for the decompressed data. */
+    //解压缩数据的中间缓冲区。
     private final NetworkBuffer internalBuffer;
 
     /** The backup array of intermediate buffer. */
+    //中间缓冲区的备份数组。
     private final byte[] internalBufferArray;
 
     public BufferDecompressor(int bufferSize, CompressionCodec factoryName) {
@@ -46,6 +50,7 @@ public class BufferDecompressor {
         checkNotNull(factoryName);
 
         // the decompressed data size should be never larger than the configured buffer size
+        //解压后的数据大小不应大于配置的缓冲区大小
         this.internalBufferArray = new byte[bufferSize];
         this.internalBuffer =
                 new NetworkBuffer(
@@ -65,6 +70,10 @@ public class BufferDecompressor {
      * <p>Notes that the decompression will always start from offset 0 to the size of the input
      * {@link Buffer}.
      */
+    //使用BlockDecompressor解压缩给定的Buffer 。
+    // 解压后的数据将存储在该BufferDecompressor的中间缓冲区中并返回给调用者。
+    // 调用者必须保证下次调用该方法时返回的Buffer已被释放。
+    //请注意，解压缩始终从偏移量 0 开始，直到输入Buffer的大小。
     public Buffer decompressToIntermediateBuffer(Buffer buffer) {
         int decompressedLen = decompress(buffer);
         internalBuffer.setSize(decompressedLen);
@@ -80,11 +89,14 @@ public class BufferDecompressor {
      * <p>The caller must guarantee that the input {@link Buffer} is writable and there's enough
      * space left.
      */
+    //该方法与decompressToIntermediateBuffer(Buffer)的区别在于，该方法将解压后的数据从偏移量 0 开始复制到输入Buffer中。
+    //调用者必须保证输入Buffer可写并且有足够的剩余空间。
     @VisibleForTesting
     public Buffer decompressToOriginalBuffer(Buffer buffer) {
         int decompressedLen = decompress(buffer);
 
         // copy the decompressed data back
+        //将解压后的数据复制回来
         int memorySegmentOffset = buffer.getMemorySegmentOffset();
         MemorySegment segment = buffer.getMemorySegment();
         segment.put(memorySegmentOffset, internalBufferArray, 0, decompressedLen);
@@ -97,6 +109,7 @@ public class BufferDecompressor {
      * Decompresses the input {@link Buffer} into the intermediate buffer and returns the
      * decompressed data size.
      */
+    //将输入Buffer解压到中间buffer中，并返回解压后的数据大小
     private int decompress(Buffer buffer) {
         checkArgument(buffer != null, "The input buffer must not be null.");
         checkArgument(buffer.isBuffer(), "Event can not be decompressed.");
@@ -115,6 +128,10 @@ public class BufferDecompressor {
         // a read-only ByteBuffer, and it is illegal to access internal array. Another reason
         // is that for the on-heap buffer, directly operating the underlying array can reduce
         // additional overhead compared to generating a NIO buffer.
+        //如果缓冲区位于堆上，则直接操作底层数组。
+        // 这里不直接使用NIO buffer的原因主要有两个：
+        // 一是有些压缩库会使用底层数组来做堆buffer，但我们的输入buffer可能是只读的ByteBuffer，访问内部数组是非法的。
+        //另一个原因是，对于堆上缓冲区来说，与生成 NIO 缓冲区相比，直接操作底层数组可以减少额外的开销。
         if (!memorySegment.isOffHeap()) {
             return blockDecompressor.decompress(
                     memorySegment.getArray(),
@@ -124,6 +141,7 @@ public class BufferDecompressor {
                     0);
         } else {
             // decompress the given buffer into the internal heap buffer
+            //将给定缓冲区解压缩到内部堆缓冲区
             return blockDecompressor.decompress(
                     buffer.getNioBuffer(0, length),
                     0,

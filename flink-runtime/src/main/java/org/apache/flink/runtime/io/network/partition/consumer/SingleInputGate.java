@@ -137,9 +137,11 @@ public class SingleInputGate extends IndexedInputGate {
     private static final Logger LOG = LoggerFactory.getLogger(SingleInputGate.class);
 
     /** Lock object to guard partition requests and runtime channel updates. */
+    //锁定对象以保护分区请求和运行时通道更新。
     private final Object requestLock = new Object();
 
     /** The name of the owning task, for logging purposes. */
+    //所属任务的名称，用于记录目的
     private final String owningTaskName;
 
     //代表当前Task消费的上游Task的下标，大部分情况下一个算子只有一个上游输入，如果有多个上游输入，gateIndex变量标识哪个上游输入。
@@ -178,6 +180,7 @@ public class SingleInputGate extends IndexedInputGate {
      * Field guaranteeing uniqueness for inputChannelsWithData queue. Both of those fields should be
      * unified onto one.
      */
+    //保证 inputChannelsWithData 队列唯一性的字段。这两个领域应该统一为一个。
     @GuardedBy("inputChannelsWithData")
     private final BitSet enqueuedInputChannelsWithData;
 
@@ -191,6 +194,7 @@ public class SingleInputGate extends IndexedInputGate {
     private int[] lastPrioritySequenceNumber;
 
     /** The partition producer state listener. */
+    //分区生产者状态监听器
     private final PartitionProducerStateProvider partitionProducerStateProvider;
 
     /**
@@ -205,6 +209,7 @@ public class SingleInputGate extends IndexedInputGate {
     private boolean hasReceivedEndOfData;
 
     /** Flag indicating whether partitions have been requested. */
+    //指示是否已请求分区的标志。
     private boolean requestedPartitionsFlag;
 
     private final List<TaskEvent> pendingEvents = new ArrayList<>();
@@ -212,6 +217,7 @@ public class SingleInputGate extends IndexedInputGate {
     private int numberOfUninitializedChannels;
 
     /** A timer to retrigger local partition requests. Only initialized if actually needed. */
+    //用于重新触发本地分区请求的计时器。仅在实际需要时才初始化。
     private Timer retriggerLocalRequestTimer;
 
     private final SupplierWithException<BufferPool, IOException> bufferPoolFactory;
@@ -226,6 +232,7 @@ public class SingleInputGate extends IndexedInputGate {
      * The segment to read data from file region of bounded blocking partition by local input
      * channel.
      */
+    //通过本地输入通道从有界阻塞分区的文件区域读取数据的段。
     private final MemorySegment unpooledSegment;
 
     private final ThroughputCalculator throughputCalculator;
@@ -233,12 +240,15 @@ public class SingleInputGate extends IndexedInputGate {
     private boolean shouldDrainOnEndOfData = true;
 
     // The consumer client will be null if the tiered storage is not enabled.
+    //如果不启用分层存储，消费者客户端将为空。
     @Nullable private TieredStorageConsumerClient tieredStorageConsumerClient;
 
     // The consumer specs in tiered storage will be null if the tiered storage is not enabled.
+    //如果未启用分层存储，则分层存储中的消费者规格将为空。
     @Nullable private List<TieredStorageConsumerSpec> tieredStorageConsumerSpecs;
 
     // The availability notifier will be null if the tiered storage is not enabled.
+    //如果未启用分层存储，则可用性通知程序将为空。
     @Nullable private AvailabilityNotifier availabilityNotifier;
 
     /**
@@ -246,16 +256,21 @@ public class SingleInputGate extends IndexedInputGate {
      * contains the following information: 1) whether the buffer contains partial record, and 2) the
      * index of the subpartition where the buffer comes from.
      */
+    //包含每个输入通道中最后消耗的缓冲区状态的映射。状态包含以下信息：
+    // 1）缓冲区是否包含部分记录，
+    // 2）缓冲区来自的子分区的索引。
     private final Map<Integer, Tuple2<Boolean, Integer>> lastBufferStatusMapInTieredStore =
             new HashMap<>();
 
     /** A map of counters for the number of {@link EndOfData}s received from each input channel. */
+    //从每个输入通道接收到的EndOfData数量的计数器映射。
     private final int[] endOfDatas;
 
     /**
      * A map of counters for the number of {@link EndOfPartitionEvent}s received from each input
      * channel.
      */
+    //从每个输入通道接收到的EndOfPartitionEvent数量的计数器映射。
     private final int[] endOfPartitions;
 
     public SingleInputGate(
@@ -322,6 +337,7 @@ public class SingleInputGate extends IndexedInputGate {
                 this.bufferPool == null,
                 "Bug in input gate setup logic: Already registered buffer pool.");
 
+        //调用org.apache.flink.runtime.io.network.buffer.NetworkBufferPool.createBufferPool(int, int)
         BufferPool bufferPool = bufferPoolFactory.get();
         setBufferPool(bufferPool);
         if (tieredStorageConsumerClient != null) {
@@ -353,6 +369,7 @@ public class SingleInputGate extends IndexedInputGate {
                 }
 
                 // Sanity checks
+                // 健全性检查
                 long numInputChannels =
                         inputChannels.values().stream().mapToLong(x -> x.values().size()).sum();
                 if (numberOfInputChannels != numInputChannels) {
@@ -373,6 +390,8 @@ public class SingleInputGate extends IndexedInputGate {
             // Start the reader only when all InputChannels have been converted to either
             // LocalInputChannel or RemoteInputChannel, as this will prevent RecoveredInputChannels
             // from being queued again.
+            // 仅当所有 InputChannel 都已转换为 LocalInputChannel 或 RemoteInputChannel 时才启动读取器，
+            // 因为这将阻止 RecoveredInputChannel 再次排队。
             if (enabledTieredStorage()) {
                 tieredStorageConsumerClient.start();
             }
@@ -497,6 +516,7 @@ public class SingleInputGate extends IndexedInputGate {
      *
      * @return consumed result partition type
      */
+    //返回此输入通道的消费结果分区的类型。
     public ResultPartitionType getConsumedPartitionType() {
         return consumedPartitionType;
     }
@@ -519,6 +539,7 @@ public class SingleInputGate extends IndexedInputGate {
 
     public int getNumberOfQueuedBuffers() {
         // re-try 3 times, if fails, return 0 for "unknown"
+        // 重试3次，如果失败，返回0表示“未知”
         for (int retry = 0; retry < 3; retry++) {
             try {
                 int totalBuffers = 0;
@@ -578,17 +599,21 @@ public class SingleInputGate extends IndexedInputGate {
     }
 
     /** Assign the exclusive buffers to all remote input channels directly for credit-based mode. */
+    //将专用缓冲区直接分配给所有远程输入通道，以实现基于信用的模式。
     @VisibleForTesting
     public void setupChannels() throws IOException {
         // Allocate enough exclusive and floating buffers to guarantee that job can make progress.
         // Note: An exception will be thrown if there is no buffer available in the given timeout.
+        //分配足够的独占和浮动缓冲区以保证作业能够取得进展。注意：如果在给定的超时时间内没有可用的缓冲区，则会抛出异常。
 
         // First allocate a single floating buffer to avoid potential deadlock when the exclusive
         // buffer is 0. See FLINK-24035 for more information.
+        //首先分配单个浮动缓冲区，以避免独占缓冲区为 0 时潜在的死锁。有关更多信息，请参阅 FLINK-24035。
         bufferPool.reserveSegments(1);
 
         // Next allocate the exclusive buffers per channel when the number of exclusive buffer is
         // larger than 0.
+        //接下来，当独占缓冲区的数量大于 0 时，为每个通道分配独占缓冲区。
         synchronized (requestLock) {
             for (InputChannel inputChannel : inputChannels()) {
                 inputChannel.setup();
@@ -706,6 +731,7 @@ public class SingleInputGate extends IndexedInputGate {
     }
 
     /** Retriggers a partition request. */
+    //重新触发分区请求。
     public void retriggerPartitionRequest(
             IntermediateResultPartitionID partitionId, InputChannelInfo inputChannelInfo)
             throws IOException {
@@ -775,6 +801,7 @@ public class SingleInputGate extends IndexedInputGate {
 
                     // The buffer pool can actually be destroyed immediately after the
                     // reader received all of the data from the input channels.
+                    //实际上，在读取器从输入通道接收到所有数据后，缓冲池可以立即被销毁。
                     if (bufferPool != null) {
                         bufferPool.lazyDestroy();
                     }
@@ -928,6 +955,7 @@ public class SingleInputGate extends IndexedInputGate {
     private Optional<Buffer> readRecoveredOrNormalBuffer(InputChannel inputChannel)
             throws IOException, InterruptedException {
         // Firstly, read the buffers from the recovered channel
+        // 首先，从恢复的通道读取缓冲区
         if (inputChannel instanceof RecoveredInputChannel && !inputChannel.isReleased()) {
             //从可读取数据InputChannel中开始获取数据。
             Optional<Buffer> buffer = readBufferFromInputChannel(inputChannel);
@@ -937,6 +965,7 @@ public class SingleInputGate extends IndexedInputGate {
         }
 
         //  After the recovered buffers are read, read the normal buffers
+        // 读取恢复的缓冲区后，读取正常缓冲区
         return enabledTieredStorage()
                 ? readBufferFromTieredStore(inputChannel)
                 : readBufferFromInputChannel(inputChannel);
@@ -951,6 +980,7 @@ public class SingleInputGate extends IndexedInputGate {
         final BufferAndAvailability bufferAndAvailability = bufferAndAvailabilityOpt.get();
         if (bufferAndAvailability.moreAvailable()) {
             // enqueue the inputChannel at the end to avoid starvation
+            //将 inputChannel 添加到最后队列以避免饥饿
             queueChannelUnsafe(inputChannel, bufferAndAvailability.morePriorityEvents());
         }
         if (bufferAndAvailability.hasPriority()) {
@@ -1001,6 +1031,7 @@ public class SingleInputGate extends IndexedInputGate {
 
             // If the data is available in the specific partition and subpartition, read buffer
             // through consumer client.
+            // 如果特定分区和子分区中有数据，则通过消费者客户端读取缓冲区。
             Optional<Buffer> buffer =
                     checkNotNull(tieredStorageConsumerClient)
                             .getNextBuffer(
@@ -1019,6 +1050,7 @@ public class SingleInputGate extends IndexedInputGate {
                         && inputChannel.getConsumedSubpartitionIndexSet().size() > 1) {
                     // Continue to check other subpartitions that have been marked as
                     // available.
+                    // 继续检查已标记为可用的其他子分区。
                     continue;
                 }
             }
@@ -1098,6 +1130,9 @@ public class SingleInputGate extends IndexedInputGate {
                 // 1. releasing inputChannelsWithData lock in this method and reaching this place
                 // 2. empty data notification that re-enqueues a channel we can end up with
                 // moreAvailable flag set to true, while we expect no more data.
+                //由于以下条件之间的竞争条件：
+                // 1. 在此方法中释放 inputChannelsWithData 锁并到达此位置
+                // 2. 重新排队通道的空数据通知，我们最终可能会将 moreAvailable 标志设置为 true，而我们预计不会有更多数据。
                 checkState(!moreAvailable || !pollNext().isPresent());
                 moreAvailable = false;
                 markAvailable();
@@ -1164,6 +1199,8 @@ public class SingleInputGate extends IndexedInputGate {
         // are allocated together so there should be no UnknownInputChannel. As a result, it
         // is safe to not synchronize the requestLock here. We will refactor the code to not
         // rely on this assumption in the future.
+        //注意：消耗恢复仅发生在所有槽都分配在一起的流作业中，因此不应存在 UnknownInputChannel。
+        //因此，这里不同步requestLock是安全的。我们将重构代码，以便将来不再依赖这个假设。
         channels[channelInfo.getInputChannelIdx()].resumeConsumption();
     }
 
@@ -1203,6 +1240,10 @@ public class SingleInputGate extends IndexedInputGate {
      * performed under lock), this buffer number allows {@link #queueChannel(InputChannel, Integer,
      * boolean)} to avoid spurious priority wake-ups.
      */
+    //通知相应通道在给定缓冲区编号的头部有一个优先级事件。
+    //缓冲区编号将通知限制到相应的缓冲区，并在同时轮询缓冲区的情况下使整个通知无效。
+    //也就是说，如果任务线程在此通知发生之前轮询排队优先级缓冲区（通知不在锁定状态下执行），
+    //则此缓冲区编号允许queueChannel(InputChannel, Integer, boolean)避免虚假优先级唤醒。
     void notifyPriorityEvent(InputChannel inputChannel, int prioritySequenceNumber) {
         queueChannel(checkNotNull(inputChannel), prioritySequenceNumber, false);
     }
@@ -1247,6 +1288,7 @@ public class SingleInputGate extends IndexedInputGate {
                     // priority event at the given offset already polled (notification is not atomic
                     // in respect to
                     // buffer enqueuing), so just ignore the notification
+                    //给定偏移处的优先级事件已轮询（通知对于缓冲区排队而言不是原子的），因此只需忽略该通知
                     return;
                 }
 
@@ -1270,6 +1312,7 @@ public class SingleInputGate extends IndexedInputGate {
         if ((lastSequenceNumber < 0) != (sequenceNumber < 0)
                 && Math.max(lastSequenceNumber, sequenceNumber) > Integer.MAX_VALUE / 2) {
             // probably overflow of one of the two numbers, the negative one is greater then
+            // 可能两个数之一溢出，负数大于
             return lastSequenceNumber < 0;
         }
         return lastSequenceNumber >= sequenceNumber;
@@ -1294,6 +1337,7 @@ public class SingleInputGate extends IndexedInputGate {
         if (alreadyEnqueued
                 && (!priority || inputChannelsWithData.containsPriorityElement(channel))) {
             // already notified / prioritized (double notification), ignore
+            // 已通知优先（双重通知），忽略
             return false;
         }
 
@@ -1339,6 +1383,7 @@ public class SingleInputGate extends IndexedInputGate {
     }
 
     /** The default implementation of {@link AvailabilityNotifier}. */
+    //AvailabilityNotifier的默认实现。
     private class AvailabilityNotifierImpl implements AvailabilityNotifier {
 
         private AvailabilityNotifierImpl() {}

@@ -79,6 +79,8 @@ public final class ReadOnlySlicedNetworkBuffer extends ReadOnlyByteBuf implement
      *     MemorySegment}
      * @param isCompressed whether the buffer is compressed or not
      */
+    //创建一个共享给定缓冲区的内存段并仅公开给定子区域的缓冲区。
+    //读者和作者索引以及标记不共享。引用计数器是共享的，但切片不会自动retained 。
     ReadOnlySlicedNetworkBuffer(
             ByteBuf buffer, int index, int length, int memorySegmentOffset, boolean isCompressed) {
         super(new SlicedByteBuf(buffer, index, length));

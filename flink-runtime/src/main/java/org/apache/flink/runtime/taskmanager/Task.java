@@ -476,6 +476,7 @@ public class Task
         this.partitionWriters = resultPartitionWriters;
 
         // consumed intermediate result partitions
+        //消耗的中间结果分区
         final IndexedInputGate[] gates =
                 shuffleEnvironment
                         //inputGates的生成入口，入参包含Task提交过程中创建的InputGateDeploymentDescriptor实例信息即Task的输入信
@@ -710,6 +711,7 @@ public class Task
             //首先，获取用户代码类加载器，这可能涉及下载作业的 JAR 文件和/或类
             LOG.info("Loading JAR files for task {}.", this);
 
+            //创建用户代码类加载器
             userCodeClassLoader = createUserCodeClassloader();
             final ExecutionConfig executionConfig =
                     serializedExecutionConfig.deserializeValue(userCodeClassLoader.asClassLoader());
@@ -731,6 +733,7 @@ public class Task
                             .orElse(Duration.ofMillis(taskCancellationTimeout))
                             .toMillis();
 
+            //检查任务是否已失败、已取消或正在取消。
             if (isCanceledOrFailed()) {
                 throw new CancelTaskException();
             }
@@ -771,6 +774,7 @@ public class Task
                         e);
             }
 
+            //检查任务是否已失败、已取消或正在取消。
             if (isCanceledOrFailed()) {
                 throw new CancelTaskException();
             }
@@ -1177,6 +1181,7 @@ public class Task
         }
     }
 
+    //创建用户代码类加载器
     private UserCodeClassLoader createUserCodeClassloader() throws Exception {
         long startDownloadTime = System.currentTimeMillis();
 

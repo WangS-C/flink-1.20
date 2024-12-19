@@ -49,28 +49,38 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  *   <li>{@link #releaseAllResources()}
  * </ol>
  */
+//输入通道消耗单个ResultSubpartitionView 。
+//对于每个渠道，消费生命周期如下：
+//requestSubpartitions()
+//getNextBuffer()
+//releaseAllResources()
 public abstract class InputChannel {
     /** The info of the input channel to identify it globally within a task. */
+    //输入通道的信息，用于在任务中全局识别它。
     protected final InputChannelInfo channelInfo;
 
     /** The parent partition of the subpartitions consumed by this channel. */
+    //该通道消耗的子分区的父分区。
     protected final ResultPartitionID partitionId;
 
     /** The indexes of the subpartitions consumed by this channel. */
+    //该通道消耗的子分区的索引。
     protected final ResultSubpartitionIndexSet consumedSubpartitionIndexSet;
 
     protected final SingleInputGate inputGate;
 
     // - Asynchronous error notification --------------------------------------
-
+    //异步错误通知
     private final AtomicReference<Throwable> cause = new AtomicReference<Throwable>();
 
     // - Partition request backoff --------------------------------------------
-
+    //分区请求退避
     /** The initial backoff (in ms). */
+    //初始退避（以毫秒为单位）。
     protected final int initialBackoff;
 
     /** The maximum backoff (in ms). */
+    //最大退避（以毫秒为单位）。
     protected final int maxBackoff;
 
     protected final Counter numBytesIn;
@@ -81,9 +91,11 @@ public abstract class InputChannel {
      * The index of the subpartition if {@link #consumedSubpartitionIndexSet} contains only one
      * subpartition, or -1.
      */
+    //如果consumedSubpartitionIndexSet仅包含一个子分区，则为子分区的索引，否则为 -1。
     private final int subpartitionId;
 
     /** The current backoff (in ms). */
+    //当前的退避（以毫秒为单位）。
     protected int currentBackoff;
 
     protected InputChannel(
@@ -126,6 +138,7 @@ public abstract class InputChannel {
     // ------------------------------------------------------------------------
 
     /** Returns the index of this channel within its {@link SingleInputGate}. */
+    //返回此通道在其SingleInputGate中的索引。
     public int getChannelIndex() {
         return channelInfo.getInputChannelIdx();
     }
@@ -134,6 +147,7 @@ public abstract class InputChannel {
      * Returns the info of this channel, which uniquely identifies the channel in respect to its
      * operator instance.
      */
+    //返回此通道的信息，该信息根据其运算符实例唯一标识该通道。
     public InputChannelInfo getChannelInfo() {
         return channelInfo;
     }
@@ -151,12 +165,14 @@ public abstract class InputChannel {
      * exactly-once mode, the upstream will be blocked and become unavailable. This method tries to
      * unblock the corresponding upstream and resume data consumption.
      */
+    //发送exactly-once模式的CheckpointBarrier后，上游会被阻塞，变得不可用。该方法尝试解锁相应的上游并恢复数据消耗。
     public abstract void resumeConsumption() throws IOException;
 
     /**
      * When received {@link EndOfData} from one channel, it need to acknowledge after this event get
      * processed.
      */
+    //当从一个通道接收到EndOfData时，需要在处理该事件后进行确认。
     public abstract void acknowledgeAllRecordsProcessed() throws IOException;
 
     /**
@@ -202,6 +218,7 @@ public abstract class InputChannel {
      * Returns the index of the subpartition where the next buffer locates, or -1 if there is no
      * buffer available and the subpartition to be consumed is not determined.
      */
+    //返回下一个缓冲区所在子分区的索引，如果没有可用缓冲区且未确定要消费的子分区，则返回-1。
     public int peekNextBufferSubpartitionId() throws IOException {
         if (subpartitionId >= 0) {
             return subpartitionId;
@@ -213,12 +230,14 @@ public abstract class InputChannel {
      * Returns the index of the subpartition where the next buffer locates, or -1 if there is no
      * buffer available and the subpartition to be consumed is not determined.
      */
+    //返回下一个缓冲区所在子分区的索引，如果没有可用缓冲区且未确定要消费的子分区，则返回-1。
     protected abstract int peekNextBufferSubpartitionIdInternal() throws IOException;
 
     /**
      * Returns the next buffer from the consumed subpartitions or {@code Optional.empty()} if there
      * is no data to return.
      */
+    //如果没有数据可返回，则返回已使用的子分区中的下一个缓冲区或Optional. empty() 。
     public abstract Optional<BufferAndAvailability> getNextBuffer()
             throws IOException, InterruptedException;
 
@@ -226,9 +245,11 @@ public abstract class InputChannel {
      * Called by task thread when checkpointing is started (e.g., any input channel received
      * barrier).
      */
+    //当检查点启动时由任务线程调用（例如，任何输入通道接收屏障）。
     public void checkpointStarted(CheckpointBarrier barrier) throws CheckpointException {}
 
     /** Called by task thread on cancel/complete to clean-up temporary data. */
+    //由任务线程在取消/ 完成时调用以清理临时数据。
     public void checkpointStopped(long checkpointId) {}
 
     public void convertToPriorityEvent(int sequenceNumber) throws IOException {}
@@ -245,6 +266,9 @@ public abstract class InputChannel {
      * ensure that the producer will wait for all backwards events. Otherwise, this will lead to an
      * Exception at runtime.
      */
+    //将TaskEvent发送回生成消耗结果分区的任务。
+    //重要提示：生产任务必须运行才能接收向后事件。
+    // 这意味着结果类型需要管道化，并且任务逻辑必须确保生产者将等待所有向后事件。否则，这将导致运行时出现异常。
     abstract void sendTaskEvent(TaskEvent event) throws IOException;
 
     // ------------------------------------------------------------------------
@@ -254,6 +278,7 @@ public abstract class InputChannel {
     abstract boolean isReleased();
 
     /** Releases all resources of the channel. */
+    //释放频道所有资源。
     abstract void releaseAllResources() throws IOException;
 
     abstract void announceBufferSize(int newBufferSize);
@@ -270,6 +295,8 @@ public abstract class InputChannel {
      * <p>Note: Any {@link PartitionException} instances should not be transformed and make sure
      * they are always visible in task failure cause.
      */
+    //检查是否有错误，如果报告错误则重新抛出错误。
+    //注意：不应转换任何PartitionException实例，并确保它们在任务失败原因中始终可见。
     protected void checkError() throws IOException {
         final Throwable t = cause.get();
 
@@ -289,6 +316,7 @@ public abstract class InputChannel {
      * Atomically sets an error for this channel and notifies the input gate about available data to
      * trigger querying this channel by the task thread.
      */
+    //原子地为此通道设置错误，并通知inputGate关可用数据的信息，以触发任务线程查询该通道。
     protected void setError(Throwable cause) {
         if (this.cause.compareAndSet(null, checkNotNull(cause))) {
             // Notify the input gate.
@@ -301,6 +329,7 @@ public abstract class InputChannel {
     // ------------------------------------------------------------------------
 
     /** Returns the current backoff in ms. */
+    //返回当前退避时间（以毫秒为单位）。
     protected int getCurrentBackoff() {
         return currentBackoff <= 0 ? 0 : currentBackoff;
     }
@@ -310,20 +339,26 @@ public abstract class InputChannel {
      *
      * @return <code>true</code>, iff the operation was successful. Otherwise, <code>false</code>.
      */
+    //增加当前退避并返回操作是否成功。
+    //返回：
+    //true ，当且仅当操作成功。否则为false 。
     protected boolean increaseBackoff() {
         // Backoff is disabled
+        //退避已禁用
         if (initialBackoff == 0) {
             return false;
         }
 
         if (currentBackoff == 0) {
             // This is the first time backing off
+            //这是第一次后退
             currentBackoff = initialBackoff;
 
             return true;
         }
 
         // Continue backing off
+        //继续后退
         else if (currentBackoff < maxBackoff) {
             currentBackoff = Math.min(currentBackoff * 2, maxBackoff);
 
@@ -331,6 +366,7 @@ public abstract class InputChannel {
         }
 
         // Reached maximum backoff
+        // 达到最大退避
         return false;
     }
 
@@ -352,6 +388,10 @@ public abstract class InputChannel {
      * @param subpartitionId The id of the corresponding subpartition.
      * @param segmentId The id of required segment.
      */
+    //通知上游应发送到 netty 连接的所需段的 id。
+    //参数：
+    //subpartitionId – 相应子分区的 id。
+    //segmentId – 所需段的 ID。
     public void notifyRequiredSegmentId(int subpartitionId, int segmentId) throws IOException {}
 
     // ------------------------------------------------------------------------
@@ -360,6 +400,7 @@ public abstract class InputChannel {
      * A combination of a {@link Buffer} and a flag indicating availability of further buffers, and
      * the backlog length indicating how many non-event buffers are available in the subpartitions.
      */
+    //Buffer和指示其他缓冲区可用性的标志的组合，以及指示子分区中有多少个非事件缓冲区可用的积压长度。
     public static final class BufferAndAvailability {
 
         private final Buffer buffer;

@@ -31,6 +31,8 @@ import java.io.Serializable;
  * to uniquely identify an input gate. It needs to be associated with the consuming task as well to
  * ensure correct tracking of gates in shuffle implementation.
  */
+//所使用的org. apache. flink. runtime. executiongraph. IntermediateResult的运行时标识符。
+//在运行时， IntermediateDataSetID不足以唯一标识InputGate。它还需要与消费任务相关联，以确保在洗牌实现中正确跟踪InputGate。
 public class InputGateID implements Serializable {
 
     private static final long serialVersionUID = 4613970383536333315L;
@@ -40,6 +42,7 @@ public class InputGateID implements Serializable {
      * intermediate result specified by this ID. This ID also identifies the input gate at the
      * consuming task.
      */
+    //消费的中间结果的ID。每个InputGate消耗由该 ID 指定的中间结果的分区。该 ID 还标识消费任务的InputGate
     private final IntermediateDataSetID consumedResultID;
 
     /**

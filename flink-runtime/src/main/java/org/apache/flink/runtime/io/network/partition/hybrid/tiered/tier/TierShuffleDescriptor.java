@@ -26,4 +26,6 @@ import java.io.Serializable;
  * <p>This interface extends the Serializable interface, which means that instances of classes that
  * implement this interface can be serialized and deserialized.
  */
+//TierShuffleDescriptor接口是单层的随机描述符。
+//该接口扩展了Serialized接口，这意味着实现该接口的类的实例可以被序列化和反序列化。
 public interface TierShuffleDescriptor extends Serializable {}
