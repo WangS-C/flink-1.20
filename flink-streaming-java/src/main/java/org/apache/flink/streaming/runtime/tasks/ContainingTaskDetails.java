@@ -23,6 +23,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.runtime.execution.Environment;
 
 /** Details about the operator containing task (such as {@link StreamTask}). */
+//有关包含任务的运算符（例如StreamTask ）的详细信息
 @Internal
 public interface ContainingTaskDetails extends EnvironmentProvider {
 

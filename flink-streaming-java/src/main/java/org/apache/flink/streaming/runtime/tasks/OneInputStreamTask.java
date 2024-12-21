@@ -62,6 +62,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.util.Preconditions.checkState;
 
 /** A {@link StreamTask} for executing a {@link OneInputStreamOperator}. */
+//用于执行OneInputStreamOperator的StreamTask 。
 @Internal
 public class OneInputStreamTask<IN, OUT> extends StreamTask<OUT, OneInputStreamOperator<IN, OUT>> {
 
@@ -74,6 +75,7 @@ public class OneInputStreamTask<IN, OUT> extends StreamTask<OUT, OneInputStreamO
      *
      * @param env The task environment for this task.
      */
+    //用于初始化的构造函数，可能具有初始状态（恢复/ 保存点/ 等）。
     public OneInputStreamTask(Environment env) throws Exception {
         super(env);
     }
@@ -88,6 +90,8 @@ public class OneInputStreamTask<IN, OUT> extends StreamTask<OUT, OneInputStreamO
      * @param env The task environment for this task.
      * @param timeProvider Optionally, a specific time provider to use.
      */
+    //用于初始化的构造函数，可能具有初始状态（恢复/ 保存点/ 等）。
+    //此构造函数接受特殊的TimerService 。默认情况下（如果时间提供者传递的是 null），将使用DefaultTimerService 。
     @VisibleForTesting
     public OneInputStreamTask(Environment env, @Nullable TimerService timeProvider)
             throws Exception {
@@ -121,12 +125,14 @@ public class OneInputStreamTask<IN, OUT> extends StreamTask<OUT, OneInputStreamO
                     .getIOMetricGroup()
                     .reuseRecordsInputCounter(numRecordsIn);
 
+            //创建StreamInputProcessor实例，即核心数据处理器。
             inputProcessor = new StreamOneInputProcessor<>(input, output, operatorChain);
         }
         mainOperator
                 .getMetricGroup()
                 .gauge(MetricNames.IO_CURRENT_INPUT_WATERMARK, inputWatermarkGauge);
         // wrap watermark gauge since registered metrics must be unique
+        //包装水印量规，因为注册的指标必须是唯一的
         getEnvironment()
                 .getMetricGroup()
                 .gauge(MetricNames.IO_CURRENT_INPUT_WATERMARK, inputWatermarkGauge::getValue);
@@ -216,6 +222,7 @@ public class OneInputStreamTask<IN, OUT> extends StreamTask<OUT, OneInputStreamO
      * The network data output implementation used for processing stream elements from {@link
      * StreamTaskNetworkInput} in one input processor.
      */
+    //网络数据输出实现，用于在一个输入处理器中处理来自StreamTaskNetworkInput的流元素。
     private static class StreamTaskNetworkOutput<IN> implements DataOutput<IN> {
 
         private final Input<IN> operator;

@@ -84,10 +84,17 @@ import static org.apache.flink.util.Preconditions.checkState;
  *
  * @param <OUT> The output type of the operator
  */
+//所有流运算符的新基类，旨在最终取代AbstractStreamOperator 。
+// 目前打算仅与MultipleInputStreamOperator顺利工作。
+//与AbstractStreamOperator相比，
+// 一个值得注意的区别是缺少AbstractStreamOperator. setup(StreamTask, StreamConfig, Output)
+// 有利于在构造函数中进行初始化，并消除了与StreamTask等类的一些紧密耦合。
+//保证方法不会被同时调用。
 @Experimental
 public abstract class AbstractStreamOperatorV2<OUT>
         implements StreamOperator<OUT>, CheckpointedStreamOperator {
     /** The logger used by the operator class and its subclasses. */
+    //操作符类及其子类使用的记录器。
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractStreamOperatorV2.class);
 
     protected final StreamConfig config;
@@ -101,6 +108,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
     protected final IndexedCombinedWatermarkStatus combinedWatermark;
 
     /** Metric group for the operator. */
+    //运算符的度量组。
     protected final InternalOperatorMetricGroup metrics;
 
     protected final LatencyStats latencyStats;
@@ -242,6 +250,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
      *     StreamConfig#isUnalignedCheckpointsSplittableTimersEnabled()}. {@code false} if
      *     splittable timers should never be used.
      */
+    //即使启用了配置选项，也可以覆盖以禁用此特定运算符的可拆分计时器。默认情况下，可拆分定时器处于禁用状态。
     @Internal
     public boolean useSplittableTimers() {
         return false;
@@ -271,6 +280,14 @@ public abstract class AbstractStreamOperatorV2<OUT>
      * @return flag indicating whether or not this operator is writing to raw keyed state via {@link
      *     #snapshotState(StateSnapshotContext)}.
      */
+    //指示此类的实现是否正在使用snapshotState(StateSnapshotContext)写入快照上的原始键控状态流。
+    // 如果是，子类应该重写此方法以返回true 。
+    //子类需要显式指示原始键控状态的使用，因为在内部，
+    // AbstractStreamOperator也可能尝试从中读取数据以恢复基于堆的计时器，并最终因读取错误而失败。
+    // 通过将此标志设置为true ，这允许AbstractStreamOperator知道以原始键控状态写入的数据不是由计时器服务写入的，
+    // 并跳过计时器恢复尝试。
+    //请参阅 FLINK-19741 了解更多详细信息。
+    //一旦所有计时器都由状态后端管理，就可以删除此方法。
     @Internal
     protected boolean isUsingCustomRawKeyedState() {
         return false;
@@ -284,6 +301,8 @@ public abstract class AbstractStreamOperatorV2<OUT>
      *
      * @throws Exception An exception in this method causes the operator to fail.
      */
+    //该方法在处理任何元素之前立即调用，它应该包含运算符的初始化逻辑，例如状态初始化。
+    //默认实现不执行任何操作。
     @Override
     public void open() throws Exception {}
 
@@ -301,6 +320,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
     public void prepareSnapshotPreBarrier(long checkpointId) throws Exception {
         // the default implementation does nothing and accepts the checkpoint
         // this is purely for subclasses to override
+        //默认实现不执行任何操作并接受检查点，这纯粹是为了子类覆盖
     }
 
     @Override
@@ -327,6 +347,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
      *
      * @param context context that provides information and means required for taking a snapshot
      */
+    //有状态的流操作符想要参与快照需要重写这个钩子方法。
     @Override
     public void snapshotState(StateSnapshotContext context) throws Exception {}
 
@@ -335,6 +356,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
      *
      * @param context context that allows to register different states.
      */
+    //具有可恢复状态的流运算符需要重写此钩子方法。
     @Override
     public void initializeState(StateInitializationContext context) throws Exception {}
 
@@ -358,6 +380,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
      *
      * @return The job's execution config.
      */
+    //获取该算子所属作业的执行环境中定义的执行配置。
     public ExecutionConfig getExecutionConfig() {
         return executionConfig;
     }
@@ -377,6 +400,9 @@ public abstract class AbstractStreamOperatorV2<OUT>
      * @return If runtime context is set, then return task name with subtask index. Otherwise return
      *     simple class name.
      */
+    //返回操作员名称。如果已设置运行时上下文，则返回带有子任务索引的任务名称。否则，返回简单的类名。
+    //返回：
+    //如果设置了运行时上下文，则返回带有子任务索引的任务名称。否则返回简单的类名。
     protected String getOperatorName() {
         if (runtimeContext != null) {
             return runtimeContext.getTaskInfo().getTaskNameWithSubtasks();
@@ -390,6 +416,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
      * to interact with systems such as broadcast variables and managed state. This also allows to
      * register timers.
      */
+    //返回一个上下文，允许操作员查询有关执行的信息，并与广播变量和托管状态等系统进行交互。这也允许注册定时器。
     public StreamingRuntimeContext getRuntimeContext() {
         return runtimeContext;
     }
@@ -407,6 +434,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
      * Returns the {@link ProcessingTimeService} responsible for getting the current processing time
      * and registering timers.
      */
+    //返回负责获取当前处理时间并注册计时器ProcessingTimeService 。
     @VisibleForTesting
     public ProcessingTimeService getProcessingTimeService() {
         return processingTimeService;
@@ -418,6 +446,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
      * @throws IllegalStateException Thrown, if the key/value state was already initialized.
      * @throws Exception Thrown, if the state backend cannot create the key/value state.
      */
+    //使用为此任务配置的状态后端创建分区状态句柄。
     protected <S extends State> S getPartitionedState(StateDescriptor<S, ?> stateDescriptor)
             throws Exception {
         return getPartitionedState(
@@ -436,6 +465,7 @@ public abstract class AbstractStreamOperatorV2<OUT>
      * @throws IllegalStateException Thrown, if the key/value state was already initialized.
      * @throws Exception Thrown, if the state backend cannot create the key/value state.
      */
+    //使用为此任务配置的状态后端创建分区状态句柄。
     protected <S extends State, N> S getPartitionedState(
             N namespace,
             TypeSerializer<N> namespaceSerializer,
@@ -471,9 +501,11 @@ public abstract class AbstractStreamOperatorV2<OUT>
 
     protected void reportOrForwardLatencyMarker(LatencyMarker marker) {
         // all operators are tracking latencies
+        // 所有运营商都在跟踪延迟
         this.latencyStats.reportLatency(marker);
 
         // everything except sinks forwards latency markers
+        //除了转发延迟标记之外的所有内容
         this.output.emitLatencyMarker(marker);
     }
 
@@ -501,6 +533,13 @@ public abstract class AbstractStreamOperatorV2<OUT>
      * @param triggerable The {@link Triggerable} that should be invoked when timers fire
      * @param <N> The type of the timer namespace.
      */
+    //返回一个InternalTimerService ，可用于查询当前处理时间和事件时间以及设置计时器。
+    // 一个操作员可以拥有多个计时器服务，其中每个服务都有自己的命名空间序列化器。
+    // 定时器服务通过请求时给出的字符串键来区分，如果多次使用相同的键调用此方法，您将在后续请求中获得相同的定时器服务实例。
+    //定时器的作用域始终是一个键，即键控流操作的当前活动键。当定时器触发时，该键也将被设置为当前活动键。
+    //每个计时器都有附加的元数据，即命名空间。
+    // 不同的计时器服务可以具有不同的命名空间类型。
+    // 如果不需要命名空间区分，可以使用VoidNamespaceSerializer作为命名空间序列化器。
     public <K, N> InternalTimerService<N> getInternalTimerService(
             String name, TypeSerializer<N> namespaceSerializer, Triggerable<K, N> triggerable) {
         if (timeServiceManager == null) {

@@ -62,6 +62,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *     org.apache.flink.streaming.api.functions.source.SourceFunction} API, which is due to be
  *     removed. Use the new {@link org.apache.flink.api.connector.source.Source} API instead.
  */
+//用于执行StreamSource的StreamTask 。
+//其中一个重要的方面是检查点设置和元素发射绝不能同时发生。
+// 执行必须是串行的。这是通过与SourceFunction签订合同来实现的，即它只能修改其状态或在锁定对象的同步块中发出元素。
+// 此外，状态的修改和元素的发射必须发生在受同步块保护的同一代码块中。
 @Deprecated
 @Internal
 public class SourceStreamTask<
@@ -98,6 +102,8 @@ public class SourceStreamTask<
      * <p>Moreover we differentiate drain and no drain cases to see if we need to call finish() on
      * the operators.
      */
+    //指示此任务是否有意完成，在这种情况下，我们希望忽略完成后引发的异常，以确保关闭顺利进行。
+    //此外，我们区分排出和无排出情况，看看是否需要在运算符上调用 finish()。
     private volatile FinishingReason finishingReason = FinishingReason.END_OF_DATA;
 
     public SourceStreamTask(Environment env) throws Exception {
@@ -185,6 +191,7 @@ public class SourceStreamTask<
     @Override
     protected void cleanUpInternal() {
         // does not hold any resources, so no cleanup needed
+        // 不持有任何资源，因此无需清理
     }
 
     @Override
@@ -196,6 +203,8 @@ public class SourceStreamTask<
         // blocking instead for
         // compatibility reasons with the current source interface (source functions run as a loop,
         // not in steps).
+        //与此方法的通常约定不同，此实现不是逐步实现，
+        // 而是出于与当前源接口的兼容性原因而阻塞（源函数作为循环运行，而不是逐步运行）。
         sourceThread.setTaskDescription(getName());
 
         sourceThread.start();
@@ -231,6 +240,7 @@ public class SourceStreamTask<
             } else if (!sourceThread.getCompletionFuture().isDone()) {
                 // sourceThread not alive and completion future not done means source thread
                 // didn't start and we need to manually complete the future
+                //sourceThread 不存在并且完成 future 未完成意味着源线程没有启动，我们需要手动完成 future
                 sourceThread.getCompletionFuture().complete(null);
             }
         }
@@ -245,6 +255,7 @@ public class SourceStreamTask<
 
     private void interruptSourceThread() {
         // Nothing need to do if the source is finished on restore
+        //如果源已完成恢复，则无需执行任何操作
         if (operatorChain != null && operatorChain.isTaskDeployedAsFinished()) {
             return;
         }
@@ -280,6 +291,7 @@ public class SourceStreamTask<
                             + " CLAIM mode.");
         } else {
             // we do not trigger checkpoints here, we simply state whether we can trigger them
+            // 我们这里不触发检查点，我们只是说明是否可以触发它们
             synchronized (lock) {
                 return CompletableFuture.completedFuture(isRunning());
             }
@@ -326,6 +338,7 @@ public class SourceStreamTask<
     }
 
     /** Runnable that executes the source function in the head operator. */
+    //执行头操作符中的源函数的Runnable。
     private class LegacySourceFunctionThread extends Thread {
 
         private final CompletableFuture<Void> completionFuture;
@@ -347,6 +360,7 @@ public class SourceStreamTask<
                 completionFuture.complete(null);
             } catch (Throwable t) {
                 // Note, t can be also an InterruptedException
+                // 注意，t也可以是InterruptedException
                 if (isCanceled()
                         && ExceptionUtils.findThrowable(t, InterruptedException.class)
                                 .isPresent()) {
@@ -364,6 +378,7 @@ public class SourceStreamTask<
                                 () -> {
                                     // theoretically the StreamSource can implement BoundedOneInput,
                                     // so we need to call it here
+                                    //理论上StreamSource可以实现BoundedOneInput，所以我们需要在这里调用它
                                     final StopMode stopMode = finishingReason.toStopMode();
                                     if (stopMode == StopMode.DRAIN) {
                                         operatorChain.endInput(1);
@@ -384,6 +399,8 @@ public class SourceStreamTask<
          *     #isFailing()} and this thread is not alive (e.g. not started) returns a normally
          *     completed future.
          */
+        //返回：
+        //一旦该线程完成，未来即完成。如果此任务isFailing()并且此线程不活动（例如未启动），则返回正常完成的 future。
         CompletableFuture<Void> getCompletionFuture() {
             return isFailing() && !isAlive()
                     ? CompletableFuture.completedFuture(null)

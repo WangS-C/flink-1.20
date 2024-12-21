@@ -48,6 +48,7 @@ import java.util.function.Supplier;
 import static org.apache.flink.util.ExceptionUtils.firstOrSuppressed;
 
 /** A regular non finished on restore {@link OperatorChain}. */
+//常规未完成恢复OperatorChain 。
 @Internal
 public class RegularOperatorChain<OUT, OP extends StreamOperator<OUT>>
         extends OperatorChain<OUT, OP> {
@@ -84,6 +85,7 @@ public class RegularOperatorChain<OUT, OP extends StreamOperator<OUT>>
     public void prepareSnapshotPreBarrier(long checkpointId) throws Exception {
         // go forward through the operator chain and tell each operator
         // to prepare the checkpoint
+        //继续遍历操作员链并告诉每个操作员准备检查点
         for (StreamOperatorWrapper<?, ?> operatorWrapper : getAllOperators()) {
             if (!operatorWrapper.isClosed()) {
                 operatorWrapper.getStreamOperator().prepareSnapshotPreBarrier(checkpointId);

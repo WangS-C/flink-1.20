@@ -25,6 +25,7 @@ import org.apache.flink.api.common.functions.RichFunction;
 import org.apache.flink.api.common.functions.RuntimeContext;
 
 /** Utility class that contains helper methods to work with Flink {@link Function} class. */
+//包含与 Flink Function类一起使用的辅助方法的实用程序类。
 @Internal
 public final class FunctionUtils {
 
@@ -60,6 +61,7 @@ public final class FunctionUtils {
     }
 
     /** Private constructor to prevent instantiation. */
+    //私有构造函数以防止实例化。
     private FunctionUtils() {
         throw new RuntimeException();
     }

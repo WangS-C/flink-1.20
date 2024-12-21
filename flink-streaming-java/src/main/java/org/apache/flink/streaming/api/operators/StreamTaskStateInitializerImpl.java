@@ -91,21 +91,26 @@ import static org.apache.flink.runtime.state.StateUtil.unexpectedStateHandleExce
  * <p>This implementation operates on top a {@link TaskStateManager}, from which it receives
  * everything required to restore state in the backends from checkpoints or savepoints.
  */
+//此类是StreamTaskStateInitializer的主要实现。此类从运行流任务的任务的TaskStateManager以及操作符获取状态，以便为流操作符创建StreamOperatorStateContext对象。
+//此实现在TaskStateManager之上运行，它从检查点或保存点接收恢复后端状态所需的所有内容。
 public class StreamTaskStateInitializerImpl implements StreamTaskStateInitializer {
 
     /**
      * The environment of the task. This is required as parameter to construct state backends via
      * their factory.
      */
+    //任务的环境。这是通过工厂构造状态后端所需的参数。
     private final Environment environment;
 
     /**
      * The state manager of the tasks provides the information used to restore potential previous
      * state.
      */
+    //任务的状态管理器提供用于恢复潜在的先前状态的信息。
     private final TaskStateManager taskStateManager;
 
     /** This object is the factory for everything related to state backends and checkpointing. */
+    //该对象是与状态后端和检查点相关的所有内容的工厂。
     private final StateBackend stateBackend;
 
     private final SubTaskInitializationMetricsBuilder initializationMetrics;
@@ -187,6 +192,7 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
 
             // -------------- Keyed State Backend --------------
             // TODO: Support KeyedStateBackend for AsyncKeyedStateBackend to unify the logic
+            //支持KeyedStateBackend为AsyncKeyedStateBackend，统一逻辑
             if (stateBackend.supportsAsyncKeyedStateBackend()) {
                 asyncKeyedStateBackend =
                         keyedStatedBackend(
@@ -245,6 +251,9 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
                 // state);
                 // in this case, timers should not attempt to restore timers from the raw keyed
                 // state.
+                //如果操作员指示它正在使用自定义原始键控状态，
+                // 则原始键控状态快照中写入的任何内容都不是由内部计时器服务写入的（因为原始键控状态只有一个用户）；
+                // 在这种情况下，计时器不应尝试从原始键控状态恢复计时器。
                 final Iterable<KeyGroupStatePartitionStreamProvider> restoredRawKeyedStateTimers =
                         (prioritizedOperatorSubtaskStates.isRestored()
                                         && !isUsingCustomRawKeyedState)
@@ -264,8 +273,10 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
                 timeServiceManager = null;
             }
             // TODO: Support Timer for AsyncKeyedStateBackend
+            //AsyncKeyedStateBackend 支持计时器
 
             // Add stats for input channel and result partition state
+            // 添加输入通道和结果分区状态的统计信息
             Stream.concat(
                             prioritizedOperatorSubtaskStates.getPrioritizedInputChannelState()
                                     .stream(),
@@ -275,6 +286,7 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
                     .forEach(channelHandle -> channelHandle.collectSizeStats(statsCollector));
 
             // Report collected stats to metrics
+            //将收集的统计数据报告给指标
             statsCollector
                     .getStats()
                     .forEach(
@@ -296,11 +308,13 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
         } catch (Exception ex) {
 
             // cleanup if something went wrong before results got published.
+            // 如果在结果发布之前出现问题，则进行清理。
             if (keyedStatedBackend != null) {
                 if (streamTaskCloseableRegistry.unregisterCloseable(keyedStatedBackend)) {
                     IOUtils.closeQuietly(keyedStatedBackend);
                 }
                 // release resource (e.g native resource)
+                // 释放资源（例如本机资源）
                 keyedStatedBackend.dispose();
             }
 
@@ -309,6 +323,7 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
                     IOUtils.closeQuietly(asyncKeyedStateBackend);
                 }
                 // release resource (e.g native resource)
+                // 释放资源（例如本机资源）
                 asyncKeyedStateBackend.dispose();
             }
 
@@ -368,6 +383,8 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
         // each stream constructed in restore could also be closed in case of task cancel, for
         // example the data
         // input stream opened for serDe during restore.
+        //现在恢复处理包含在后端构建过程中，因此我们需要确保恢复中构建的每个流也可以在任务取消时关闭，
+        // 例如恢复期间为serDe打开的数据输入流。
         CloseableRegistry cancelStreamRegistryForRestore = new CloseableRegistry();
         backendCloseableRegistry.registerCloseable(cancelStreamRegistryForRestore);
         BackendRestorerProcedure<OperatorStateBackend, OperatorStateHandle> backendRestorer =
@@ -423,6 +440,8 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
         // each stream constructed in restore could also be closed in case of task cancel, for
         // example the data
         // input stream opened for serDe during restore.
+        //现在恢复处理包含在后端构建过程中，因此我们需要确保恢复中构建的每个流也可以在任务取消时关闭，
+        // 例如恢复期间为serDe打开的数据输入流。
         CloseableRegistry cancelStreamRegistryForRestore = new CloseableRegistry();
         backendCloseableRegistry.registerCloseable(cancelStreamRegistryForRestore);
         BackendRestorerProcedure<R, KeyedStateHandle> backendRestorer =
@@ -465,10 +484,12 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
     }
 
     /** Functional interface to create the keyed state backend. */
+    //用于创建键控状态后端的功能接口。
     @FunctionalInterface
     protected interface KeyedStateBackendCreator<K, R extends Disposable & Closeable> {
 
         /** Create the keyed state backend. */
+        //创建键控状态后端。
         R create(
                 StateBackend stateBackend,
                 StateBackend.KeyedStateBackendParameters<K> keyedStateBackendParameters)
@@ -484,12 +505,14 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
             Collection<OperatorStateHandle> rawOperatorState = restoreStateAlternatives.next();
             // TODO currently this does not support local state recovery, so we expect there is only
             // one handle.
+            //目前这不支持本地状态恢复，所以我们预计只有一个
             Preconditions.checkState(
                     !restoreStateAlternatives.hasNext(),
                     "Local recovery is currently not implemented for raw operator state, but found state alternative.");
 
             if (rawOperatorState != null) {
                 // Report restore size stats
+                //报告恢复大小统计信息
                 rawOperatorState.forEach(
                         stateObject -> stateObject.collectSizeStats(statsCollector));
 
@@ -526,6 +549,7 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
 
             // TODO currently this does not support local state recovery, so we expect there is only
             // one handle.
+            //目前这不支持本地状态恢复，因此我们预计只有一个
             Preconditions.checkState(
                     !restoreStateAlternatives.hasNext(),
                     "Local recovery is currently not implemented for raw keyed state, but found state alternative.");
@@ -533,6 +557,7 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
             if (rawKeyedState != null) {
                 Collection<KeyGroupsStateHandle> keyGroupsStateHandles = transform(rawKeyedState);
                 // Report restore size stats
+                //报告恢复大小统计信息
                 keyGroupsStateHandles.forEach(
                         stateObject -> stateObject.collectSizeStats(statsCollector));
                 final CloseableRegistry closeableRegistry = new CloseableRegistry();
@@ -634,6 +659,7 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
         private final String
                 stateName; // TODO since we only support a single named state in raw, this could be
         // dropped
+        // 因为我们只支持原始的单个命名状态，所以可以删除它
         private long[] offsets;
         private int offPos;
 

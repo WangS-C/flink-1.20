@@ -180,7 +180,9 @@ public abstract class ResultPartition implements ResultPartitionWriter {
         //创建bufferPool
         //调用的是org.apache.flink.runtime.io.network.partition.ResultPartitionFactory.createBufferPoolFactory
         this.bufferPool = checkNotNull(bufferPoolFactory.get());
+        //做子类自己的设置操作
         setupInternal();
+        //注册结果分区
         partitionManager.registerResultPartition(this);
     }
 

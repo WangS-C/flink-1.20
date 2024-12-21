@@ -47,19 +47,23 @@ import java.util.Optional;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** This class contains utility methods to load state backends from configurations. */
+//此类包含从配置加载状态后端的实用方法。
 public class StateBackendLoader {
 
     private static final Logger LOG = LoggerFactory.getLogger(StateBackendLoader.class);
 
     /** Used for Loading ChangelogStateBackend. */
+    //用于加载ChangelogStateBackend。
     private static final String CHANGELOG_STATE_BACKEND =
             "org.apache.flink.state.changelog.ChangelogStateBackend";
 
     /** Used for Loading TempChangelogStateBackend. */
+    //用于加载 TempChangelogStateBackend。
     private static final String DEACTIVATED_CHANGELOG_STATE_BACKEND =
             "org.apache.flink.state.changelog.DeactivatedChangelogStateBackend";
 
     /** Used for loading RocksDBStateBackend. */
+    //用于加载RocksDBStateBackend。
     private static final String ROCKSDB_STATE_BACKEND_FACTORY =
             "org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackendFactory";
 
@@ -67,18 +71,22 @@ public class StateBackendLoader {
     //  Configuration shortcut names
     // ------------------------------------------------------------------------
     /** The shortcut configuration name of the HashMap state backend. */
+    //HashMap状态后端的快捷配置名称。
     public static final String HASHMAP_STATE_BACKEND_NAME = "hashmap";
 
     /**
      * The shortcut configuration name for the MemoryState backend that checkpoints to the
      * JobManager.
      */
+    //检查点到 JobManager 的 MemoryState 后端的快捷方式配置名称
     @Deprecated public static final String MEMORY_STATE_BACKEND_NAME = "jobmanager";
 
     /** The shortcut configuration name for the FileSystem State backend. */
+    //文件系统状态后端的快捷方式配置名称。
     @Deprecated public static final String FS_STATE_BACKEND_NAME = "filesystem";
 
     /** The shortcut configuration name for the RocksDB State Backend. */
+    //RocksDB State Backend 的快捷方式配置名称。
     public static final String ROCKSDB_STATE_BACKEND_NAME = "rocksdb";
 
     // ------------------------------------------------------------------------
@@ -110,6 +118,11 @@ public class StateBackendLoader {
      * @throws IOException May be thrown by the StateBackendFactory when instantiating the state
      *     backend
      */
+    //从配置中的参数“state. backend”加载未包装的状态后端，如StateBackendOptions. STATE_BACKEND中所定义。
+    //状态后端可以通过快捷方式名称或StateBackendFactory的类名来指定。
+    // 如果指定了 StateBackendFactory 类名，则会实例化工厂（通过其零参数构造函数）
+    // 并调用其StateBackendFactory. createFromConfig(ReadableConfig, ClassLoader)方法。
+    //可识别的快捷方式名称为 ' "hashmap" '、' "rocksdb" ' '"jobmanager" '（已弃用）和 ' "filesystem" '（已弃用）。
     @Nonnull
     public static StateBackend loadStateBackendFromConfig(
             ReadableConfig config, ClassLoader classLoader, @Nullable Logger logger)
@@ -121,6 +134,7 @@ public class StateBackendLoader {
         final String backendName = config.get(StateBackendOptions.STATE_BACKEND);
 
         // by default the factory class is the backend name
+        //默认情况下工厂类是后端名称
         String factoryClassName = backendName;
 
         switch (backendName.toLowerCase()) {
@@ -147,6 +161,7 @@ public class StateBackendLoader {
                 }
                 // fall through and use the HashMapStateBackend instead which
                 // utilizes the same HeapKeyedStateBackend runtime implementation.
+                //失败并使用 HashMapStateBackend 来代替，它利用相同的 HeapKeyedStateBackend 运行时实现。
             case HASHMAP_STATE_BACKEND_NAME:
                 HashMapStateBackend hashMapStateBackend =
                         new HashMapStateBackendFactory().createFromConfig(config, classLoader);
@@ -160,6 +175,7 @@ public class StateBackendLoader {
 
                 // fall through to the 'default' case that uses reflection to load the backend
                 // that way we can keep RocksDB in a separate module
+                //落到使用反射加载后端的“默认”情况，这样我们就可以将 RocksDB 保留在单独的模块中
 
             default:
                 if (logger != null) {
@@ -217,6 +233,11 @@ public class StateBackendLoader {
      * @throws IOException May be thrown by the StateBackendFactory when instantiating the state
      *     backend
      */
+    //检查是否给出了应用程序定义的状态后端，如果没有，则从配置中的参数“state. backend”加载状态后端，
+    // 如CheckpointingOptions. STATE_BACKEND中所定义。
+    // 如果未配置状态后端，则会实例化默认状态后端（ HashMapStateBackend ）。
+    //如果找到应用程序定义的状态后端，并且状态后端是ConfigurableStateBackend ，
+    // 则此方法在状态后端上调用ConfigurableStateBackend. configure(ReadableConfig, ClassLoader) 。
     private static StateBackend loadFromApplicationOrConfigOrDefaultInternal(
             @Nullable StateBackend fromApplication,
             Configuration jobConfig,
@@ -230,6 +251,7 @@ public class StateBackendLoader {
         checkNotNull(classLoader, "classLoader");
 
         // Job level config can override the cluster level config.
+        // 作业级别配置可以覆盖集群级别配置。
         Configuration mergedConfig = new Configuration(clusterConfig);
         mergedConfig.addAll(jobConfig);
 
@@ -237,10 +259,14 @@ public class StateBackendLoader {
 
         // In the FLINK-2.0, the state backend from application will be not supported anymore.
         // (1) the application defined state backend has precedence
+        //在 FLINK-2.0 中，将不再支持应用程序的状态后端。
+        // (1) 应用程序定义的状态后端优先
         if (fromApplication != null) {
             // see if this is supposed to pick up additional configuration parameters
+            // 看看这是否应该获取额外的配置参数
             if (fromApplication instanceof ConfigurableStateBackend) {
                 // needs to pick up configuration
+                // 需要获取配置
                 if (logger != null) {
                     logger.info(
                             "Using job/cluster config to configure application-defined state backend: {}",
@@ -250,9 +276,11 @@ public class StateBackendLoader {
                 backend =
                         ((ConfigurableStateBackend) fromApplication)
                                 // Use cluster config for backwards compatibility.
+                                // 使用集群配置来实现向后兼容性。
                                 .configure(clusterConfig, classLoader);
             } else {
                 // keep as is!
+                //保持原样！
                 backend = fromApplication;
             }
 
@@ -261,6 +289,7 @@ public class StateBackendLoader {
             }
         } else {
             // (2) check if the config defines a state backend
+            //(2) 检查配置是否定义了状态后端
             backend = loadStateBackendFromConfig(mergedConfig, classLoader, logger);
         }
 
@@ -286,6 +315,8 @@ public class StateBackendLoader {
      * @throws IOException May be thrown by the StateBackendFactory when instantiating the state
      *     backend
      */
+    //这是状态后端加载器，在启用委派时加载DelegatingStateBackend该 DelegatingStateBackend
+    // 包装从loadFromApplicationOrConfigOrDefaultInternal加载的状态后端。如果未启用委托，则返回底层包装状态后端。
     public static StateBackend fromApplicationOrConfigOrDefault(
             @Nullable StateBackend fromApplication,
             Configuration jobConfig,
@@ -329,6 +360,7 @@ public class StateBackendLoader {
      * @param classLoader User code classloader.
      * @return Whether the state backend uses managed memory.
      */
+    //检查状态后端是否使用托管内存，而无需反序列化或加载状态后端。
     public static boolean stateBackendFromApplicationOrConfigOrDefaultUseManagedMemory(
             Configuration config,
             Optional<Boolean> stateBackendFromApplicationUsesManagedMemory,
@@ -337,11 +369,13 @@ public class StateBackendLoader {
         checkNotNull(config, "config");
 
         // (1) the application defined state backend has precedence
+        //(1) 应用程序定义的状态后端优先
         if (stateBackendFromApplicationUsesManagedMemory.isPresent()) {
             return stateBackendFromApplicationUsesManagedMemory.get();
         }
 
         // (2) check if the config defines a state backend
+        //(2) 检查配置是否定义了状态后端
         try {
             final StateBackend fromConfig = loadStateBackendFromConfig(config, classLoader, LOG);
             return fromConfig.useManagedMemory();
@@ -363,12 +397,14 @@ public class StateBackendLoader {
      * @throws DynamicCodeLoadingException Thrown if keyed state handles of wrapped state backend
      *     are found and the class was not found or could not be instantiated.
      */
+    //加载状态后端，它可以包装原始状态后端以进行恢复。
     public static StateBackend loadStateBackendFromKeyedStateHandles(
             StateBackend originalStateBackend,
             ClassLoader classLoader,
             Collection<KeyedStateHandle> keyedStateHandles)
             throws DynamicCodeLoadingException {
         // Wrapping ChangelogStateBackend or ChangelogStateBackendHandle is not supported currently.
+        //目前不支持包装 ChangelogStateBackend 或 ChangelogStateBackendHandle。
         if (!isChangelogStateBackend(originalStateBackend)
                 && keyedStateHandles.stream()
                         .anyMatch(
@@ -389,6 +425,7 @@ public class StateBackendLoader {
             throws DynamicCodeLoadingException {
 
         // ChangelogStateBackend resides in a separate module, load it using reflection
+        // ChangelogStateBackend驻留在一个单独的模块中，使用反射加载它
         try {
             Constructor<? extends DelegatingStateBackend> constructor =
                     Class.forName(className, false, classLoader)
@@ -410,5 +447,6 @@ public class StateBackendLoader {
     // ------------------------------------------------------------------------
 
     /** This class is not meant to be instantiated. */
+    //这个类不应该被实例化。
     private StateBackendLoader() {}
 }

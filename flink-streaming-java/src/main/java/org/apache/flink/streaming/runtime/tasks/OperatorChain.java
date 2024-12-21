@@ -105,6 +105,9 @@ import static org.apache.flink.util.Preconditions.checkState;
  * @param <OUT> The type of elements accepted by the chain, i.e., the input type of the chain's main
  *     operator.
  */
+//OperatorChain包含在单个StreamTask中作为一条链执行的所有运算符。
+//链的主要入口点是它的mainOperator 。
+// mainOperator通过从网络输入和/ 或源输入中提取记录并将生成的记录推送到其余的链式运算符来驱动StreamTask的执行。
 public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         implements BoundedMultiInput, Closeable {
 
@@ -136,6 +139,19 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      * traversed: first, second, main, ..., tail or in reversed order: tail, ..., main, second,
      * first
      */
+    //对于迭代，用于执行反馈边的StreamIterationHead和StreamIterationTail不包含任何运算符，
+    // 在这种情况下， mainOperatorWrapper和tailOperatorWrapper为空。
+    //通常链中的第一个运算符与mainOperatorWrapper相同，但如果存在链接的源输入，则情况并非如此。
+    // 在这种情况下，源输入之一将是第一个运算符。例如，以下操作符链是可能的：
+    //  first
+    //       \
+    //       main (multi-input) -> ... -> tail
+    //       /
+    //  second
+    //
+    //其中“第一”和“第二”（可以有更多）是链式源运算符。
+    // 当涉及到诸如关闭、统计初始化或状态快照之类的操作时，会遍历操作符链：first, secondary, main, ..., tail
+    // 或按相反顺序：tail, ..., main, secondary,first
     @Nullable protected final StreamOperatorWrapper<OUT, OP> mainOperatorWrapper;
 
     @Nullable protected final StreamOperatorWrapper<?, ?> firstOperatorWrapper;
@@ -268,6 +284,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         } finally {
             // make sure we clean up after ourselves in case of a failure after acquiring
             // the first resources
+            //确保我们在获取第一个资源后发生故障时自行清理
             if (!success) {
                 for (int i = 0; i < streamOutputs.length; i++) {
                     if (streamOutputs[i] != null) {
@@ -311,6 +328,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      *
      * @param inputId the input ID starts from 1 which indicates the first input.
      */
+    //结束由inputId指定的主运算符输入。
     public abstract void endInput(int inputId) throws Exception;
 
     /**
@@ -328,6 +346,8 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      * operator in the chain, contrary to {@link StreamOperator#open()} which happens <b>tail to
      * heads</b> (see {@link #initializeStateAndOpenOperators(StreamTaskStateInitializer)}).
      */
+    //以连锁效应方式关闭所有运营商。关闭发生在链中从头到尾运算符，这与StreamOperator. open()相反，
+    // 后者发生在尾到头（请参阅initializeStateAndOpenOperators(StreamTaskStateInitializer) ）。
     public abstract void finishOperators(StreamTaskActionExecutor actionExecutor, StopMode stopMode)
             throws Exception;
 
@@ -376,6 +396,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      * Execute {@link StreamOperator#close()} of each operator in the chain of this {@link
      * StreamTask}. Closing happens from <b>tail to head</b> operator in the chain.
      */
+    //执行此StreamTask链中每个运算符的StreamOperator. close() 。关闭发生在链中从尾到头的操作符。
     public void closeAllOperators() throws Exception {
         isClosed = true;
     }
@@ -385,6 +406,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
     }
 
     /** Returns an {@link Iterable} which traverses all operators in forward topological order. */
+    //返回一个Iterable ，它按正向拓扑顺序遍历所有运算符。
     @VisibleForTesting
     public Iterable<StreamOperatorWrapper<?, ?>> getAllOperators() {
         return getAllOperators(false);
@@ -448,6 +470,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      *
      * @throws IOException Thrown, if the buffered data cannot be pushed into the output streams.
      */
+    //应在完成记录发送之前调用此方法，以确保发送仍在缓冲的任何数据。它还确保识别所有与数据发送相关的异常。
     public void flushOutputs() throws IOException {
         for (RecordWriterOutput<?> streamOutput : getStreamOutputs()) {
             streamOutput.flush();
@@ -460,6 +483,8 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      *
      * <p>This method should never fail.
      */
+    //此方法释放记录写入器输出的所有资源。它停止输出刷新线程（如果有）并释放输出序列化器当前持有的所有缓冲区。
+    //这个方法永远不会失败。
     public void close() throws IOException {
         closer.close();
     }
@@ -499,6 +524,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
     }
 
     /** Wrapper class to access the chained sources and their's outputs. */
+    //用于访问链接源及其输出的包装类。
     public static class ChainedSource {
         private final WatermarkGaugeExposingOutput<StreamRecord<?>> chainedSourceOutput;
         private final StreamTaskSourceInput<?> sourceTaskInput;
@@ -533,6 +559,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
             NonChainedOutput output = outputsInOrder.get(i);
 
             RecordWriterOutput<?> recordWriterOutput =
+                    //创建流输出
                     createStreamOutput(
                             recordWriterDelegate.getRecordWriter(i),
                             output,
@@ -654,6 +681,9 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      * <p>Return null if we should not use the numRecordsOut counter to track the records emitted by
      * this operator.
      */
+    //获取给定配置表示的运算符的 numRecordsOut 计数器。
+    // 如果该运算符位于运算符链的末尾，则将运算符级计数器重新用于任务级 numRecordsOut 计数器。
+    //如果我们不应该使用 numRecordsOut 计数器来跟踪此运算符发出的记录，则返回 null。
     @Nullable
     private Counter getOperatorRecordsOutCounter(
             StreamTask<?, ?> containingTask, StreamConfig operatorConfig) {
@@ -668,6 +698,11 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         // number of records sent to downstream operators, which is number of Committable batches
         // sent to SinkCommitter. So we skip registering this metric on output and leave this metric
         // to sink writer implementations to report.
+        //如果此运算符是 SinkWriterOperator，请勿在输出上使用 numRecordsOut 计数器。
+        // 指标“numRecordsOut”在FLIP-33中被定义为写入外部系统的记录总数，
+        // 但该指标在AbstractStreamOperator中被占用为发送到下游算子的记录数，
+        // 即发送到SinkCommitter的可提交批次数。
+        // 因此，我们跳过在输出上注册此指标，并将此指标留给接收器编写器实现来报告。
         try {
             Class<?> sinkWriterFactoryClass =
                     userCodeClassloader.loadClass(SinkWriterOperatorFactory.class.getName());
@@ -752,6 +787,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
             StreamConfig chainedOpConfig = chainedConfigs.get(outputId);
 
             WatermarkGaugeExposingOutput<StreamRecord<T>> output =
+                    //递归地创建, 运算符是尾对头创建的
                     createOperatorChain(
                             containingTask,
                             operatorConfig,
@@ -838,7 +874,8 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      * Recursively create chain of operators that starts from the given {@param operatorConfig}.
      * Operators are created tail to head and wrapped into an {@link WatermarkGaugeExposingOutput}.
      */
-    //递归地创建从给定的 @ param operatorConfig开始的运算符链。运算符是尾对头创建的，并包装到WatermarkGaugeExposingOutput中。
+    //递归地创建从给定的 @ param operatorConfig开始的运算符链。
+    // 运算符是尾对头创建的，并包装到WatermarkGaugeExposingOutput中。
     private <IN, OUT> WatermarkGaugeExposingOutput<StreamRecord<IN>> createOperatorChain(
             StreamTask<OUT, ?> containingTask,
             StreamConfig prevOperatorConfig,
@@ -956,6 +993,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         }
 
         // wrap watermark gauges since registered metrics must be unique
+        //包装水印仪表，因为注册的指标必须是唯一的
         operator.getMetricGroup()
                 .gauge(
                         MetricNames.IO_CURRENT_INPUT_WATERMARK,
@@ -969,6 +1007,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
      *
      * @param allOperatorWrappers is an operator wrapper list of reverse topological order
      */
+    //按正向拓扑顺序链接运算符包装器。
     private StreamOperatorWrapper<?, ?> linkOperatorWrappers(
             List<StreamOperatorWrapper<?, ?>> allOperatorWrappers) {
         StreamOperatorWrapper<?, ?> previous = null;

@@ -46,6 +46,7 @@ import static java.util.Objects.requireNonNull;
  * @param <OUT> The output type of the operator
  * @param <F> The type of the user function
  */
+//它用作具有用户定义函数的运算符的基类。此类处理用户定义函数的打开和关闭，作为运算符生命周期的一部分
 @PublicEvolving
 public abstract class AbstractUdfStreamOperator<OUT, F extends Function>
         extends AbstractStreamOperator<OUT>
@@ -54,6 +55,7 @@ public abstract class AbstractUdfStreamOperator<OUT, F extends Function>
     private static final long serialVersionUID = 1L;
 
     /** The user function. */
+    //用户Function。
     protected final F userFunction;
 
     public AbstractUdfStreamOperator(F userFunction) {
@@ -66,6 +68,7 @@ public abstract class AbstractUdfStreamOperator<OUT, F extends Function>
      *
      * @return The user function of this operator.
      */
+    //获取在此运算符中执行的用户函数。
     public F getUserFunction() {
         return userFunction;
     }
@@ -158,6 +161,7 @@ public abstract class AbstractUdfStreamOperator<OUT, F extends Function>
      *
      * @return The user function parameters (currently empty)
      */
+    //由于流 API 不通过配置实现任何函数参数化，因此这里返回的配置实际上是空的。
     public Configuration getUserFunctionParameters() {
         return new Configuration();
     }

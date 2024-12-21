@@ -344,6 +344,7 @@ public class SingleInputGate extends IndexedInputGate {
             tieredStorageConsumerClient.setup(bufferPool);
         }
 
+        //将专用缓冲区直接分配给所有远程输入通道，以实现基于信用的模式。
         setupChannels();
     }
 

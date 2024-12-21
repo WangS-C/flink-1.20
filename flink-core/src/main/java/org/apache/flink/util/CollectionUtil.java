@@ -161,6 +161,7 @@ public final class CollectionUtil {
      * @param <K> the type of keys maintained by this map.
      * @param <V> the type of mapped values.
      */
+    //创建一个具有预期大小的新HashMap ，即考虑到负载因子，如果插入预期大小的多个键，则不会重新散列的哈希映射。
     public static <K, V> HashMap<K, V> newHashMapWithExpectedSize(int expectedSize) {
         return new HashMap<>(
                 computeRequiredCapacity(expectedSize, HASH_MAP_DEFAULT_LOAD_FACTOR),

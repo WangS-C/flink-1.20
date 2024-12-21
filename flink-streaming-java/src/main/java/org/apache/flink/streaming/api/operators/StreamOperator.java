@@ -43,6 +43,10 @@ import java.io.Serializable;
  *
  * @param <OUT> The output type of the operator
  */
+//流操作符的基本接口。实现者将实现OneInputStreamOperator或TwoInputStreamOperator之一来创建处理元素的运算符。
+//AbstractStreamOperator类提供生命周期和属性方法的默认实现。
+//StreamOperator的方法保证不会被并发调用。
+// 此外，如果使用计时器服务，还保证计时器回调不会与StreamOperator上的方法同时调用。
 @PublicEvolving
 public interface StreamOperator<OUT> extends CheckpointListener, KeyContext, Serializable {
 
@@ -82,6 +86,13 @@ public interface StreamOperator<OUT> extends CheckpointListener, KeyContext, Ser
      *
      * @throws java.lang.Exception An exception in this method causes the operator to fail.
      */
+    //该方法在数据处理结束时调用。
+    //该方法预计会刷新所有剩余的缓冲数据。
+    // 应传播缓冲数据刷新期间的异常，以便导致操作被识别为失败，因为最后的数据项未正确处理。
+    //调用该方法后，下游算子将无法再产生记录。
+    //警告：使用此方法提交任何事务或其他副作用是不安全的！
+    // 您可以使用此方法刷新任何稍后可以提交的缓冲数据，例如在notifyCheckpointComplete(long)中。
+    //注意：此方法不需要关闭任何资源。您应该在close()方法中释放外部资源。
     void finish() throws Exception;
 
     /**
@@ -94,6 +105,9 @@ public interface StreamOperator<OUT> extends CheckpointListener, KeyContext, Ser
      * <p><b>NOTE:</b>It can not emit any records! If you need to emit records at the end of
      * processing, do so in the {@link #finish()} method.
      */
+    //该方法在操作符生命周期的最后阶段被调用，无论是在操作成功完成的情况下，还是在操作失败和取消的情况下。
+    //该方法有望彻底释放运营商已获取的所有资源。
+    //注意：它不能发出任何记录！如果需要在处理结束时发出记录，请在finish()方法中执行此操作
     void close() throws Exception;
 
     // ------------------------------------------------------------------------
@@ -120,6 +134,12 @@ public interface StreamOperator<OUT> extends CheckpointListener, KeyContext, Ser
      * @throws Exception Throwing an exception here causes the operator to fail and go into
      *     recovery.
      */
+    //当操作员应该在发出自己的检查点屏障之前执行快照时调用此方法。
+    //此方法并非用于任何实际状态持久性，而仅用于在发出检查点屏障之前发出一些数据。
+    // 维护一些小的瞬态状态的操作符对于检查点来说效率低下（特别是当需要以可重新扩展的方式进行检查点时），
+    // 但可以简单地在检查点之前发送到下游。一个例子是机会预聚合算子，它们的预聚合状态很小，经常被下游刷新。
+    //重要提示：此方法不应用于任何实际状态快照逻辑，因为它本质上位于操作员检查点的同步部分内。
+    // 如果在此方法中完成繁重的工作，它将影响延迟和下游检查点对齐。
     void prepareSnapshotPreBarrier(long checkpointId) throws Exception;
 
     /**
@@ -159,6 +179,7 @@ public interface StreamOperator<OUT> extends CheckpointListener, KeyContext, Ser
      *
      * @return OperatorAttributes of the operator.
      */
+    //调用以获取操作员的 OperatorAttributes。如果没有定义的属性，则会构建默认的 OperatorAttributes
     @Experimental
     default OperatorAttributes getOperatorAttributes() {
         return new OperatorAttributesBuilder().build();

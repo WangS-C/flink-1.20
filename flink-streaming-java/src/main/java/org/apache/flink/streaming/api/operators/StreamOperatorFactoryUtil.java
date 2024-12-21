@@ -44,6 +44,7 @@ public class StreamOperatorFactoryUtil {
      * @return a newly created and configured operator, and the {@link ProcessingTimeService}
      *     instance it can access.
      */
+    //使用工厂创建一个新的运算符，并确保所有特殊的工厂特征都得到正确处理。
     public static <OUT, OP extends StreamOperator<OUT>>
             Tuple2<OP, Optional<ProcessingTimeService>> createOperator(
                     StreamOperatorFactory<OUT> operatorFactory,

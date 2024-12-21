@@ -61,6 +61,9 @@ public interface TaskInvokable {
      * <p>All resources should be cleaned up by calling {@link #cleanUp(Throwable)} after the method
      * returns.
      */
+    //开始执行。
+    //当任务实际执行开始时，任务管理器会调用此方法。
+    //方法返回后，应通过调用cleanUp(Throwable)来清理所有资源。
     void invoke() throws Exception;
 
     /**
@@ -84,18 +87,23 @@ public interface TaskInvokable {
      *     <p>ATTENTION: {@link org.apache.flink.runtime.execution.CancelTaskException
      *     CancelTaskException} should not be treated as a failure.
      */
+    //清理invoke()或restore()中使用的所有资源。无论上述调用成功还是失败，都必须调用该方法。
     void cleanUp(@Nullable Throwable throwable) throws Exception;
 
     /**
      * This method is called when a task is canceled either as a result of a user abort or an
      * execution failure. It can be overwritten to respond to shut down the user code properly.
      */
+    //当任务因用户中止或执行失败而取消时，将调用此方法。它可以被覆盖以响应正确关闭用户代码
     void cancel() throws Exception;
 
     /**
      * @return true if blocking input such as {@link InputGate#getNext()} is used (as opposed to
      *     {@link InputGate#pollNext()}. To be removed together with the DataSet API.
      */
+    //返回：
+    //如果使用阻塞输入（例如InputGate. getNext() （而不是InputGate. pollNext() ，则为 true 。
+    // 与 DataSet API 一起删除。
     boolean isUsingNonBlockingInput();
 
     /**
@@ -106,6 +114,7 @@ public interface TaskInvokable {
      * @param taskName optional taskName to log stack trace
      * @param timeout optional timeout to log stack trace
      */
+    //检查任务在取消期间是否应被中断，如果是，则执行指定的Runnable interruptAction 。
     void maybeInterruptOnCancel(
             Thread toInterrupt, @Nullable String taskName, @Nullable Long timeout);
 }
